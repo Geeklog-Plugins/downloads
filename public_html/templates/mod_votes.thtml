@@ -1,0 +1,8 @@
+
+<!-- start mod_votes.thtml -->
+<div class="aligncenter">
+    <div class="block-divider"></div>
+</div>
+{regvotesinfo}
+{unregvotesinfo}
+<!-- end mod_votes.thtml -->

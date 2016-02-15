@@ -1,0 +1,18 @@
+
+<!-- start unregvotesinfo.thtml -->
+    <div style="margin-top:10px;">{unregvotes}</div>
+    <form method="post" action="index.php" onsubmit="alert(this.form.op.value)">
+      <input type="hidden" name="op" value=""{xhtml}>
+      <input type="hidden" name="rid" value=""{xhtml}>
+      <input type="hidden" name="lid" value="{lid}"{xhtml}>
+      <table class="plugin" style="width:100%;">
+        <tr>
+          <th colspan="2">{lang_ip}</th>
+          <th colspan="3">{lang_rating}</th>
+          <th colspan="2">{lang_date}</th>
+        </tr>
+{nounregvotes}
+{unregvoteitems}
+      </table>
+    </form>
+<!-- end unregvotesinfo.thtml -->

@@ -1,0 +1,19 @@
+
+<!-- start mod_access.thtml -->
+  <fieldset>
+    <legend>{lang_accessrights}</legend>
+
+    <dl class="form_block">
+      <dt>{lang_owner}</dt>
+      <dd>{owner_name}<input type="hidden" name="owner_id" value="{download_ownerid}"{xhtml}></dd>
+
+      <dt><label for="group_id">{lang_group}</label></dt>
+      <dd>{group_dropdown}</dd>
+
+      <dt><label for="admin-permissions">{lang_permissions}</label></dt>
+      <dd>{permissions_editor}</dd>
+      <dd class="description">{lang_permissionskey}</dd>
+      <dd class="description">{lang_permmsg}</dd>
+    </dl>
+  </fieldset>
+<!-- end mod_access.thtml -->

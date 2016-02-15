@@ -1,0 +1,828 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html lang="ja">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta http-equiv="Content-Style-Type" content="text/css">
+  <style type="text/css">
+  <!--
+    body {
+    font-family: Helvetica, Arial, sans-serif;
+    margin: 25px;
+    }
+
+    h1 {
+    font-size: 1.5em;
+    border-bottom: thin outset black;
+    }
+
+    h2 {
+    margin: 0 0 0.5em 0;
+    font-size: 1em;
+    }
+
+    h3 {
+    border-bottom: 1px solid #0033FF;
+    border-left: 6px solid #0033FF;
+    padding: 0.25em;
+    font-size: 1em;
+    }
+
+    h4 {
+    font-size: 0.85em;
+    font-weight: bold;
+    margin: 0.2em 0;
+    }
+
+    p {
+    font-size: 0.85em;
+    margin: 0.5em 0;
+    }
+
+    .attention {
+    color:#FF3300
+    }
+
+    .gray {
+    color:gray;
+    }
+
+    ul {
+    margin-top: 0.5em;
+    margin-bottom: 1em;
+    }
+
+    li {
+    font-size: 0.8em;
+    margin: 0.5em 0;
+    }
+
+    li p {
+    font-size: 0.8em;
+    margin: 0.5em 0;
+    }
+
+    .email {
+    padding-left: 1.3em;
+    font-size: small;
+    font-weight: normal;
+    }
+
+    pre {
+    padding: 0.2em;
+    border: 1px solid #BBBBBB;
+    background-color: #EEEEEE;
+    margin: 1em 1em 1em 3em;
+    overflow: auto;
+    font-size: 0.85em;
+    line-height: 1.5em;
+    }
+
+    table {
+    font-size: 0.8em;
+    border: solid 1px black;
+    border-collapse: collapse;
+    }
+
+    th,
+    td
+    {
+    border: solid 1px black;
+    padding: 5px;
+    }
+
+    span.comment {
+    color: green;
+    font-weight: bold;
+    }
+
+    .goto {
+    margin: 1em 0 1.5em 0.5em;
+    font-size: 0.8em;
+    }
+
+    .fix {
+    color: red;
+    font-weight: bold;
+    }
+
+    .new {
+    color: blue;
+    font-weight: bold;
+    }
+
+    .center {
+    text-align: center;
+    }
+
+    .snap {
+    border: 1px solid #000;
+    margin: 0px 0 20px 4em;
+    }
+
+    table {
+    width: 100%;
+    }
+
+    th {
+    background-color:#C0C0C0;
+    border: 1px solid #AAA;
+    }
+
+    td {
+    background-color:#F9F9F9;
+    border: 1px solid #AAA;
+    }
+
+    tr.r2 td {
+    background-color:#F0F0F0;
+    border: 1px solid #AAA;
+    }
+
+    em {
+    color: green;
+    font-weight: bold;
+    }
+  -->
+  </style>
+  <title>The Geeklog Downloads Plugin Documentation</title>
+</head>
+<body>
+
+  <h1><a name="_top">Downloads Plugin Documentation</a></h1>
+  <h2>Version: 1.2.0</h2>
+  <h2>Author: Yoshinori Tahara - dengen</h2>
+  <h2>Published:&nbsp;2014-9-27</h2>
+  <h2>License:&nbsp;GPL v2</h2>
+  <h2>Overview:</h2>
+  <ul>
+    <li>Downloads plugin adds downloads section to your Geeklog site.</li>
+    <li>This plugin is derived from the famous Filemgmt plugin. And, adds various features. </li>
+  </ul>
+
+
+
+
+  <h2>Features:</h2>
+  <ul>
+    <li>Create, edit, and delete downloads file information on admin panel.</li>
+    <li>Download file can be classified in multi-level category.</li>
+    <li>Download file can be put tags.</li>
+    <li>The description and details of file can be expressed freely using HTML text.</li>
+    <li>Like the story you can edit using the Advanced Editor. </li>
+    <li>Snapshot thumbnail view. </li>
+    <li>Multi-language support.</li>
+  </ul>
+
+
+
+
+  <h2>Terms:</h2>
+  <ul>
+    <li>Downloads plugin works in Geeklog 1.8.0 or later. It doesn&#039;t work in older.</li>
+    <li>Currently, only MySQL database support. </li>
+  </ul>
+
+
+
+
+  <h2>Note:</h2>
+  <ul>
+    <li>None.</li>
+  </ul>
+
+
+
+
+  <h2>Sections of this document:</h2>
+  <ul>
+    <li><a href="#_installation">1) Installation</a></li>
+    <li><a href="#_uninstallation">2) Uninstallation</a></li>
+    <li><a href="#_conversion">3) Data conversion</a></li>
+    <li><a href="#_try_out">4) Try out</a></li>
+    <li><a href="#_categoryman">5) Managing categories</a></li>
+    <li><a href="#_downloadman">6) Managing downloads</a></li>
+    <li><a href="#_configulation">7) Configuration</a></li>
+    <li><a href="#_multilanguage">8) Multi-language support</a></li>
+    <li><a href="#_autotag">9) Autotag</a></li>
+    <li><a href="#_history">10) History</a></li>
+  </ul>
+
+
+
+
+  <h3><a name="_installation">1) Installation</a></h3>
+  <p class="attention">To install, create some directories for Downloads plugin manually, you must copy some files to the appropriate directory.</p>
+  <p>In the following descriptions</p>
+  <ul style="margin:0.5em 0 1.2em 0">
+    <li><em>&lt;geeklog_dir&gt;</em> is the directory where the system db-config.php file resides</li>
+    <li><em>&lt;public_html&gt;</em> is the directory where the lib-common.php file resides</li>
+    <li><em>&lt;admin&gt;</em> is the directory where the administration files reside (usually, <em>&lt;public_html&gt;</em>/admin/ )</li>
+  </ul>
+  <h4>Step 1 - Backup your database</h4>
+  <ul>
+    <li>Because Downloads plugin adds some database tables, backup your current Geeklog databese beforehand using &quot;DB Backups&quot; feature or phpMyAdmin.</li>
+  </ul>
+  <h4>Step 2 - Uncompress the plugin archive</h4>
+  <ul>
+    <li>Uncompress the Downloads plugin archive in your <em>&lt;geeklog_dir&gt;</em>/plugins directory. The archive will create a directory called downloads in your plugins directory.</li>
+  </ul>
+  <h4>Step 3 - Create the required plugin directories</h4>
+  <ul>
+    <li>Create a directory called downloads under your <em>&lt;public_html&gt;</em> directory.</li>
+    <li>Create a directory called downloads under your <em>&lt;admin&gt;</em>/plugins/ directory.</li>
+  </ul>
+  <h4>Step 4 - Copy the required plugin files</h4>
+  <ul>
+    <li>Change to your <span class="geeklog"><em>&lt;geeklog_dir&gt;</em></span>/plugins/downloads/ directory.</li>
+    <li>Copy the files and directories in the admin directory to the <span class="admin"><em>&lt;admin&gt;</em></span>/plugins/downloads/ directory your created in step 3.</li>
+    <li>Copy the files and directories in the public_html directory to the <span class="public"><em>&lt;public_html&gt;</em></span>/downloads/ directory your created in step 3.</li>
+  </ul>
+
+  <h4>Step 5 - Create the required directories for the file repository</h4>
+  <ul>
+    <li>Create the following directories under <em>&lt;public_html&gt;</em> .</li>
+  </ul>
+  <ul style="margin-left:3em">
+    <li>downloads_data</li>
+    <li>downloads_data/category_snaps</li>
+    <li>downloads_data/files</li>
+    <li>downloads_data/snaps</li>
+    <li>downloads_data/tn</li>
+  </ul>
+  <ul>
+    <li>You might also copy your <em>&lt;geeklog_dir&gt;</em>/plugins/downloads/downloads_data  under <em>&lt;public_html&gt;</em>.</li>
+    <li><span class="attention">Set directory permission so that your webserver has write access to the directories. This may require write permissions to be 744, 754 or 777 depending on your webserver setup.</span></li>
+  </ul>
+
+  <h4>Step 6 - Run the plugin install from the plugin editor</h4>
+  <ul>
+    <li>Log in to your Geeklog as a root user and run the Downloads plugin install from the plugin editor (&quot;Plugins&quot;).</li>
+    <li>If the install was not successful, examine Geeklog system errorlog (error.log).</li>
+    <li>Downloads plugin was installed now.</li>
+    <li>Clicking on the &quot;Downloads&quot; will take you to the &quot;Downloads Manager&quot; page.</li>
+  </ul>
+  <p class="goto"><a href="#_top">Goto Top</a></p>
+
+
+
+
+  <h3><a name="_uninstallation">2) Uninstallation</a></h3>
+  <h4>Step 1 - Backup your database</h4>
+  <ul>
+    <li>During the uninstall process, Downloads plugin table will be deleted, and we recommend that you backup your current Geeklog databese beforehand using &quot;DB Backups&quot; feature or phpMyAdmin.</li>
+  </ul>
+  <h4>Step 2 - Run the plugin uninstall from the plugin editor</h4>
+  <ul>
+    <li>Run the Downloads plugin uninstall from the plugin editor (&quot;Plugins&quot;). This will remove Downloads plugin table and all data from your database.</li>
+  </ul>
+  <h4>Step 3 - Delete directories</h4>
+  <ul>
+    <li>Delete the three plugin directories created in the install process ( &lt;geeklog-dir&gt;/plugins/downloads/, <em>&lt;public_html&gt;</em>/downloads/, <em>&lt;admin&gt;</em>/plugins/downloads/ ).</li>
+  </ul>
+  <h4>Step 4 - Delete directories for the file repository</h4>
+  <ul>
+    <li>Delete the directories created in 1) - Step5.</li>
+  </ul>
+  <p class="goto"><a href="#_top">Goto Top</a></p>
+
+
+
+  <h3><a name="_convert">3) Data conversion</a></h3>
+  <p>Downloads plugin provides script to receive the data from Filemgmt plugin. </p>
+  <p>Login your site with Root user permission, access to http://your_site/admin/plugins/downloads/<span class="attention">fm2dm.php</span> . And, please follow the instructions.</p>
+  <p class="goto"><a href="#_top">Goto Top</a></p>
+
+
+
+
+  <h3><a name="_try_out">4) Try out</a></h3>
+  <p>Let&#039;s use Downloads plugin.</p>
+  <h4>Step 1 - Show Downloads manager</h4>
+  <ul>
+    <li>Click the &quot;Downloads&quot; from the Admin Menu.</li>
+  </ul>
+  <p><img src="./images/snap_01_en.png" alt="Step 01" title="Step 01" class="snap"></p>
+
+
+  <h4>Step 2 - Add a category</h4>
+  <ul>
+    <li>You must create at least one or more categories.</li>
+    <li>Click &quot;Add Category&quot;. </li>
+  </ul>
+  <p><img src="./images/snap_02_en.png" alt="Step 02" title="Step 02" class="snap"></p>
+  <ul>
+    <li>On &quot;Add category&quot; screen, enter &quot;Category ID&quot; and &quot;Title&quot;, and then click &quot;Save Changes&quot; button.</li>
+  </ul>
+  <p><img src="./images/snap_03_en.png" alt="Step 03" title="Step 03" class="snap"></p>
+  <ul>
+    <li>One category have been added.</li>
+  </ul>
+  <p><img src="./images/snap_04_en.png" alt="Step 04" title="Step 04" class="snap"></p>
+
+
+  <h4>Step 3 - Add a download file</h4>
+  <ul>
+    <li>Download the file (information) to add.</li>
+    <li>Click &quot;Add File&quot;. </li>
+  </ul>
+  <p><img src="./images/snap_05_en.png" alt="Step 05" title="Step 05" class="snap"></p>
+  <ul>
+    <li>Enter the minimum &quot;Title&quot;, &quot;File ID&quot;, &quot;File Name&quot;, &quot;Category&quot;, &quot;Description&quot;, and then click &quot;Add&quot; button. </li>
+    <li>&quot;Category&quot; is already selected categories you created in Step 2.</li>
+  </ul>
+  <p><img src="./images/snap_06_en.png" alt="Step 06" title="Step 06" class="snap"></p>
+  <ul>
+    <li>One download file have been added.</li>
+  </ul>
+  <p><img src="./images/snap_07_en.png" alt="Step 07" title="Step 07" class="snap"></p>
+
+
+  <h4>Step 4 - See downloads section</h4>
+  <ul>
+    <li>Click the "Downloads" from the header menu. </li>
+    <li>See the download section. This is configured in the category list and the file list.</li>
+  </ul>
+  <p><img src="./images/snap_08_en.png" alt="Step 08" title="Step 08" class="snap"></p>
+
+
+
+
+  <h3><a name="_categoryman">5) Managing categories</a></h3>
+  <p>Hereunder are items to be edited at category manager.</p>
+  <table>
+      <tr>
+        <th>Item</th>
+        <th>Desctription</th>
+      </tr>
+      <tr>
+        <td>Category ID</td>
+        <td>Set category ID here. Alphabet, numerics, hyphen, under score are allowed. ID duplication is not allowed.<br>
+        If your Geeklog site is operated by multi-language mode, language ID should be added on category ID. (ex:cat<span style="color:red; font-weight:bold">_en</span>, cat<span style="color:red; font-weight:bold">_ja</span> ...)</td>
+      </tr>
+      <tr class="r2">
+        <td>Title</td>
+        <td>Set category title here.</td>
+      </tr>
+      <tr>
+        <td>Category Image</td>
+        <td>Set category icon&#039;s file name here.<br>
+        You can upload new category icon image file by clicking 'Upload' button.</td>
+      </tr>
+      <tr class="r2">
+        <td>Parent Category</td>
+        <td>Select upper layer category.</td>
+      </tr>
+      <tr>
+        <td>Order</td>
+        <td>Set display order at category list here. Value here is to be adjusted to decimal order by Geeklog.</td>
+      </tr>
+      <tr class="r2">
+        <td>Enabled</td>
+        <td>Switch each category&#039;s status enabled/disabled.<br>If disabled, files &amp; categories belong to do not display at downloads section of your Geeklog site.</td>
+      </tr>
+  </table>
+  <p class="goto"><a href="#_top">Goto Top</a></p>
+
+
+
+
+  <h3><a name="_downloadman">6) Managing downloads</a></h3>
+  <p>Hereunder are items to be edited at downloads manager.</p>
+  <table>
+      <tr>
+        <th>Item</th>
+        <th>Desctription</th>
+      </tr>
+      <tr>
+        <td>Submitter</td>
+        <td>Who submitted the file is automatically set here.</td>
+      </tr>
+      <tr class="r2">
+        <td>Title</td>
+        <td>Set the file&#039;s title here.</td>
+      </tr>
+      <tr>
+        <td>File ID</td>
+        <td>Set the file&#039;s ID here. Alphabet, numerics, hyphen, under score are allowed. ID duplication is not allowed.</td>
+      </tr>
+      <tr class="r2">
+        <td>File Name</td>
+        <td>Set the file&#039;s name here.<br>
+        Replacing file is available by click &#039;Upload&#039;.</td>
+      </tr>
+      <tr>
+        <td>Category</td>
+        <td>Choose a category you wish the file belongs to.</td>
+      </tr>
+      <tr class="r2">
+        <td>Tag</td>
+        <td>Set the tag list separated by a space character. <br>
+        In order to enable the tag, install the <a href="http://mystral-kk.net/filemgmt/index.php/38">Tag plugin(Ver 0.6.0 or later)</a> that is released by mystral-kk.</td>
+      </tr>
+      <tr>
+        <td>Web</td>
+        <td>Describe URLs such as the one of the submitter&#039;s web.<br>
+        Geeklog provides user&#039;s web URL.</td>
+      </tr>
+      <tr class="r2">
+        <td>Version</td>
+        <td>Set the file&#039;s version here.</td>
+      </tr>
+      <tr>
+        <td>File Size</td>
+        <td>The file&#039;s size is described automatically here.</td>
+      </tr>
+      <tr class="r2">
+        <td>MD5 Checksum</td>
+        <td>The file&#039;s MD5 value is described automatically here.</td>
+      </tr>
+      <tr>
+        <td>Description</td>
+        <td>Describe the file&#039;s description here. Simple one is recommended. <br>
+        HTML is acceptable when post mode is [HTML] or[advanced editor].</td>
+      </tr>
+      <tr class="r2">
+        <td>Detail</td>
+        <td>Describe details of the file.<br>
+        HTML is acceptable when post mode is [HTML] or [advanced editor].</td>
+      </tr>
+      <tr>
+        <td>Post Mode</td>
+        <td>Chosse post mode of description and details.<br>
+        [text] : plain text<br>[HTML] : HTML text<br>[advanced editor] : edit HTML text by advanced editor<br>[Wiki text] : Wiki text</td>
+      </tr>
+      <tr class="r2">
+        <td>File Image</td>
+        <td>Set file name of snapshot image.<br>
+        New file upload is available by clicking &#039;Upload&#039; button.</td>
+      </tr>
+      <tr>
+        <td>MG Autotag</td>
+        <td>Set Autotag of Media Gallery.<br>
+        Once MG Autotags is set, a file image (snapshot) is replaced by the one created by MG Autotags.<br>
+        This item appears when &#039;MG Autotag&#039; is enabled at Geeklog&#039;s configuration.</td>
+      </tr>
+      <tr class="r2">
+        <td>Comment Mode</td>
+        <td>Choose comment actions<br>
+        [Comments Enabled] : allow comment submit<br>[Comments Disabled] : disallow comment submit<br>[Comment Closed] : close comment features</td>
+      </tr>
+      <tr>
+        <td>Released</td>
+        <td>Select if the file &amp; its information make it in public.<br>
+        [YES] : make it in public (accessable)<br>[NO] : not to make it in public (access unavailable)</td>
+      </tr>
+      <tr class="r2">
+        <td>Include Files on List</td>
+        <td>Select if the file&#039;s download information is displayed on the list, ie numbers of downloads etc.<br>
+        [YES] : download information not displayed<br>[NO] : download information is displayed<br>
+        This selection is not to be effected by the previous item &#039;Released&#039;.</td>
+      </tr>
+      <tr>
+        <td>Release Date</td>
+        <td>Set download information&#039;s release date<br>
+        If future date is set, the file does not to be in public before the date.</td>
+      </tr>
+      <tr class="r2">
+        <td>Project Name</td>
+        <td>Descript project name of the download file.</td>
+      </tr>
+
+  </table>
+  <p class="goto"><a href="#_top">Goto Top</a></p>
+
+
+
+
+  <h3><a name="_configulation">7) Configuration</a></h3>
+  <p>Downloads plugin is cofigurable at Geeklog&#039;s Admin Menu - Configuration - Downloads.</p>
+  <h4 style="margin-top:10px;">Main Settings - General Downloads Settings</h4>
+  <table>
+      <tr>
+        <th style="width:25%">Variable</th>
+        <th style="width:20%">Default Value</th>
+        <th style="width:55%">Desctription</th>
+      </tr>
+      <tr>
+        <td>Downloads Login Required<br><span class="gray">(loginrequired)</span></td>
+        <td>False(0)</td>
+        <td>Set True(1) makes login user only accesabile to download section.<br>
+More priority than this is set for value at &#039;Login Required?(loginrequired)&#039; at Configuration - Geeklog - Users and Submissions.</td>
+      </tr>
+      <tr class="r2">
+        <td>Hide Downloads Menu Entry<br><span class="gray">(hidemenu)</span></td>
+        <td>False(0)</td>
+        <td>Set True(1) makes no display of &#039;download&#039; at site menu.</td>
+      </tr>
+      <tr>
+        <td>Delete Downloads with Owner<br><span class="gray">(delete_download)</span></td>
+        <td>False(0)</td>
+        <td>Set True(1) makes delete all dowload information owned by a user when the user&#039;s account was deleted. <br>Set False(0) makes pass the information to a user belongs to root group such as site admin.</td>
+      </tr>
+      <tr class="r2">
+        <td>Downloads per Page<br><span class="gray">(download_perpage)</span></td>
+        <td>5</td>
+        <td>Set numbers of download information per page.</td>
+      </tr>
+      <tr>
+        <td>Popularity Threshold of Hits<br><span class="gray">(download_popular)</span></td>
+        <td>20</td>
+        <td>Display &#039;pop&#039; icon when downloads numbers exceeds this value.</td>
+      </tr>
+      <tr class="r2">
+        <td>Allow Login Users to Upload<br><span class="gray">(download_uploadselect)</span></td>
+        <td>False(0)</td>
+        <td>Set True(1) makes login users upload files.<br>Set False(0) makes &#039;downloads.upload&#039; users only upload files.</td>
+      </tr>
+      <tr>
+        <td>Email Notification Allowing<br><span class="gray">(download_emailoption)</span></td>
+        <td>True(1)</td>
+        <td>Set True(1) makes email advise on file approval by admin.</td>
+      </tr>
+      <tr class="r2">
+        <td>File Permissions<br><span class="gray">(filepermissions)</span></td>
+        <td>755</td>
+        <td>Set upload file permission by three digits.</td>
+      </tr>
+      <tr>
+        <td>Default Post Mode<br><span class="gray">(postmode)</span></td>
+        <td>Plain Old Text(plaintext)</td>
+        <td>Set default submission mode of download file&#039;s description &amp; details.<br>&#039;Plain Old Text(plaintext)&#039; : Plain old text<br>&#039;HTML Formatted(html)&#039; : HTML Formatted text</td>
+      </tr>
+      <tr class="r2">
+        <td>Enabled MG Autotag<br><span class="gray">(enabled_mg_autotag)</span></td>
+        <td>False(0)</td>
+        <td>Set True(1) makes MG autotags enabled. <br>It makes Media Gallery plugin&#039;s image files and album file images(snapshots).</td>
+      </tr>
+  </table>
+
+  <h4 style="margin-top:10px;">Main Settings - Thumbnail Image</h4>
+  <table>
+      <tr>
+        <th style="width:25%">Variable</th>
+        <th style="width:20%">Default Value</th>
+        <th style="width:55%">Desctription</th>
+      </tr>
+      <tr>
+        <td>Show Thumbnail Image<br><span class="gray">(show_tn_image)</span></td>
+        <td>True(1)</td>
+        <td>Set False(0) makes thumnail of the file image (snapshot) not display. Instead, displays a link icon to the file image.</td>
+      </tr>
+      <tr>
+        <td>Show Only Image Exists<br><span class="gray">(show_tn_only_exists)</span></td>
+        <td>False(0)</td>
+        <td>Set True(1) makes thumnail display only in case a file image (snapshot) is registered. </td>
+      </tr>
+      <tr class="r2">
+        <td>Max Width<br><span class="gray">(max_tnimage_width)</span></td>
+        <td>200</td>
+        <td>Set max width of thumnail.</td>
+      </tr>
+      <tr>
+        <td>Max Height<br><span class="gray">(max_tnimage_height)</span></td>
+        <td>200</td>
+        <td>Set max length of thumnail.</td>
+      </tr>
+      <tr class="r2">
+        <td>Format<br><span class="gray">(tnimage_format)</span></td>
+        <td>PNG(png)</td>
+        <td>Set file compression format of thumnail.<br>JPEG(jpeg) : JPEG format<br>PNG(png) : PNG format</td>
+      </tr>
+  </table>
+
+  <h4 style="margin-top:10px;">Main Settings - Category</h4>
+  <table>
+      <tr>
+        <th style="width:25%">Variable</th>
+        <th style="width:20%">Default Value</th>
+        <th style="width:55%">Desctription</th>
+      </tr>
+      <tr>
+        <td>Show Category Images<br><span class="gray">(download_useshots)</span></td>
+        <td>True(1)</td>
+        <td>SetFalse(0) makes not to display category images.</td>
+      </tr>
+      <tr class="r2">
+        <td>Category Image Width<br><span class="gray">(download_shotwidth)</span></td>
+        <td>32</td>
+        <td>Set category image width.</td>
+      </tr>
+  </table>
+
+  <h4 style="margin-top:10px;">Main Settings - What&#039;s New Block</h4>
+  <table>
+      <tr>
+        <th style="width:25%">Variable</th>
+        <th style="width:20%">Default Value</th>
+        <th style="width:55%">Desctription</th>
+      </tr>
+      <tr>
+        <td>Show New Downloads<br><span class="gray">(download_whatsnew)</span></td>
+        <td>True(1)</td>
+        <td>Set False(0) makes not to display new downloads information at whatsnew block.</td>
+      </tr>
+      <tr class="r2">
+        <td>Max Number of New Downloads<br><span class="gray">(download_newdownloads)</span></td>
+        <td>10</td>
+        <td>Set max number of new downloads to show at whatsnew block.</td>
+      </tr>
+      <tr>
+        <td>New Downloads Interval Date<br><span class="gray">(whatsnew_perioddays)</span></td>
+        <td>14</td>
+        <td>Set how long to make it as &#039;new downloads&#039; and show at whatsnew blcok. unit:day</td>
+      </tr>
+  </table>
+
+  <h4 style="margin-top:10px;">Main Settings - Downloads History</h4>
+  <table>
+      <tr>
+        <th style="width:25%">Variable</th>
+        <th style="width:20%">Default Value</th>
+        <th style="width:55%">Desctription</th>
+      </tr>
+      <tr>
+        <td>Downloads History Permissions<br><span class="gray">(download_dlreport)</span></td>
+        <td>Downloads Editor(editor)</td>
+        <td>Set what kinds of user can see downloads history.<br>&#039;Downloads Editor(editor)&#039; : allow &#039;downloads.editor&#039; users only.<br>&#039;All(all)&#039; : allow all users.<br>&#039;Login User(user)&#039; : allow login users only.</td>
+      </tr>
+      <tr class="r2">
+        <td>Cut Owner&#039;s Own Download<br><span class="gray">(cut_own_download)</span></td>
+        <td>True(1)</td>
+        <td>Set False(0) makes not to record to download history even a file owner downloads.</td>
+      </tr>
+  </table>
+
+  <h4 style="margin-top:10px;">Miscellaneous - Repository Paths</h4>
+  <table>
+      <tr>
+        <th style="width:25%">Variable</th>
+        <th style="width:20%">Default Value</th>
+        <th style="width:55%">Desctription</th>
+      </tr>
+      <tr>
+        <td>Download File<br><span class="gray">(path_filestore)</span></td>
+        <td><em>&lt;public_html&gt;</em>/downloads_data/files/</td>
+        <td>Set repository path to store download files.<br>You can set it at non-public area in case you consider file security.</td>
+      </tr>
+      <tr class="r2">
+        <td>Download File Snapshot<br><span class="gray">(path_snapstore)</span></td>
+        <td><em>&lt;public_html&gt;</em>/downloads_data/snaps/</td>
+        <td>Set repository path to store file images.<br>Non-public area is not allowed. Make sure to set public area.</td>
+      </tr>
+      <tr>
+        <td>Category Image<br><span class="gray">(path_snapcat)</span></td>
+        <td><em>&lt;public_html&gt;</em>/downloads_data/category_snaps/</td>
+        <td>Set repository path to store category images.<br>Non-public area is not allowed. Make sure to set public area.</td>
+      </tr>
+      <tr class="r2">
+        <td>Thumbnail Image<br><span class="gray">(path_tnstore)</span></td>
+        <td><em>&lt;public_html&gt;</em>/downloads_data/tn/</td>
+        <td>Set repository path to store thumnail images.<br>Non-public area is not allowed. Make sure to set public area.</td>
+      </tr>
+  </table>
+
+  <h4 style="margin-top:10px;">Miscellaneous - Repository URL</h4>
+  <table>
+      <tr>
+        <th style="width:25%">Variable</th>
+        <th style="width:20%">Default Value</th>
+        <th style="width:55%">Desctription</th>
+      </tr>
+      <tr>
+        <td>Download File Snapshot<br><span class="gray">(snapstore_url)</span></td>
+        <td>http://your_site/downloads_data/snaps</td>
+        <td>Set repository URL to store file images.</td>
+      </tr>
+      <tr class="r2">
+        <td>Category Image<br><span class="gray">(snapcat_url)</span></td>
+        <td>http://your_site/downloads_data/category_snaps</td>
+        <td>Set repository URL to store category images.</td>
+      </tr>
+      <tr>
+        <td>Thumbnail Image<br><span class="gray">(tnstore_url)</span></td>
+        <td>http://your_site/downloads_data/tn</td>
+        <td>Set repository URL to store thumnail images.</td>
+      </tr>
+  </table>
+
+  <h4 style="margin-top:10px;">Miscellaneous - Category Permissions</h4>
+  <table>
+      <tr>
+        <th style="width:25%">Variable</th>
+        <th style="width:20%">Default Value</th>
+        <th style="width:55%">Desctription</th>
+      </tr>
+      <tr>
+        <td>Default Permissions[0]</td>
+        <td>Read-Write</td>
+        <td>Set owner&#039;s permission. This value becomes default at creating category.</td>
+      </tr>
+      <tr class="r2">
+        <td>Default Permissions[1]</td>
+        <td>Read-Only</td>
+        <td>Set group&#039;s permission. This value becomes default at creating category.</td>
+      </tr>
+      <tr>
+        <td>Default Permissions[2]</td>
+        <td>Read-Only</td>
+        <td>Set member&#039;s permission. This value becomes default at creating category.</td>
+      </tr>
+      <tr class="r2">
+        <td>Default Permissions[3]</td>
+        <td>Read-Only</td>
+        <td>Set gues&#039;s permissio. This value becomes default at creating category.</td>
+      </tr>
+  </table>
+  <p class="goto"><a href="#_top">Goto Top</a></p>
+
+
+
+
+  <h3><a name="_multilanguage">8) Multi-language support</a></h3>
+  <p>Downloads Plugin supports Geeklog&#039;s multi-language features.</p>
+  <p>Downloads plugin uses a method to add language ID at suffix of category ID.</p>
+  <p>For details of multi-language support, please see the following WIKI pages.</p>
+  <ul>
+  <li><a href="http://wiki.geeklog.jp/index.php/Multi-Language_Support#.E3.83.96.E3.83.AD.E3.83.83.E3.82.AF">http://wiki.geeklog.jp/index.php/Multi-Language_Support#.E3.83.96.E3.83.AD.E3.83.83.E3.82.AF</a> (Japanese)</li>
+  <li><a href="http://wiki.geeklog.net/index.php/Multilingual_Support">http://wiki.geeklog.net/index.php/Multilingual_Support</a> (English)</li>
+  </ul>
+  <p>The following is an example to use at English and Japanese.</p>
+  <ul>
+  <li>Create categories for each language by category editor.</li>
+  <li>Set &#039;category ID&#039; like below.</li>
+  </ul>
+  <pre><code>plugin_en
+plugin_ja</code></pre>
+  <ul>
+  <li>The one suffix of &quot;_en&quot; is used for English mode, suffix &quot;_ja&quot; for Japanese mode.</li>
+  <li>Creat 2 download information for each language&#039;s category. In this case, for English and Japanese.</li>
+  <li>This is all what you have to do. Try and see switching launguage at user&#039;s setting.</li>
+  </ul>
+  <p class="goto"><a href="#_top">Goto Top</a></p>
+
+
+
+
+  <h3><a name="_autotag">9) Autotag</a></h3>
+  <p>Autotag for a link to a download information is available for articles and staticpages etc.</p>
+  <p>Tag format: [download:Download ID]</p>
+  <p>Ex: [download:custommenu_0.4.3]</p>
+  <p class="goto"><a href="#_top">Goto Top</a></p>
+
+
+
+
+  <h3><a name="_history">10) History</a></h3>
+  <table>
+    <tr>
+      <th style="width:10%">Version</th>
+      <th style="width:10%">Published</th>
+      <th style="width:80%">Description</th>
+    </tr>
+    <tr>
+      <td class="center">1.2.0</td>
+      <td class="center">2014.9.27</td>
+      <td>* Supported Geeklog 2.1.0.<br>
+          * Dropped support for Geeklog 1.7.2 or earlier.<br>
+          * Enabled the CKEditor and Timepicker for editing with Geeklog 2.1.0 or older.<br>
+          * Added the preview feature in the downloads info editor with restrictions.</td>
+    </tr>
+    <tr>
+      <td class="center">1.1.0</td>
+      <td class="center">2013.4.7</td>
+      <td>* Supported Geeklog 2.0.0.<br>
+          * Changed the template and style sheet to fit the Denim theme that supports responsive Web design.<br>
+          * Now possible to put tags to download information in cooperation with <a href="http://mystral-kk.net/filemgmt/index.php/38">Tag plugin(Ver 0.6.0 or later)</a>.</td>
+    </tr>
+    <tr>
+      <td class="center">1.0.4</td>
+      <td class="center">2011.9.28</td>
+      <td>* Fixed issue that could not select an access rights group from list.<br>
+          * Security policy was changed. Now, category management rights are owned by the root users only.</td>
+    </tr>
+    <tr>
+      <td class="center">1.0.3</td>
+      <td class="center">2011.3.6</td>
+      <td>* Fixed bug in the category select-box display on multi-language mode.<br>
+          * Fixed issue errors may occur when creating a category.<br>
+          * Fixed bug with link to download content from comment page.</td>
+    </tr>
+    <tr>
+      <td class="center">1.0.2</td>
+      <td class="center">2010.10.6</td>
+      <td>Fix of Version 1.0.1 was not enough, so fixed more.</td>
+    </tr>
+    <tr>
+      <td class="center">1.0.1</td>
+      <td class="center">2010.10.5</td>
+      <td>Fixed failure to specific name images or GIF format images conversion of fm2dm data converter.</td>
+    </tr>
+    <tr>
+      <td class="center">1.0.0</td>
+      <td class="center">2010.10.3</td>
+      <td>Initial version</td>
+    </tr>
+  </table>
+  <p class="goto"><a href="#_top">Goto Top</a></p>
+</body>
+</html>

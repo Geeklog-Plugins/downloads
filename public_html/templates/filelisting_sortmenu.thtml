@@ -1,0 +1,21 @@
+
+<!-- start filelisting_sortmenu.thtml -->
+<div class="header-listcontrol">
+<div>
+  <div class="sortby">
+    {lang_sortby}:&nbsp;
+    <div class="btn"><a href="{site_url}/downloads/index.php?cid={cid0}&amp;orderby=dated&amp;nppage={nppage}" class="{current_ord_d}">{lang_datenew}</a></div>
+    <div class="btn"><a href="{site_url}/downloads/index.php?cid={cid0}&amp;orderby=titlea&amp;nppage={nppage}" class="{current_ord_t}">{lang_titleatoz}</a></div>
+    <div class="btn"><a href="{site_url}/downloads/index.php?cid={cid0}&amp;orderby=hitsd&amp;nppage={nppage}" class="{current_ord_h}">{lang_popularitymtol}</a></div>
+    <div class="btn"><a href="{site_url}/downloads/index.php?cid={cid0}&amp;orderby=ratingd&amp;nppage={nppage}" class="{current_ord_r}">{lang_ratinghtol}</a></div>
+  </div>
+  <div class="perpage">
+    {lang_numperpage}:&nbsp;
+    <div class="btn"><a href="{site_url}/downloads/index.php?cid={cid0}&amp;orderby={orderby}&amp;nppage=5" class="{current_num_5}">5</a></div>
+    <div class="btn"><a href="{site_url}/downloads/index.php?cid={cid0}&amp;orderby={orderby}&amp;nppage=10" class="{current_num_10}">10</a></div>
+    <div class="btn"><a href="{site_url}/downloads/index.php?cid={cid0}&amp;orderby={orderby}&amp;nppage=20" class="{current_num_20}">20</a></div>
+    <div class="btn"><a href="{site_url}/downloads/index.php?cid={cid0}&amp;orderby={orderby}&amp;nppage=50" class="{current_num_50}">50</a></div>
+  </div>
+</div>
+</div>
+<!-- end filelisting_sortmenu.thtml -->

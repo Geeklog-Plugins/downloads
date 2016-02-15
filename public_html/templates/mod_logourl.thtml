@@ -1,0 +1,6 @@
+
+<!-- start mod_logourl.thtml -->
+      <dt><label for="downloads-logourl">{lang_shotimage}</label></dt>
+      <dd><input type="text" maxlength="250" name="logourl" value="{logourl}" id="downloads-logourl" size="48" class="size5"{xhtml}>{mod_tempsnap}
+          {preview}</dd>
+<!-- end mod_logourl.thtml -->

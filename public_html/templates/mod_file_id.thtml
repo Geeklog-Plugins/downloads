@@ -1,0 +1,5 @@
+
+<!-- start mod_file_id.thtml -->
+      <dt><label for="downloads-fileid">{lang_fileid}</label></dt>
+      <dd><input type="text" maxlength="40" name="lid" value="{lid}" id="downloads-fileid" size="48" class="size5"{xhtml}></dd>
+<!-- end mod_file_id.thtml -->

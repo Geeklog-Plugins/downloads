@@ -1,0 +1,834 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html lang="ja">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta http-equiv="Content-Style-Type" content="text/css">
+  <style type="text/css">
+  <!--
+    body {
+    font-family: Helvetica, Arial, sans-serif;
+    margin: 25px;
+    }
+
+    h1 {
+    font-size: 1.5em;
+    border-bottom: thin outset black;
+    }
+
+    h2 {
+    margin: 0 0 0.5em 0;
+    font-size: 1em;
+    }
+
+    h3 {
+    border-bottom: 1px solid #0033FF;
+    border-left: 6px solid #0033FF;
+    padding: 0.25em;
+    font-size: 1em;
+    }
+
+    h4 {
+    font-size: 0.85em;
+    font-weight: bold;
+    margin: 0.2em 0;
+    }
+
+    p {
+    font-size: 0.85em;
+    margin: 0.5em 0;
+    }
+
+    .attention {
+    color:#FF3300
+    }
+
+    .gray {
+    color:gray;
+    }
+
+    ul {
+    margin-top: 0.5em;
+    margin-bottom: 1em;
+    }
+
+    li {
+    font-size: 0.8em;
+    margin: 0.5em 0;
+    }
+
+    li p {
+    font-size: 0.8em;
+    margin: 0.5em 0;
+    }
+
+    .email {
+    padding-left: 1.3em;
+    font-size: small;
+    font-weight: normal;
+    }
+
+    pre {
+    padding: 0.2em;
+    border: 1px solid #BBBBBB;
+    background-color: #EEEEEE;
+    margin: 1em 1em 1em 3em;
+    overflow: auto;
+    font-size: 0.85em;
+    line-height: 1.5em;
+    }
+
+    table {
+    font-size: 0.8em;
+    border: solid 1px black;
+    border-collapse: collapse;
+    }
+
+    th,
+    td
+    {
+    border: solid 1px black;
+    padding: 5px;
+    }
+
+    span.comment {
+    color: green;
+    font-weight: bold;
+    }
+
+    .goto {
+    margin: 1em 0 1.5em 0.5em;
+    font-size: 0.8em;
+    }
+
+    .fix {
+    color: red;
+    font-weight: bold;
+    }
+
+    .new {
+    color: blue;
+    font-weight: bold;
+    }
+
+    .center {
+    text-align: center;
+    }
+
+    .snap {
+    border: 1px solid #000;
+    margin: 0px 0 20px 4em;
+    }
+
+    table {
+    width: 100%;
+    }
+
+    th {
+    background-color:#C0C0C0;
+    border: 1px solid #AAA;
+    }
+
+    td {
+    background-color:#F9F9F9;
+    border: 1px solid #AAA;
+    }
+
+    tr.r2 td {
+    background-color:#F0F0F0;
+    border: 1px solid #AAA;
+    }
+
+    em {
+    color: green;
+    font-weight: bold;
+    }
+  -->
+  </style>
+  <title>Geeklog Downloads プラグイン 説明書</title>
+</head>
+<body>
+
+  <h1><a name="_top">Downloads プラグイン</a></h1>
+  <h2>バージョン: 1.2.0</h2>
+  <h2>作成者: Yoshinori Tahara - dengen</h2>
+  <h2>公開日:&nbsp;2014.9.27</h2>
+  <h2>ライセンス:&nbsp;GPL v2</h2>
+  <h2>概要:</h2>
+  <ul>
+    <li>Downloads プラグインは、Geeklogサイトにダウンロードセクションを追加するものです。</li>
+    <li>有名な Filemgmt プラグインから派生したもので、様々な機能追加を行っています。</li>
+  </ul>
+
+
+
+
+  <h2>機能:</h2>
+  <ul>
+    <li>ダウンロードファイルの登録、修正、削除などを管理画面で行えます。</li>
+    <li>多階層のカテゴリーでダウンロードファイルを分類できます。</li>
+    <li>ダウンロードファイルにタグをつけられます。</li>
+    <li>ダウロードファイルの概要や詳細をHTMLテキストを使って自由に表現できます。</li>
+    <li>記事のようにアドバンストエディタで編集できます。</li>
+    <li>スナップショットのサムネール表示ができます。</li>
+    <li>多言語切り替え機能をサポートしています。</li>
+  </ul>
+
+
+
+
+  <h2>条件:</h2>
+  <ul>
+    <li>このプラグインは、Geeklog 1.8.0 以降用です。それより古いバージョンでは動作しません。</li>
+    <li>データベースは、MySQLのみサポートします。</li>
+  </ul>
+
+
+
+
+  <h2>注意:</h2>
+  <ul>
+    <li>ありません。</li>
+  </ul>
+
+
+
+
+  <h2>この説明のセクション:</h2>
+  <ul>
+    <li><a href="#_installation">１） インストール</a></li>
+    <li><a href="#_uninstallation">２） アンインストール</a></li>
+    <li><a href="#_conversion">３） データコンバート</a></li>
+    <li><a href="#_try_out">４） 使ってみる</a></li>
+    <li><a href="#_categoryman">５） カテゴリの管理</a></li>
+    <li><a href="#_downloadman">６） ダウンロード情報の管理</a></li>
+    <li><a href="#_configulation">７） コンフィギュレーション</a></li>
+    <li><a href="#_multilanguage">８） 多言語切り替え機能</a></li>
+    <li><a href="#_autotag">９） 自動タグ</a></li>
+    <li><a href="#_history">１０） 改訂履歴</a></li>
+  </ul>
+
+
+
+
+  <h3><a name="_installation">１） インストール</a></h3>
+  <p class="attention">インストールには、手動でプラグイン用のディレクトリを作成し、適切なディレクトリへファイルをコピーする必要があります。</p>
+  <p>以下の説明で、</p>
+  <ul style="margin:0.5em 0">
+    <li><em>&lt;geeklog_dir&gt;</em> は、システムの db-config.php が存在するディレクトリ</li>
+    <li><em>&lt;public_html&gt;</em> は、lib-common.php が存在するディレクトリ</li>
+    <li><em>&lt;admin&gt;</em> は、管理者用ファイルが存在するディレクトリ（普通は、<em>&lt;public_html&gt;</em>/admin/ ）</li>
+  </ul>
+  <p style="margin-bottom:1.2em">を表しています。</p>
+  <h4>Step 1 -&nbsp;データベースのバックアップ</h4>
+  <ul>
+    <li>Downloads プラグインはテーブルを追加するので、管理者メニューの「DBのバックアップ」や phpMyAdmin
+    を使用して、事前に Geeklog のデータベースをバックアップしておきます。</li>
+  </ul>
+  <h4>Step 2 -&nbsp;アーカイブの展開</h4>
+  <ul>
+    <li>Downloads プラグインのアーカイブを <em>&lt;geeklog_dir&gt;</em>/plugins ディレクトリに展開します。downloads という名前のディレクトリができます。</li>
+  </ul>
+  <h4>Step 3 -&nbsp;必要なディレクトリの作成</h4>
+  <ul>
+    <li><em>&lt;public_html&gt;</em> ディレクトリの下に downloads という名前のディレクトリを作ります。</li>
+    <li><em>&lt;admin&gt;</em>/plugins/ ディレクトリの下にも downloads という名前のディレクトリを作ります。</li>
+  </ul>
+  <h4>Step 4 -&nbsp;必要なファイルのコピー</h4>
+  <ul>
+    <li><span class="geeklog"><em>&lt;geeklog_dir&gt;</em></span>/plugins/downloads/ ディレクトリに移動します。</li>
+    <li>admin ディレクトリの内容を、Step 3 で作成した <span class="admin"><em>&lt;admin&gt;</em></span>/plugins/downloads/ ディレクトリにコピーします。</li>
+    <li>public_html ディレクトリの内容を、Step 3 で作成した <span class="public"><em>&lt;public_html&gt;</em></span>/downloads/ ディレクトリにコピーします。</li>
+  </ul>
+
+  <h4>Step 5 - ファイルリポジトリ用ディレクトリの作成</h4>
+  <ul>
+    <li>次のディレクトリを<em>&lt;public_html&gt;</em> ディレクトリの下に作ります。</li>
+  </ul>
+  <ul style="margin-left:3em">
+    <li>downloads_data</li>
+    <li>downloads_data/category_snaps</li>
+    <li>downloads_data/files</li>
+    <li>downloads_data/snaps</li>
+    <li>downloads_data/tn</li>
+  </ul>
+  <ul>
+    <li><em>&lt;geeklog_dir&gt;</em>/plugins/downloads/downloads_data ディレクトリを <em>&lt;public_html&gt;</em> ディレクトリの下にコピーしても良いでしょう。</li>
+    <li><span class="attention">Webサーバーが書き込めるように、ディレクトリのパーミッションを設定します。Webサーバーの設定により、パーミッションを744, 754 または 777 に設定します。</span></li>
+  </ul>
+
+  <h4>Step 6 - プラグインエディタでインストールの実行</h4>
+  <ul>
+    <li>Root ユーザとしてログインし、プラグインエディタから Downloads のインストールを実行します。</li>
+    <li>失敗した場合には、エラーログ（ error.log ）を調べます。</li>
+    <li>これで、Downloads プラグインはインストールされました。</li>
+    <li>投稿管理メニューまたはサイドバーのメニューから、「ダウンロード」をクリックすると、「ダウンロード管理」ページが表示されるでしょう。</li>
+  </ul>
+  <p class="goto"><a href="#_top">Goto Top</a></p>
+
+
+
+
+  <h3><a name="_uninstallation">２） アンインストール</a></h3>
+  <h4>Step 1 - データベースのバックアップ</h4>
+  <ul>
+    <li>Downloads プラグインはアンインストール時に、Downloads プラグインが使用していたテーブルを破棄するので、管理者メニューの「DBのバックアップ」や
+    phpMyAdmin を使用して、事前に Geeklog のデータベースをバックアップしておくことをお勧めします。</li>
+  </ul>
+  <h4>Step 2 - プラグインエディタでアンインストールの実行</h4>
+  <ul>
+    <li>プラグインエディタから、Downloads をアンインストールします。このとき、Downloads
+    プラグインが使用していたテーブルは破棄され、その中に記録されていたデータも削除されます。</li>
+  </ul>
+  <h4>Step 3 - ディレクトリの削除</h4>
+  <ul>
+    <li>インストールの過程で作成した3つのディレクトリ（ &lt;geeklog-dir&gt;/plugins/downloads/ 、<em>&lt;public_html&gt;</em>/downloads/
+    、<em>&lt;admin&gt;</em>/plugins/downloads/ ）を削除します。</li>
+  </ul>
+  <h4>Step 4 - ファイルリポジトリ用ディレクトリの削除</h4>
+  <ul>
+    <li>1) - Step5 で作成したディレクトリを削除します。</li>
+  </ul>
+  <p class="goto"><a href="#_top">Goto Top</a></p>
+
+
+
+
+  <h3><a name="_conversion">３） データコンバート</a></h3>
+  <p>Downloads プラグインは、Filemgmt プラグインからデータを引き継ぐためのスクリプトを提供します。</p>
+  <p>Rootユーザとしてサイトにログインし、http://your_site/admin/plugins/downloads/<span class="attention">fm2dm.php</span> にアクセスして、指示に従ってください。</p>
+  <p class="goto"><a href="#_top">Goto Top</a></p>
+
+
+
+
+  <h3><a name="_try_out">４） 使ってみる</a></h3>
+  <p>Downloads プラグインを、早速、使ってみましょう。</p>
+  <h4>Step 1 - ダウロード管理画面を表示</h4>
+  <ul>
+    <li>管理者専用メニューから「ダウンロード」をクリックします。</li>
+  </ul>
+  <p><img src="./images/snap_01_ja.png" alt="Step 01" title="Step 01" class="snap"></p>
+
+
+  <h4>Step 2 - カテゴリの追加</h4>
+  <ul>
+    <li>少なくとも１つ以上のカテゴリを作成する必要があります。</li>
+    <li>「カテゴリの追加」をクリックします。</li>
+  </ul>
+  <p><img src="./images/snap_02_ja.png" alt="Step 02" title="Step 02" class="snap"></p>
+  <ul>
+    <li>「カテゴリの追加」画面で「カテゴリID」、「タイトル」を入力し、「保存」ボタンをクリックします。</li>
+  </ul>
+  <p><img src="./images/snap_03_ja.png" alt="Step 03" title="Step 03" class="snap"></p>
+  <ul>
+    <li>これでカテゴリが追加されました。</li>
+  </ul>
+  <p><img src="./images/snap_04_ja.png" alt="Step 04" title="Step 04" class="snap"></p>
+
+
+  <h4>Step 3 - ダウンロードファイルの追加</h4>
+  <ul>
+    <li>ダウンロードの対象となるファイル（の情報）を追加します。</li>
+    <li>「ファイルの追加」をクリックします。</li>
+  </ul>
+  <p><img src="./images/snap_05_ja.png" alt="Step 05" title="Step 05" class="snap"></p>
+  <ul>
+    <li>最低限必要な「タイトル」、「ファイルID」、「ファイル名」、「カテゴリ」、「説明」を入力し、「追加」ボタンをクリックします。</li>
+    <li>「カテゴリ」はStep 2で作成したカテゴリが既に選択されています。</li>
+  </ul>
+  <p><img src="./images/snap_06_ja.png" alt="Step 06" title="Step 06" class="snap"></p>
+  <ul>
+    <li>これでダウンロードファイルが追加されました。</li>
+  </ul>
+  <p><img src="./images/snap_07_ja.png" alt="Step 07" title="Step 07" class="snap"></p>
+
+
+  <h4>Step 4 - ダウンロードセクションの表示</h4>
+  <ul>
+    <li>ヘッダーメニューから「ダウンロード」クリックしてみてください。</li>
+    <li>ダウンロードセクションが表示されます。カテゴリリストとファイルリストで構成されています。</li>
+  </ul>
+  <p><img src="./images/snap_08_ja.png" alt="Step 08" title="Step 08" class="snap"></p>
+
+
+
+
+  <h3><a name="_categoryman">５） カテゴリの管理</a></h3>
+  <p>カテゴリの編集で設定する項目を以下に示します。</p>
+  <table>
+      <tr>
+        <th>項目</th>
+        <th>説明</th>
+      </tr>
+      <tr>
+        <td>カテゴリID</td>
+        <td>カテゴリのIDを設定します。半角英数、ハイフン、アンダーラインを用います。カテゴリIDの重複は許されません。<br>
+        Geeklogサイトを多言語モードで運用する場合、カテゴリIDに言語IDを付加する必要があります。（例:cat<span style="color:red; font-weight:bold">_en</span>, cat<span style="color:red; font-weight:bold">_ja</span> ...）</td>
+      </tr>
+      <tr class="r2">
+        <td>タイトル</td>
+        <td>カテゴリのタイトルを設定します。</td>
+      </tr>
+      <tr>
+        <td>カテゴリ画像</td>
+        <td>カテゴリ画像（アイコン）のファイル名を設定します。<br>
+        「アップロード」をクリックし、新たにカテゴリ画像をアップロードすることができます。</td>
+      </tr>
+      <tr class="r2">
+        <td>上位カテゴリ</td>
+        <td>上位階層のカテゴリを選択します。</td>
+      </tr>
+      <tr>
+        <td>順序</td>
+        <td>カテゴリリストにおける順番を設定します。なお、自動的に10づつの値に調整されます。</td>
+      </tr>
+      <tr class="r2">
+        <td>有効</td>
+        <td>カテゴリの有効/無効を切り替えます。<br>無効にしたカテゴリ、下位に属するカテゴリ、配下のダウンロードファイルはダウンロードセクションに表示されません。</td>
+      </tr>
+  </table>
+  <p class="goto"><a href="#_top">Goto Top</a></p>
+
+
+
+
+  <h3><a name="_downloadman">６） ダウンロード情報の管理</a></h3>
+  <p>ダウンロード情報の編集で設定する項目を以下に示します。</p>
+  <table>
+      <tr>
+        <th>項目</th>
+        <th>説明</th>
+      </tr>
+      <tr>
+        <td>提供者</td>
+        <td>ダウンロードファイルの提供者です。自動的に設定されます。</td>
+      </tr>
+      <tr class="r2">
+        <td>タイトル</td>
+        <td>ダウンロードファイルのタイトルを設定します。</td>
+      </tr>
+      <tr>
+        <td>ファイルID</td>
+        <td>ダウンロードファイルのIDを設定します。半角英数、ハイフン、アンダーラインを用います。ファイルIDの重複は許されません。</td>
+      </tr>
+      <tr class="r2">
+        <td>ファイル名</td>
+        <td>ダウンロードファイルのファイル名を設定します。<br>
+        「アップロード」をクリックし、ダウンロードファイルをアップロードして取り替えることができます。</td>
+      </tr>
+      <tr>
+        <td>カテゴリ</td>
+        <td>ダウンロードファイルが属するカテゴリを選択します。</td>
+      </tr>
+      <tr class="r2">
+        <td>タグ</td>
+        <td>タグを空白文字で区切って設定します。<br>
+        タグを有効にするために、mystral-kkさんが公開している<a href="http://mystral-kk.net/filemgmt/index.php/38">タグプラグイン(Ver 0.6.0以降)</a>をインストールしてください。</td>
+      </tr>
+      <tr>
+        <td>Web</td>
+        <td>提供者のホームページなど、インターネット上のURLを設定します。<br>
+        初期値として、ユーザーの個人情報のホームページURLが設定されます。</td>
+      </tr>
+      <tr class="r2">
+        <td>バージョン</td>
+        <td>ダウンロードファイルのバージョン番号を設定します。</td>
+      </tr>
+      <tr>
+        <td>ファイルサイズ</td>
+        <td>ダウンロードファイルのファイルサイズです。自動的に設定されます。</td>
+      </tr>
+      <tr class="r2">
+        <td>MD5値</td>
+        <td>ダウンロードファイルのMD5値です。自動的に設定されます。</td>
+      </tr>
+      <tr>
+        <td>説明</td>
+        <td>ダウンロードファイルの説明を設定します。簡潔に記述することをお奨めします。<br>
+        投稿モードが[HTML]または[アドバンストエディタ]のとき、HTMLテキストで記述できます。</td>
+      </tr>
+      <tr class="r2">
+        <td>詳細</td>
+        <td>ダウンロードファイルの詳細を設定します。<br>
+        投稿モードが[HTML]または[アドバンストエディタ]のとき、HTMLテキストで記述できます。</td>
+      </tr>
+      <tr>
+        <td>投稿モード</td>
+        <td>説明および詳細の投稿モードを選択します。<br>
+        [テキスト] : プレーンテキスト<br>[HTML] : HTMLテキスト<br>[アドバンストエディタ] : HTMLテキストをアドバンストエディタで編集<br>[Wikiテキスト] : Wikiテキスト</td>
+      </tr>
+      <tr class="r2">
+        <td>ファイル画像</td>
+        <td>ファイル画像（スナップショット）のファイル名を設定します。<br>
+        「アップロード」をクリックし、新たにファイル画像をアップロードすることができます。</td>
+      </tr>
+      <tr>
+        <td>MG 自動タグ</td>
+        <td>メディアギャラリーの自動タグを設定します。<br>
+        MG 自動タグが設定されていると、ファイル画像（スナップショット）はMG 自動タグから生成される画像に置き換わります。<br>
+        この項目は、コンフィギュレーションで「MG自動タグを有効にする」が「はい」に設定されているときに表示されます。</td>
+      </tr>
+      <tr class="r2">
+        <td>コメントモード</td>
+        <td>コメント機能の動作を選択します。<br>
+        [コメント有効] : コメントの投稿を許可<br>[コメント停止] : コメントの投稿を停止<br>[コメント終了] : コメントの投稿を終了</td>
+      </tr>
+      <tr>
+        <td>公開</td>
+        <td>インターネットでのダウンロード情報の公開/非公開を選択します。<br>
+        [はい] : ダウンロード情報を公開する（アクセス可）<br>[いいえ] : ダウンロード情報を非公開にする（アクセス不可）</td>
+      </tr>
+      <tr class="r2">
+        <td>ファイルリストに掲載</td>
+        <td>ダウンロード情報をファイルリストへ掲載するかどうかを選択します。<br>
+        [はい] : ダウンロード情報をファイルリストへ掲載する<br>[いいえ] : ダウンロード情報をファイルリストへ掲載しない<br>
+        この選択はインターネットでのアクセスの可否とは無関係です。</td>
+      </tr>
+      <tr>
+        <td>公開日</td>
+        <td>ダウンロード情報の公開日を設定します。<br>
+        未来の日付を設定すると、その日付が過ぎるまで公開されません。</td>
+      </tr>
+      <tr class="r2">
+        <td>プロジェクト名</td>
+        <td>ダウンロードファイルのプロジェクト名を設定します。</td>
+      </tr>
+
+  </table>
+  <p class="goto"><a href="#_top">Goto Top</a></p>
+
+
+
+
+  <h3><a name="_configulation">７） コンフィギュレーション</a></h3>
+  <p>Downloads プラグインの設定は、「管理者用メニュー - コンフィギュレーション - ダウンロード」から変更できます。</p>
+  <h4 style="margin-top:10px;">メイン - ダウンロードのメイン設定</h4>
+  <table>
+      <tr>
+        <th style="width:25%">項目</th>
+        <th style="width:20%">初期値</th>
+        <th style="width:55%">説明</th>
+      </tr>
+      <tr>
+        <td>ログインを要求する<br><span class="gray">(loginrequired)</span></td>
+        <td>いいえ(0)</td>
+        <td>はい(1)にすると、登録ユーザしかダウンロードセクションにアクセスできなくなります。<br>
+この設定値よりも、「コンフィギュレーション - Geeklog - ユーザと投稿」の「すべてにログインを要求する(loginrequired)」の設定の方が優先されます。</td>
+      </tr>
+      <tr class="r2">
+        <td>メニューに表示しない<br><span class="gray">(hidemenu)</span></td>
+        <td>いいえ(0)</td>
+        <td>はい(1)にすると、サイトのメニューに「ダウンロード」を表示しません。</td>
+      </tr>
+      <tr>
+        <td>所有者の削除と共に削除する<br><span class="gray">(delete_download)</span></td>
+        <td>いいえ(0)</td>
+        <td>はい(1)にすると、ダウンロード情報の所有者のアカウントが削除されたときに、所有していたすべてのダウンロード情報が削除されます。<br>いいえ(0)にすると、Rootグループに属するユーザ（たとえば、サイトの管理者）に引き継がれます。</td>
+      </tr>
+      <tr class="r2">
+        <td>1ページあたりのファイル表示件数<br><span class="gray">(download_perpage)</span></td>
+        <td>5</td>
+        <td>1ページごとに表示するダウンロード情報の数を設定します。</td>
+      </tr>
+      <tr>
+        <td>人気を判断するヒット数のしきい値<br><span class="gray">(download_popular)</span></td>
+        <td>20</td>
+        <td>ダウンロード数がこの値以上になると「pop」アイコンが表示されます。</td>
+      </tr>
+      <tr class="r2">
+        <td>登録ユーザのアップロードを許可する<br><span class="gray">(download_uploadselect)</span></td>
+        <td>いいえ(0)</td>
+        <td>はい(1)にすると、登録ユーザはファイルのアップロード（投稿）ができるようになります。<br>いいえ(0)にすると、&#039;downloads.upload&#039;権限を持つユーザだけがアップロードできます。</td>
+      </tr>
+      <tr>
+        <td>ファイル承認をメールで通知する<br><span class="gray">(download_emailoption)</span></td>
+        <td>はい(1)</td>
+        <td>はい(1)にすると、ファイルアップロード（投稿）が承認されたときに、その結果をアップロードしたユーザへメールで通知します。</td>
+      </tr>
+      <tr class="r2">
+        <td>ファイルのパーミッション<br><span class="gray">(filepermissions)</span></td>
+        <td>755</td>
+        <td>アップロードしたファイルのパーミッションを3桁の数字で設定します。</td>
+      </tr>
+      <tr>
+        <td>デフォルトの投稿モード<br><span class="gray">(postmode)</span></td>
+        <td>テキスト(plaintext)</td>
+        <td>ダウンロード情報の説明および詳細の投稿モードの規定値を設定します。<br>&#039;テキスト(plaintext)&#039; : プレーンテキスト<br>&#039;HTML(html)&#039; : HTMLテキスト<br>&#039;アドバンストエディタ(adveditor)&#039; : HTMLテキストをアドバンストエディタで編集<br>&#039;Wikiテキスト(wikitext)&#039; : Wikiテキスト</td>
+      </tr>
+      <tr class="r2">
+        <td>MG自動タグを有効にする<br><span class="gray">(enabled_mg_autotag)</span></td>
+        <td>いいえ(0)</td>
+        <td>はい(1)にすると、Media Gallery プラグインの画像やアルバムをファイル画像（スナップショット）として使用できるようになります。<br>その際、Media Gallery プラグインの自動タグで設定します。</td>
+      </tr>
+  </table>
+
+  <h4 style="margin-top:10px;">メイン - サムネール画像</h4>
+  <table>
+      <tr>
+        <th style="width:25%">項目</th>
+        <th style="width:20%">初期値</th>
+        <th style="width:55%">説明</th>
+      </tr>
+      <tr>
+        <td>サムネール画像を表示する<br><span class="gray">(show_tn_image)</span></td>
+        <td>はい(1)</td>
+        <td>いいえ(0)にすると、ファイル画像（スナップショット）のサムネール画像を表示しません。その代わりにファイル画像へのリンクアイコンを表示します。</td>
+      </tr>
+      <tr>
+        <td>存在する画像のみ表示する<br><span class="gray">(show_tn_only_exists)</span></td>
+        <td>いいえ(0)</td>
+        <td>はい(1)にすると、ファイル画像（スナップショット）のが登録されている場合のみ、サムネール画像を表示します。</td>
+      </tr>
+      <tr class="r2">
+        <td>最大幅<br><span class="gray">(max_tnimage_width)</span></td>
+        <td>200</td>
+        <td>サムネール画像の最大幅を設定します。</td>
+      </tr>
+      <tr>
+        <td>最大高<br><span class="gray">(max_tnimage_height)</span></td>
+        <td>200</td>
+        <td>サムネール画像の最大高を設定します。</td>
+      </tr>
+      <tr class="r2">
+        <td>ファイル形式<br><span class="gray">(tnimage_format)</span></td>
+        <td>PNG(png)</td>
+        <td>サムネール画像のファイル形式を設定します。<br>JPEG(jpeg) : JPEG形式<br>PNG(png) : PNG形式</td>
+      </tr>
+  </table>
+
+  <h4 style="margin-top:10px;">メイン - カテゴリ</h4>
+  <table>
+      <tr>
+        <th style="width:25%">項目</th>
+        <th style="width:20%">初期値</th>
+        <th style="width:55%">説明</th>
+      </tr>
+      <tr>
+        <td>カテゴリ画像を表示する<br><span class="gray">(download_useshots)</span></td>
+        <td>はい(1)</td>
+        <td>いいえ(0)にすると、カテゴリ画像を表示しません。</td>
+      </tr>
+      <tr class="r2">
+        <td>カテゴリ画像の幅<br><span class="gray">(download_shotwidth)</span></td>
+        <td>32</td>
+        <td>カテゴリ画像の幅を設定します。</td>
+      </tr>
+  </table>
+
+  <h4 style="margin-top:10px;">メイン - 新着情報ブロック</h4>
+  <table>
+      <tr>
+        <th style="width:25%">項目</th>
+        <th style="width:20%">初期値</th>
+        <th style="width:55%">説明</th>
+      </tr>
+      <tr>
+        <td>新着ファイルを表示する<br><span class="gray">(download_whatsnew)</span></td>
+        <td>はい(1)</td>
+        <td>いいえ(0)にすると、新規ダウンロードが新着情報ブロックに表示されなくなります。</td>
+      </tr>
+      <tr class="r2">
+        <td>新着ファイルの表示件数<br><span class="gray">(download_newdownloads)</span></td>
+        <td>10</td>
+        <td>新着情報ブロックに表示する新規ダウンロードの数を設定します。</td>
+      </tr>
+      <tr>
+        <td>新着ファイルと見なす日数<br><span class="gray">(whatsnew_perioddays)</span></td>
+        <td>14</td>
+        <td>ダウンロード情報が登録されてどれくらいの間、新着とみなされ、サイトの新着情報ブロックに表示されるかを決める期間を設定します（単位：日）。</td>
+      </tr>
+  </table>
+
+  <h4 style="margin-top:10px;">メイン - ダウンロード履歴</h4>
+  <table>
+      <tr>
+        <th style="width:25%">項目</th>
+        <th style="width:20%">初期値</th>
+        <th style="width:55%">説明</th>
+      </tr>
+      <tr>
+        <td>ダウンロード履歴の閲覧許可<br><span class="gray">(download_dlreport)</span></td>
+        <td>ダウンロード編集者まで(editor)</td>
+        <td>ダウンロード履歴の閲覧を許される対象者を設定します。<br>&#039;ダウンロード編集者まで(editor)&#039; : &#039;downloads.editor&#039;権限を持つユーザまで許可します。<br>&#039;全てのユーザ(all)&#039; : 全てのユーザに許可します。<br>&#039;登録ユーザ(user)&#039; : 登録ユーザまで許可します。</td>
+      </tr>
+      <tr class="r2">
+        <td>所有者自らのダウンロードを無視<br><span class="gray">(cut_own_download)</span></td>
+        <td>はい(1)</td>
+        <td>いいえ(0)にすると、所有者自らがダウンロードしても、ダウンロード履歴として記録されません。</td>
+      </tr>
+  </table>
+
+  <h4 style="margin-top:10px;">その他 - リポジトリのパス</h4>
+  <table>
+      <tr>
+        <th style="width:25%">項目</th>
+        <th style="width:20%">初期値</th>
+        <th style="width:55%">説明</th>
+      </tr>
+      <tr>
+        <td>ファイル<br><span class="gray">(path_filestore)</span></td>
+        <td><em>&lt;public_html&gt;</em>/downloads_data/files/</td>
+        <td>ダウンロードファイルを保存するリポジトリのパスを設定します。<br>セキュリティに配慮して非公開領域のパスを設定可能です。</td>
+      </tr>
+      <tr class="r2">
+        <td>ファイル画像<br><span class="gray">(path_snapstore)</span></td>
+        <td><em>&lt;public_html&gt;</em>/downloads_data/snaps/</td>
+        <td>ファイル画像を保存するリポジトリのパスを設定します。<br>必ず公開領域のパスを設定してください。</td>
+      </tr>
+      <tr>
+        <td>カテゴリ画像<br><span class="gray">(path_snapcat)</span></td>
+        <td><em>&lt;public_html&gt;</em>/downloads_data/category_snaps/</td>
+        <td>カテゴリ画像を保存するリポジトリのパスを設定します。<br>必ず公開領域のパスを設定してください。</td>
+      </tr>
+      <tr class="r2">
+        <td>サムネール画像<br><span class="gray">(path_tnstore)</span></td>
+        <td><em>&lt;public_html&gt;</em>/downloads_data/tn/</td>
+        <td>サムネール画像を保存するリポジトリのパスを設定します。<br>必ず公開領域のパスを設定してください。</td>
+      </tr>
+  </table>
+
+  <h4 style="margin-top:10px;">その他 - リポジトリのURL</h4>
+  <table>
+      <tr>
+        <th style="width:25%">項目</th>
+        <th style="width:20%">初期値</th>
+        <th style="width:55%">説明</th>
+      </tr>
+      <tr>
+        <td>ファイル画像<br><span class="gray">(snapstore_url)</span></td>
+        <td>http://your_site/downloads_data/snaps</td>
+        <td>ファイル画像を保存するリポジトリのURLを設定します。</td>
+      </tr>
+      <tr class="r2">
+        <td>カテゴリ画像<br><span class="gray">(snapcat_url)</span></td>
+        <td>http://your_site/downloads_data/category_snaps</td>
+        <td>カテゴリ画像を保存するリポジトリのURLを設定します。</td>
+      </tr>
+      <tr>
+        <td>サムネール画像<br><span class="gray">(tnstore_url)</span></td>
+        <td>http://your_site/downloads_data/tn</td>
+        <td>サムネール画像を保存するリポジトリのURLを設定します。</td>
+      </tr>
+  </table>
+
+  <h4 style="margin-top:10px;">その他 - カテゴリのデフォルトパーミッション</h4>
+  <table>
+      <tr>
+        <th style="width:25%">項目</th>
+        <th style="width:20%">初期値</th>
+        <th style="width:55%">説明</th>
+      </tr>
+      <tr>
+        <td>パーミッション[0]</td>
+        <td>表示・編集</td>
+        <td>所有者のパーミッションを設定します。この値がカテゴリ作成時の初期値となります。</td>
+      </tr>
+      <tr class="r2">
+        <td>パーミッション[1]</td>
+        <td>表示</td>
+        <td>グループのパーミッションを設定します。この値がカテゴリ作成時の初期値となります。</td>
+      </tr>
+      <tr>
+        <td>パーミッション[2]</td>
+        <td>表示</td>
+        <td>メンバーのパーミッションを設定します。この値がカテゴリ作成時の初期値となります。</td>
+      </tr>
+      <tr class="r2">
+        <td>パーミッション[3]</td>
+        <td>表示</td>
+        <td>ゲストのパーミッションを設定します。この値がカテゴリ作成時の初期値となります。</td>
+      </tr>
+  </table>
+  <p class="goto"><a href="#_top">Goto Top</a></p>
+
+
+
+
+  <h3><a name="_multilanguage">８） 多言語切り替え機能</a></h3>
+  <p>DownloadsプラグインはGeeklogの多言語切り替え機能をサポートします。</p>
+  <p>DownloadsプラグインではカテゴリIDの末尾に言語IDを付加する方法を採用しています。</p>
+  <p>多言語切り替え機能の詳細については以下のWikiを参照してください。</p>
+  <ul>
+  <li><a href="http://wiki.geeklog.jp/index.php/Multi-Language_Support#.E3.83.96.E3.83.AD.E3.83.83.E3.82.AF">http://wiki.geeklog.jp/index.php/Multi-Language_Support#.E3.83.96.E3.83.AD.E3.83.83.E3.82.AF</a> (日本語)</li>
+  <li><a href="http://wiki.geeklog.net/index.php/Multilingual_Support">http://wiki.geeklog.net/index.php/Multilingual_Support</a> (英語)</li>
+  </ul>
+  <p>一例として、英語と日本語を切り替える場合の使用方法を示します。</p>
+  <ul>
+  <li>カテゴリ管理画面で言語ごとにカテゴリを作成します。</li>
+  <li>そして「カテゴリID」を、例えば次のように設定します。</li>
+  </ul>
+  <pre><code>plugin_en
+plugin_ja</code></pre>
+  <ul>
+  <li>ここで添字&quot;_en&quot;を付加したものは英語モードで、添字&quot;_ja&quot;を付加したものは日本語モードで表示されます。</li>
+  <li>そして、それぞれのカテゴリに属する、2つのダウンロード情報を作成します。英語用と日本語用の2つです。</li>
+  <li>これで完了です。ユーザ設定で言語を切り替えてみてください。</li>
+  </ul>
+  <p class="goto"><a href="#_top">Goto Top</a></p>
+
+
+
+
+  <h3><a name="_autotag">９） 自動タグ</a></h3>
+  <p>ダウンロード情報へのリンクを自動タグ（Autotag）を使用して記事などへ埋め込むことができます。</p>
+  <p>タグ書式： [download:ダウンロードID]</p>
+  <p>例： [download:custommenu_0.4.3]</p>
+  <p class="goto"><a href="#_top">Goto Top</a></p>
+
+
+
+
+  <h3><a name="_history">１０） 改訂履歴</a></h3>
+  <table>
+    <tr>
+      <th style="width:10%">バージョン</th>
+      <th style="width:10%">公開日</th>
+      <th style="width:80%">説明</th>
+    </tr>
+    <tr>
+      <td class="center">1.2.0</td>
+      <td class="center">2014.9.27</td>
+      <td>* Geeklog 2.1.0に対応しました。<br>
+          * Geeklog 1.7.2以前のサポートを廃止しました。<br>
+          * Geeklog 2.1.0上では編集時にCKEditorとTimepickerが使用可能になりました。<br>
+          * 制限付きながらダウンロード情報の編集画面にプレビュー機能を追加しました。</td>
+    </tr>
+    <tr>
+      <td class="center">1.1.0</td>
+      <td class="center">2013.4.7</td>
+      <td>* Geeklog 2.0.0に対応しました。<br>
+          * レスポンシブWebデザインのDenimテーマに合わせてテンプレートとスタイルシートを変更しました。<br>
+          * <a href="http://mystral-kk.net/filemgmt/index.php/38">タグプラグイン(Ver 0.6.0以降)</a>と連携してダウンロード情報にタグを付けられるようになりました。</td>
+    </tr>
+    <tr>
+      <td class="center">1.0.4</td>
+      <td class="center">2011.9.28</td>
+      <td>* カテゴリの編集の際、アクセス権のうちグループの選択ができない問題を修正しました。<br>
+          * セキュリティーポリシーを変更しました。カテゴリ管理の権限はルートユーザだけが所有するようになりました。</td>
+    </tr>
+    <tr>
+      <td class="center">1.0.3</td>
+      <td class="center">2011.3.6</td>
+      <td>* 多言語モードでのカテゴリ選択ボックスの表示に関するバグを修正しました。<br>
+          * カテゴリ作成時にエラーが発生する場合がある問題を修正しました。<br>
+          * ダウンロードコンテンツのコメントのリンクに関するバグを修正しました。</td>
+    </tr>
+    <tr>
+      <td class="center">1.0.2</td>
+      <td class="center">2010.10.6</td>
+      <td>バージョン1.0.1の修正が不十分だったので、さらに修正しました。</td>
+    </tr>
+    <tr>
+      <td class="center">1.0.1</td>
+      <td class="center">2010.10.5</td>
+      <td>fm2dmコンバータで、特定のファイル名やGIF画像形式のスナップ画像のコンバートに失敗する問題を修正しました。</td>
+    </tr>
+    <tr>
+      <td class="center">1.0.0</td>
+      <td class="center">2010.10.3</td>
+      <td>初期バージョン</td>
+    </tr>
+  </table>
+  <p class="goto"><a href="#_top">Goto Top</a></p>
+</body>
+</html>

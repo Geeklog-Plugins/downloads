@@ -1,0 +1,15 @@
+
+<!-- start regvoteitem.thtml -->
+        <tr class="pluginRow{cssid}">
+          <td>{ratinguname}</td>
+          <td>{ratinghostname}</td>
+          <td>{rating}</td>
+          <td>{useravgrating}</td>
+          <td>{uservotes}</td>
+          <td>{formatted_date}</td>
+          <td style="text-align:right;padding-right:20px;">
+            <input type="image" src="{site_url}/downloads/images/delete.gif"
+            onclick="if (confirm('Delete this record')) {this.form.op.value='delVote';this.form.lid.value='{lid}';this.form.rid.value='{ratingid}';return true};return false;" value="Delete"></input>
+          </td>
+        </tr>
+<!-- end regvoteitem.thtml -->

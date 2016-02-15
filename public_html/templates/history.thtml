@@ -1,0 +1,55 @@
+
+<!-- start vote.thtml -->
+<form method="post" action="ratefile.php">
+    <div style="width:100%" class="plugin">
+        <p class="pluginHeader" style="padding:10px 0 0 10px;">{lang_file}:&nbsp;{val_title}</p>
+        <p style="padding:0 0 0 10px;">{lang_ratefiletitle}</p>
+        <ul>
+            <li>{lang_voteonce}</li>
+            <li>{lang_ratingscale}</li>
+            <li>{lang_beobjective}</li>
+            <li>{lang_donotvote}</li>
+        </ul>
+        <div style="text-align:center; padding-bottom:10px;">
+            <p>
+              <select name="rating">
+                {option_list}
+              </select>
+            </p>
+            <input type="submit" name="submit" value="{lang_rateit}"{xhtml}>
+            <input type="button" value="{lang_cancel}" onclick="javascript:history.go(-1)"{xhtml}>
+            <input type="hidden" name="lid" value="{val_lid}"{xhtml}>
+        </div>
+    </div>
+</form>
+<!-- end vote.thtml -->
+
+<table width='100%' border='0' cellspacing='1' cellpadding='4' class='plugin'>
+    <tr>
+        <td colspan='3'>
+            <center><h2>{lang_downloadreport}</h2></center>
+        </td>
+    </tr>
+    <tr>
+        <td colspan='3'>
+            <h4>File: " .$dtitle ."</h4>
+        </td>
+    </tr>
+    <tr>
+        <td bgcolor='#000000' width='20%'>
+            <b><center><font color='#ffffff' size='3'>Date</font></center></b>
+        </td>
+        <td bgcolor='#000000' width='20%'>
+            <b><center><font color='#ffffff' size='3'>User</font></center></b>
+        </td>
+        <td bgcolor='#000000' width='20%'>
+            <b><center><font color='#ffffff' size='3'>Remote IP</font></center></b>
+        </td>
+    </tr>
+    <tr>
+        <td bgcolor='#f5f5f5' width=20%>{date}</td>
+        <td bgcolor='#f5f5f5' width=20%>{username}</td>
+        <td bgcolor='#f5f5f5' width=20%>{remote_ip}</td>
+    </tr>
+</table>
+<br>
