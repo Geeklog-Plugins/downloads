@@ -1021,7 +1021,11 @@ function plugin_itemlist_downloads()
     if (plugin_ismoderator_downloads()) {
         $plugin = new Plugin();
         $plugin->submissionlabel = $LANG_DLM['download_submissions'];
-        if (file_exists($_CONF['path_html'] . 'help/ccdownloadsubmission.html')) {
+        if (COM_VersionCompare(VERSION, '2.1.2')) { // updated help feature for multiple languages only support in 2.1.2+
+            if (file_exists($_CONF['path_html'] . 'help/ccdownloadsubmission.html')) {
+                $plugin->submissionhelpfile = 'ccdownloadsubmission.html';
+            }
+        } else {
             $plugin->submissionhelpfile = 'ccdownloadsubmission.html';
         }
         $plugin->getsubmissionssql
