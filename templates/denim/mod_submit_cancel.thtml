@@ -1,0 +1,3 @@
+{# begin {templatelocation} #}
+    <button type="submit" value="{lang_cancel}" name="mode" class="uk-button">{lang_cancel}</button>
+{# end {templatelocation} #}

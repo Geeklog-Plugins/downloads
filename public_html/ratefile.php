@@ -6,7 +6,7 @@
 // +---------------------------------------------------------------------------+
 // | public_html/downloads/ratefile.php                                        |
 // +---------------------------------------------------------------------------+
-// | Copyright (C) 2010-2014 dengen - taharaxp AT gmail DOT com                |
+// | Copyright (C) 2010-2017 dengen - taharaxp AT gmail DOT com                |
 // |                                                                           |
 // | Downloads Plugin is based on Filemgmt plugin                              |
 // | Copyright (C) 2004 by Consult4Hire Inc.                                   |
@@ -33,7 +33,7 @@
 require_once '../lib-common.php';
 
 if (!in_array('downloads', $_PLUGINS)) {
-    echo COM_refresh($_CONF['site_url'] . '/index.php');
+    COM_handle404();
     exit;
 }
 
@@ -48,23 +48,22 @@ if (COM_isAnonUser() && ($_CONF['loginrequired'] == 1 || $_DLM_CONF['loginrequir
 
 $uid = (isset($_USER['uid'])) ? $_USER['uid'] : 1;
 
-//if ($_POST['submit'] && SEC_checkToken()) {
-if ($_POST['submit']) {
+//if (Geeklog\Input::Post('submit') && SEC_checkToken()) {
+if (Geeklog\Input::Post('submit')) {
 
     //Make sure only 1 anonymous from an IP in a single day.
     $anonwaitdays = 1;
     $ip = $_SERVER['REMOTE_ADDR'];
-    $lid = COM_applyFilter($_POST['lid']);
-    $rating = COM_applyFilter($_POST['rating'], true);
-    // Check if Rating is Null
-    if ($rating == "--") {
+    $lid = Geeklog\Input::fPost('lid');
+    $rating = (int) Geeklog\Input::fPost('rating', 0);
+    if ($rating == 0) {
         echo DLM_showErrorMessage('norating');
         exit();
     }
 
     if ($uid != 1) {
         // Check if Download POSTER is voting (UNLESS Anonymous users allowed to post)
-        $result = DB_query("SELECT owner_id FROM {$_TABLES['downloads']} WHERE lid='" . addslashes($lid) . "'");
+        $result = DB_query("SELECT owner_id FROM {$_TABLES['downloads']} WHERE lid='" . DB_escapeString($lid) . "'");
         while (list($ratinguserDB) = DB_fetchArray($result)) {
             if ($ratinguserDB == $uid) {
                 echo DLM_showErrorMessage('cantvoteown');
@@ -73,7 +72,7 @@ if ($_POST['submit']) {
         }
 
         // Check if REG user is trying to vote twice.
-        $result = DB_query("SELECT ratinguser FROM {$_TABLES['downloadvotes']} WHERE lid='" . addslashes($lid) . "'");
+        $result = DB_query("SELECT ratinguser FROM {$_TABLES['downloadvotes']} WHERE lid='" . DB_escapeString($lid) . "'");
         while (list($ratinguserDB) = DB_fetchArray($result)) {
             if ($ratinguserDB == $uid) {
                 echo DLM_showErrorMessage('voteonce');
@@ -86,7 +85,7 @@ if ($_POST['submit']) {
     if ($uid == 1){
         $yesterday = (time() - (86400 * $anonwaitdays));
         $result=DB_query("SELECT COUNT(*) FROM {$_TABLES['downloadvotes']} "
-                       . "WHERE lid = '" . addslashes($lid) . "' "
+                       . "WHERE lid = '" . DB_escapeString($lid) . "' "
                        . "AND ratinguser = 1 AND ratinghostname = '$ip' AND ratingtimestamp > $yesterday");
         list($anonvotecount) = DB_fetchArray($result);
         if ($anonvotecount >= 1) {
@@ -99,22 +98,22 @@ if ($_POST['submit']) {
     $datetime = time();
     DB_query("INSERT INTO {$_TABLES['downloadvotes']} "
            . "(lid, ratinguser, rating, ratinghostname, ratingtimestamp) "
-           . "VALUES ('" . addslashes($lid) . "', $uid, $rating, '$ip', $datetime)");
+           . "VALUES ('" . DB_escapeString($lid) . "', $uid, $rating, '$ip', $datetime)");
     //All is well.  Calculate Score & Add to Summary (for quick retrieval & sorting) to DB.
     DLM_updaterating($lid);
     echo PLG_afterSaveSwitch('home', '', 'downloads', 113);
     exit;
 }
 
-$lid = COM_applyFilter($_GET['lid']);
-$result = DB_query("SELECT title FROM {$_TABLES['downloads']} WHERE lid='" . addslashes($lid) . "'");
+$lid = Geeklog\Input::fGet('lid');
+$result = DB_query("SELECT title FROM {$_TABLES['downloads']} WHERE lid='" . DB_escapeString($lid) . "'");
 list($title) = DB_fetchArray($result);
 $title = DLM_htmlspecialchars($title);
 
 $pagetitle = $LANG_DLM['plugin_name'];
 $display = '';
 $display .= COM_startBlock($LANG_DLM['plugin_name']);
-$T = new Template($_DLM_CONF['path_layout']);
+$T = COM_newTemplate(CTL_plugin_templatePath('downloads'));
 $T->set_file(array('t_vote' => 'vote.thtml'));
 DLM_setDefaultTemplateVars($T);
 $T->set_var('val_lid',          $lid);
@@ -137,4 +136,3 @@ $display .= $T->finish($T->get_var('output'));
 $display .= COM_endBlock();
 $display = DLM_createHTMLDocument($display, array('pagetitle' => $pagetitle));
 COM_output($display);
-?>

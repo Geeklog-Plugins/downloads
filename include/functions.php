@@ -6,7 +6,7 @@
 // +---------------------------------------------------------------------------+
 // | plugins/downloads/include/functions.php                                   |
 // +---------------------------------------------------------------------------+
-// | Copyright (C) 2010-2014 dengen - taharaxp AT gmail DOT com                |
+// | Copyright (C) 2010-2017 dengen - taharaxp AT gmail DOT com                |
 // |                                                                           |
 // | Downloads Plugin is based on Filemgmt plugin                              |
 // | Copyright (C) 2004 by Consult4Hire Inc.                                   |
@@ -30,7 +30,7 @@
 // |                                                                           |
 // +---------------------------------------------------------------------------+
 
-if (strpos(strtolower($_SERVER['PHP_SELF']), 'functions.php') !== false) {
+if (stripos($_SERVER['PHP_SELF'], basename(__FILE__)) !== false) {
     die('This file can not be used on its own.');
 }
 
@@ -52,7 +52,7 @@ function DLM_updaterating($sel_id)
 {
     global $_TABLES;
 
-    $sel_id = addslashes($sel_id);
+    $sel_id = DB_escapeString($sel_id);
     $voteresult = DB_query("SELECT rating FROM {$_TABLES['downloadvotes']} "
                           ."WHERE lid = '$sel_id'");
     $votesDB = DB_numRows($voteresult);
@@ -209,7 +209,7 @@ function DLM_approveNewDownload($id)
 
     $result = DB_query("SELECT url, logourl, date, secret_id "
                      . "FROM {$_TABLES['downloads']} "
-                     . "WHERE lid = '" . addslashes($id) . "'");
+                     . "WHERE lid = '" . DB_escapeString($id) . "'");
     list($url, $logourl, $date, $secret_id) = DB_fetchArray($result);
 
     $safename = DLM_encodeFileName($url);
@@ -254,21 +254,21 @@ function DLM_delNewDownload($id)
 
     $result = DB_query("SELECT url, logourl, date "
                      . "FROM {$_TABLES['downloadsubmission']} "
-                     . "WHERE lid = '" . addslashes($id) . "'");
+                     . "WHERE lid = '" . DB_escapeString($id) . "'");
     list($url, $logourl, $date) = DB_fetchArray($result);
     if (empty($url)) return;
     $tmpfilename = $_DLM_CONF['path_filestore'] . 'tmp' . date('YmdHis', $date) . DLM_encodeFileName($url);
     $tmpshotname = $_DLM_CONF['path_snapstore'] . 'tmp' . date('YmdHis', $date) . DLM_encodeFileName($logourl);
     DLM_unlink($tmpfilename);
     DLM_unlink($tmpshotname);
-    DB_delete($_TABLES['downloadsubmission'], 'lid', addslashes($id));
+    DB_delete($_TABLES['downloadsubmission'], 'lid', DB_escapeString($id));
 }
 
 function DLM_changeFileExt($src_path, $ext)
 {
     $src_parts = pathinfo($src_path);
     $extension = $src_parts['extension'];
-    
+
     if (!empty($extension)) {
         $dest_path = substr($src_path, 0, strlen($src_path) - strlen($extension) - 1) . '.' . $ext;
     } else {
@@ -406,7 +406,7 @@ function DLM_createSafeFileName($name, $prefix='')
     return $prefix . (!empty($prefix) ? '_' : '') . DLM_encodeFileName($name);
 }
 
-// 
+//
 function DLM_modTNPath($url)
 {
     $parts = pathinfo($url);
@@ -467,12 +467,12 @@ function DLM_uploadNewFile($newfile, $directory, $name = '')
 }
 
 
-// Send a email to submitter notifying them that file was approved
+// Send an email to submitter notifying them that file was approved
 function DLM_sendNotification($lid)
 {
     global $_CONF, $_TABLES, $LANG_DLM, $LANG08;
 
-    $lid = addslashes($lid);
+    $lid = DB_escapeString($lid);
     $result = DB_query("SELECT username, email, b.url "
                      . "FROM {$_TABLES['users']} a, {$_TABLES['downloads']} b "
                      . "WHERE a.uid = b.owner_id AND b.lid = '$lid'");
@@ -531,7 +531,7 @@ function DLM_createHTMLDocument(&$content, $information = array())
     $rightblock = -1;
     if (isset($information['rightblock'])) {
         $rightblock = $information['rightblock'];
-    } 
+    }
     $custom = '';
     if (isset($information['custom'])) {
         $custom = $information['custom'];
@@ -540,4 +540,3 @@ function DLM_createHTMLDocument(&$content, $information = array())
     return COM_siteHeader($what, $pagetitle, $headercode) . $content
          . COM_siteFooter($rightblock, $custom);
 }
-?>

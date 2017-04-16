@@ -6,7 +6,7 @@
 // +---------------------------------------------------------------------------+
 // | plugins/downloads/include/gltree.class.php                                |
 // +---------------------------------------------------------------------------+
-// | Copyright (C) 2010-2014 dengen - taharaxp AT gmail DOT com                |
+// | Copyright (C) 2010-2017 dengen - taharaxp AT gmail DOT com                |
 // |                                                                           |
 // | Downloads Plugin is based on Filemgmt plugin                              |
 // | Copyright (C) 2004 by Consult4Hire Inc.                                   |
@@ -30,7 +30,7 @@
 // |                                                                           |
 // +---------------------------------------------------------------------------+
 
-if (strpos(strtolower($_SERVER['PHP_SELF']), 'gltree.class.php') !== false) {
+if (stripos($_SERVER['PHP_SELF'], basename(__FILE__)) !== false) {
     die('This file can not be used on its own.');
 }
 
@@ -52,13 +52,13 @@ class GLTree {
     var $_pid;       // name of parent id used in table $_table
     var $_title;     // name of a field in table $_table which will be used when selection box and paths are generated
     var $_order;     // specifies the order of query results
-    var $_filtersql; // 
-    var $_rootid;    // 
-    var $_langid;    // 
-    var $_sepalator; // 
-    var $_root;      // 
+    var $_filtersql; //
+    var $_rootid;    //
+    var $_langid;    //
+    var $_sepalator; //
+    var $_root;      //
 
-    var $_is_multi_language; // 
+    var $_is_multi_language; //
 
     // constructor of class GLTree
     // sets the names of table, unique id, and parend id

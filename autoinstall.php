@@ -6,7 +6,7 @@
 // +---------------------------------------------------------------------------+
 // | plugins/downloads/autoinstall.inc                                         |
 // +---------------------------------------------------------------------------+
-// | Copyright (C) 2010-2014 dengen - taharaxp AT gmail DOT com                |
+// | Copyright (C) 2010-2017 dengen - taharaxp AT gmail DOT com                |
 // |                                                                           |
 // | Downloads Plugin is based on Filemgmt plugin                              |
 // | Copyright (C) 2004 by Consult4Hire Inc.                                   |
@@ -54,8 +54,8 @@ function plugin_autoinstall_downloads($pi_name)
     $info = array(
         'pi_name'         => $pi_name,
         'pi_display_name' => $pi_display_name,
-        'pi_version'      => '1.2.0',
-        'pi_gl_version'   => '1.8.0',
+        'pi_version'      => '1.3.0',
+        'pi_gl_version'   => '2.1.2',
         'pi_homepage'     => 'http://www.trybase.com/~dengen/log/'
     );
 
@@ -171,7 +171,7 @@ function plugin_compatible_with_this_version_downloads($pi_name)
 
     if (!function_exists('MBYTE_strpos')) {
         // the plugin requires the multi-byte functions
-        return false; 
+        return false;
     }
 
     if (!function_exists('SEC_createToken')) {
@@ -275,6 +275,9 @@ function DLM_upgrade()
             }
             $current_version = '1.2.0';
             break;
+        case '1.2.0':
+            $current_version = '1.3.0';
+            break;
         default:
             $done = true;
             break;
@@ -291,5 +294,3 @@ function DLM_upgrade()
 
     return true;
 }
-
-?>

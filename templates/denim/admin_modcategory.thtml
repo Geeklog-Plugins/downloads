@@ -1,0 +1,44 @@
+
+{# begin {templatelocation} #}
+
+<form enctype="multipart/form-data" action="index.php" method="post" class="compact uk-form">
+  <div class="admin_basic">
+    <dl class="form_block">
+      <dt><label for="downloads-cid">{lang_catid}</label></dt>
+      <dd><input type="text" maxlength="40" name="cid" value="{cid}" id="downloads-cid" size="48" class="size5"{xhtml}></dd>
+
+      <dt><label for="downloads-title">{lang_title}</label></dt>
+      <dd><input type="text" maxlength="50" name="title" value="{title}" id="downloads-title" size="48" class="size5"{xhtml}></dd>
+
+      <dt><label for="downloads-imgurl">{lang_imgurlmain}</label></dt>
+      <dd><input type="text" maxlength="250" name="imgurl" value="{imgurl}" id="downloads-imgurl" size="48" class="size5"{xhtml}>
+          <p style="margin:5px 0;">{lang_upload}: <input type="file" name="imgurl" size="48"{xhtml}></p>
+          <p style="margin:5px 0;">{preview}</p></dd>
+
+      <dt><label for="select_pid">{lang_parent}</label></dt>
+      <dd>{selparents}</dd>
+
+      <dt><label for="downloads-corder">{lang_corder}</label></dt>
+      <dd><input type="text" name="corder" value="{corder}" id="downloads-corder" size="4" class="size1"{xhtml}>
+          <span> 0 - 9999</span></dd>
+
+      <dt><label for="downloads-is_enabled">{lang_is_enabled}</label></dt>
+      <dd><input type="checkbox" name="is_enabled" {val_is_enabled} id="downloads-is_enabled"{xhtml}></dd>
+    </dl>
+  </div>
+
+{admin_access}
+
+  <div class="submit">
+    <button type="submit" name="mode" value="{lang_save}" class="uk-button uk-button-primary">{lang_save}</button>
+    <button type="submit" value="{lang_cancel}" name="mode" class="uk-button">{lang_cancel}</button>
+{admin_submit_delete}
+    <input type="hidden" name="imgurlold" value="{imgurlold}"{xhtml}>
+    <input type="hidden" name="op" value="{op}"{xhtml}>
+    <input type="hidden" name="old_cid" value="{old_cid}"{xhtml}>
+    <input type="hidden" name="{gltoken_name}" value="{gltoken}"{xhtml}>
+{hidden_values}
+  </div>
+</form>
+
+{# end {templatelocation} #}

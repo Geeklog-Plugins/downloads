@@ -6,7 +6,7 @@
 // +---------------------------------------------------------------------------+
 // | public_html/downloads/history.php                                         |
 // +---------------------------------------------------------------------------+
-// | Copyright (C) 2010-2014 dengen - taharaxp AT gmail DOT com                |
+// | Copyright (C) 2010-2017 dengen - taharaxp AT gmail DOT com                |
 // |                                                                           |
 // | Downloads Plugin is based on Filemgmt plugin                              |
 // | Copyright (C) 2004 by Consult4Hire Inc.                                   |
@@ -33,7 +33,7 @@
 require_once '../lib-common.php';
 
 if (!in_array('downloads', $_PLUGINS)) {
-    echo COM_refresh($_CONF['site_url'] . '/index.php');
+    COM_handle404();
     exit;
 }
 
@@ -55,7 +55,7 @@ $pagetitle = $LANG_DLM['DownloadReport'];
 $display = '';
 
 COM_setArgNames(array('lid'));
-$lid = addslashes(COM_applyFilter(COM_getArgument('lid')));
+$lid = DB_escapeString(COM_applyFilter(COM_getArgument('lid')));
 $title = DB_getItem($_TABLES['downloads'], 'title', "lid = '$lid'");
 $result = DB_query("SELECT date, uid, remote_ip "
                  . "FROM {$_TABLES['downloadhistories']} WHERE lid = '$lid'");
@@ -78,4 +78,3 @@ $display .= ADMIN_simpleList('', $header_arr, $text_arr, $data_arr);
 $display = DLM_createHTMLDocument($display, array('pagetitle' => $pagetitle));
 
 COM_output($display);
-?>

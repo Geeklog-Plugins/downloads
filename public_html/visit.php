@@ -6,7 +6,7 @@
 // +---------------------------------------------------------------------------+
 // | public_html/downloads/visit.php                                           |
 // +---------------------------------------------------------------------------+
-// | Copyright (C) 2010-2014 dengen - taharaxp AT gmail DOT com                |
+// | Copyright (C) 2010-2017 dengen - taharaxp AT gmail DOT com                |
 // |                                                                           |
 // | Downloads Plugin is based on Filemgmt plugin                              |
 // | Copyright (C) 2004 by Consult4Hire Inc.                                   |
@@ -33,7 +33,7 @@
 require_once '../lib-common.php';
 
 if (!in_array('downloads', $_PLUGINS)) {
-    echo COM_refresh($_CONF['site_url'] . '/index.php');
+    COM_handle404();
     exit;
 }
 
@@ -48,7 +48,7 @@ if (COM_isAnonUser() && ($_CONF['loginrequired'] == 1 || $_DLM_CONF['loginrequir
 
 $uid = (isset($_USER['uid'])) ? $_USER['uid'] : 1;
 COM_setArgNames(array('id'));
-$lid = addslashes(COM_applyFilter(COM_getArgument('id')));
+$lid = DB_escapeString(COM_applyFilter(COM_getArgument('id')));
 
 $sql = "SELECT COUNT(*) FROM {$_TABLES['downloads']} a "
      . "LEFT JOIN {$_TABLES['downloadcategories']} b ON a.cid=b.cid "
@@ -58,7 +58,7 @@ list($count) = DB_fetchArray(DB_query($sql));
 if ($count == 0 || DB_count($_TABLES['downloads'], "lid", $lid) == 0) {
     COM_errorLog("Downloads: invalid attempt to download a file. "
                . "User:{$_USER['username']}, IP:{$_SERVER['REMOTE_ADDR']}, File ID:{$lid}");
-    echo COM_refresh($_CONF['site_url'] . '/downloads/index.php');
+    COM_redirect($_CONF['site_url'] . '/downloads/index.php');
     exit;
 }
 
@@ -88,4 +88,3 @@ if (file_exists($filepath)) {
     flush();
     @readfile($filepath);
 }
-?>

@@ -6,7 +6,7 @@
 // +---------------------------------------------------------------------------+
 // | plugins/downloads/include/category.class.php                              |
 // +---------------------------------------------------------------------------+
-// | Copyright (C) 2010-2014 dengen - taharaxp AT gmail DOT com                |
+// | Copyright (C) 2010-2017 dengen - taharaxp AT gmail DOT com                |
 // |                                                                           |
 // | Downloads Plugin is based on Filemgmt plugin                              |
 // | Copyright (C) 2004 by Consult4Hire Inc.                                   |
@@ -30,7 +30,7 @@
 // |                                                                           |
 // +---------------------------------------------------------------------------+
 
-if (strpos(strtolower($_SERVER['PHP_SELF']), 'category.class.php') !== false) {
+if (stripos($_SERVER['PHP_SELF'], basename(__FILE__)) !== false) {
     die('This file can not be used on its own.');
 }
 
@@ -110,8 +110,8 @@ class DLCategory
     function _loadFromDatabase($cid)
     {
         global $_TABLES;
-        
-        $result = DB_query("SELECT * FROM {$_TABLES['downloadcategories']} WHERE cid='" . addslashes($cid) . "'");
+
+        $result = DB_query("SELECT * FROM {$_TABLES['downloadcategories']} WHERE cid='" . DB_escapeString($cid) . "'");
         $A = DB_fetchArray($result);
         foreach ($A as $key => $val) {
             $this->{'_' . $key} = $val;
@@ -208,7 +208,7 @@ class DLCategory
         $retval .= $this->_showMessage();
         $retval .= COM_startBlock($blocktitle, '', COM_getBlockTemplate('_admin_block', 'header'));
 
-        $T = new Template($_DLM_CONF['path_layout']);
+        $T = COM_newTemplate(CTL_plugin_templatePath('downloads'));
         $T->set_file(array(
             't_modcategory'         => 'admin_modcategory.thtml',
             't_admin_access'        => 'admin_access.thtml',
@@ -307,7 +307,7 @@ class DLCategory
             $this->_errno[] = '1301';
         } else {
             if ($this->_cid != $this->_old_cid) {
-                $count = DB_count($_TABLES['downloadcategories'], 'cid', addslashes($this->_cid));
+                $count = DB_count($_TABLES['downloadcategories'], 'cid', DB_escapeString($this->_cid));
                 if ($count > 0) {
                     $this->_errno[] = '1302';
                 }
@@ -330,11 +330,11 @@ class DLCategory
         $parts = pathinfo($name);
         $extension = $parts['extension'];
         $filename  = $parts['filename'];
-        $count = DB_count($_TABLES['downloadcategories'], 'imgurl', addslashes($name));
+        $count = DB_count($_TABLES['downloadcategories'], 'imgurl', DB_escapeString($name));
         $i = 1;
         while ($count > 0) {
             $name = $filename . "_$i." . $extension;
-            $count = DB_count($_TABLES['downloadcategories'], 'imgurl', addslashes($name));
+            $count = DB_count($_TABLES['downloadcategories'], 'imgurl', DB_escapeString($name));
             $i++;
         }
         return $name;
@@ -364,11 +364,11 @@ class DLCategory
         $this->_validate();
         $this->_uploadImage();
 
-        $cid          = addslashes($this->_cid);
-        $old_cid      = addslashes($this->_old_cid);
-        $pid          = addslashes($this->_pid);
-        $title        = addslashes($this->_title);
-        $imgurl       = addslashes($this->_imgurl);
+        $cid          = DB_escapeString($this->_cid);
+        $old_cid      = DB_escapeString($this->_old_cid);
+        $pid          = DB_escapeString($this->_pid);
+        $title        = DB_escapeString($this->_title);
+        $imgurl       = DB_escapeString($this->_imgurl);
         $corder       = (int) $this->_corder;
         $is_enabled   = (int) $this->_is_enabled;
         $owner_id     = (int) $this->_owner_id;
@@ -399,11 +399,11 @@ class DLCategory
         $this->_validate();
         $this->_uploadImage();
 
-        $cid          = addslashes($this->_cid);
-        $old_cid      = addslashes($this->_old_cid);
-        $pid          = addslashes($this->_pid);
-        $title        = addslashes($this->_title);
-        $imgurl       = addslashes($this->_imgurl);
+        $cid          = DB_escapeString($this->_cid);
+        $old_cid      = DB_escapeString($this->_old_cid);
+        $pid          = DB_escapeString($this->_pid);
+        $title        = DB_escapeString($this->_title);
+        $imgurl       = DB_escapeString($this->_imgurl);
         $corder       = (int) $this->_corder;
         $is_enabled   = (int) $this->_is_enabled;
         $owner_id     = (int) $this->_owner_id;
@@ -456,11 +456,11 @@ class DLCategory
     {
         global $_TABLES, $_DLM_CONF;
 
-        $cid = addslashes($cid);
+        $cid = DB_escapeString($cid);
         //all subcategory and associated data are deleted, now delete category data and its associated data
         $result = DB_query("SELECT lid, url, logourl, secret_id FROM {$_TABLES['downloads']} WHERE cid='$cid'");
         while (list($lid, $url, $logourl, $secret_id)= DB_fetchArray($result)) {
-            $lid = addslashes($lid);
+            $lid = DB_escapeString($lid);
             DB_query("DELETE FROM {$_TABLES['downloadvotes']} WHERE lid='$lid'");
             DB_query("DELETE FROM {$_TABLES['downloads']}     WHERE lid='$lid'");
             $this->_unlinkDlFile($url, $secret_id);
@@ -487,7 +487,7 @@ class DLCategory
 
         if (empty($name)) return;
         $target = $_DLM_CONF['path_snapstore'] . DLM_encodeFileName($name);
-        $count = DB_count($_TABLES['downloads'], 'logourl', addslashes($name));
+        $count = DB_count($_TABLES['downloads'], 'logourl', DB_escapeString($name));
         if ($count == 0) $this->_unlink($target);
     }
 
@@ -498,7 +498,7 @@ class DLCategory
         if (empty($name)) return;
         $target = $_DLM_CONF['path_tnstore'] . DLM_encodeFileName($name);
         $target = DLM_changeFileExt($target, $_DLM_CONF['tnimage_format']);
-        $count = DB_count($_TABLES['downloads'], 'logourl', addslashes($name));
+        $count = DB_count($_TABLES['downloads'], 'logourl', DB_escapeString($name));
         if ($count == 0) $this->_unlink($target);
     }
 
@@ -508,7 +508,7 @@ class DLCategory
 
         if (empty($name)) return;
         $target = $_DLM_CONF['path_snapcat'] . DLM_encodeFileName($name);
-        $count = DB_count($_TABLES['downloadcategories'], 'imgurl', addslashes($name));
+        $count = DB_count($_TABLES['downloadcategories'], 'imgurl', DB_escapeString($name));
         if ($count == 0) $this->_unlink($target);
     }
 

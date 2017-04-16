@@ -1,0 +1,22 @@
+
+<!-- start filelisting.thtml -->
+{block_header}
+
+<div id="dlm_cat_path">{category_path_link}</div>
+
+{category_selbox}
+
+{category_part}
+
+<div id="dlm_filelist_info"><strong>{filelisting_info}</strong></div>
+
+{sort_menu}
+
+{filelisting_records}
+
+<div style="padding:10px;">{page_navigation}</div>
+
+{comment_records}
+
+{block_footer}
+<!-- end filelisting.thtml -->

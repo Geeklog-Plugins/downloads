@@ -6,7 +6,7 @@
 // +---------------------------------------------------------------------------+
 // | plugins/downloads/functions.inc                                           |
 // +---------------------------------------------------------------------------+
-// | Copyright (C) 2010-2014 dengen - taharaxp AT gmail DOT com                |
+// | Copyright (C) 2010-2017 dengen - taharaxp AT gmail DOT com                |
 // |                                                                           |
 // | Downloads Plugin is based on Filemgmt plugin                              |
 // | Copyright (C) 2004 by Consult4Hire Inc.                                   |
@@ -30,7 +30,7 @@
 // |                                                                           |
 // +---------------------------------------------------------------------------+
 
-if (strpos(strtolower($_SERVER['PHP_SELF']), 'functions.inc') !== false) {
+if (stripos($_SERVER['PHP_SELF'], basename(__FILE__)) !== false) {
     die('This file can not be used on its own.');
 }
 
@@ -54,14 +54,13 @@ if (file_exists($langfile)) {
 }
 
 $_DLM_CONF = array();
-$_DLM_CONF['version'] = '1.2.0';
+$_DLM_CONF['version'] = '1.3.0';
 
 $_TABLES['downloadcategories'] = $_DB_table_prefix . 'downloadcategories';
 $_TABLES['downloads']          = $_DB_table_prefix . 'downloads';
 $_TABLES['downloadvotes']      = $_DB_table_prefix . 'downloadvotes';
 $_TABLES['downloadhistories']  = $_DB_table_prefix . 'downloadhistories';
 $_TABLES['downloadsubmission'] = $_DB_table_prefix . 'downloadsubmission';
-
 
 /**
 * Check and see if we need to load the plugin configuration
@@ -73,25 +72,11 @@ if (is_array($temp)) {
     $_DLM_CONF = array_merge($_DLM_CONF, $temp);
 }
 
-$_DLM_CONF['use_theme'] = true;
-
 $_DLM_CONF['lang_id'] = COM_getLanguageId();
 
 $_DLM_CONF['date_format'] = '%Y-%m-%d %H:%M';
 
 $_DLM_CONF['enabled_preview_on_upload'] = false;
-
-/**
-* Set template path and CSS url
-*/
-$_DLM_CONF['path_layout'] = $_CONF['path_html'] . 'downloads/templates/';
-$_DLM_CONF['css_url'] = $_CONF['site_url'] . '/downloads/templates';
-if ($_DLM_CONF['use_theme']) {
-    if (is_dir($_CONF['path_layout'] . 'downloads')) {
-        $_DLM_CONF['path_layout'] = $_CONF['path_layout'] . 'downloads/';
-        $_DLM_CONF['css_url'] = $_CONF['layout_url'] . '/downloads';
-    }
-}
 
 // +---------------------------------------------------------------------------+
 // | Geeklog Plugin API Implementation                                         |
@@ -190,7 +175,7 @@ function plugin_getwhatsnew_downloads()
 /**
 * Return new Downloads comments for the What's New block
 *
-* @param    string  $numreturn  If 0 will return results for What's New Block. 
+* @param    string  $numreturn  If 0 will return results for What's New Block.
 *                               If > 0 will return last X new comments for User Profile.
 * @param    string  $uid        ID of the user to return results for. 0 = all users.
 * @return   array list of new comments (dups, type, title, sid, lastdate) or (sid, title, cid, unixdate)
@@ -226,7 +211,7 @@ function plugin_getwhatsnewcomment_downloads($numreturn = 0, $uid = 0)
         for ($x = 0; $x < $nrows; $x++) {
             $A[] = DB_fetchArray($result);
         }
-        
+
         return $A;
     }
 }
@@ -252,7 +237,7 @@ function plugin_autotags_downloads($op, $content = '', $autotag = '')
         $url = COM_buildUrl($_CONF['site_url'] . '/downloads/index.php?id=' . $file_id);
         if (empty($autotag['parm2'])) {
             $linktext = stripslashes(DB_getItem($_TABLES['downloads'],
-                                     'title', "lid = '" . addslashes($file_id) . "'"));
+                                     'title', "lid = '" . DB_escapeString($file_id) . "'"));
         } else {
             $linktext = $autotag['parm2'];
         }
@@ -399,7 +384,7 @@ function plugin_dopluginsearch_downloads($query, $datestart, $dateend, $topic, $
     global $_TABLES, $LANG_DLM;
 
     // Make sure the query is SQL safe
-    $query = trim(addslashes($query));
+    $query = trim(DB_escapeString($query));
 
     // downloads search
     $sql  = "SELECT lid AS id, a.title AS title, date, a.owner_id AS uid, hits, "
@@ -565,9 +550,9 @@ function plugin_savecomment_downloads($title, $comment, $id, $pid, $postmode)
 
     $retval = '';
     $commentcode = DB_getItem($_TABLES['downloads'], 'commentcode',
-                              "lid = '" . addslashes($id) . "'");
+                              "lid = '" . DB_escapeString($id) . "'");
     if ($commentcode != 0) {
-        return COM_refresh($_CONF['site_url'] . '/index.php');
+        COM_redirect($_CONF['site_url'] . '/index.php');
     }
 
     $ret = CMT_saveComment($title, $comment, $id, $pid, 'downloads', $postmode);
@@ -583,7 +568,7 @@ function plugin_savecomment_downloads($title, $comment, $id, $pid, $postmode)
             }
         }
     } else { // success
-        $retval = COM_refresh(COM_buildURL($_CONF['site_url'] . "/downloads/index.php?id=$id"));
+        COM_redirect(COM_buildURL($_CONF['site_url'] . "/downloads/index.php?id=$id"));
     }
 
     return $retval;
@@ -607,7 +592,7 @@ function plugin_deletecomment_downloads($cid, $id)
     $result = DB_query("SELECT a.owner_id, group_id, perm_owner, perm_group, perm_members, perm_anon "
                      . "FROM {$_TABLES['downloads']} a "
                      . "LEFT JOIN {$_TABLES['downloadcategories']} b ON b.cid=a.cid "
-                     . "WHERE lid = '" . addslashes($id) . "'");
+                     . "WHERE lid = '" . DB_escapeString($id) . "'");
     $A = DB_fetchArray($result);
     $access = SEC_hasAccess($A['owner_id'], $A['group_id'],
                             $A['perm_owner'], $A['perm_group'],
@@ -615,11 +600,11 @@ function plugin_deletecomment_downloads($cid, $id)
 
     if ($has_editPermissions && $access == 3) {
         CMT_deleteComment($cid, $id, 'downloads');
-        $retval .= COM_refresh(COM_buildURL($_CONF['site_url'] . "/downloads/index.php?id=$id"));
+        COM_redirect(COM_buildURL($_CONF['site_url'] . "/downloads/index.php?id=$id"));
     } else {
         COM_errorLog("User {$_USER['username']} (IP: {$_SERVER['REMOTE_ADDR']}) "
                    . "tried to illegally delete comment $cid from downloads $id");
-        $retval .= COM_refresh($_CONF['site_url'] . '/index.php');
+        COM_redirect(COM_buildURL($_CONF['site_url'] . '/index.php'));
     }
 
     return $retval;
@@ -648,7 +633,7 @@ function plugin_displaycomment_downloads($id, $commentid, $title, $order, $forma
          . "perm_group, perm_members, perm_anon "
          . "FROM {$_TABLES['downloads']} a "
          . "LEFT JOIN {$_TABLES['downloadcategories']} b ON b.cid=a.cid "
-         . "WHERE lid = '" . addslashes($id) . "' " . COM_getPermSQL('AND', 0, 2, 'b')
+         . "WHERE lid = '" . DB_escapeString($id) . "' " . COM_getPermSQL('AND', 0, 2, 'b')
          . " GROUP BY lid";
 
     $result = DB_query($sql);
@@ -751,18 +736,13 @@ function plugin_user_delete_downloads($uid)
 */
 function plugin_getheadercode_downloads()
 {
-    global $_DLM_CONF;
+    global $_SCRIPTS, $_DLM_CONF;
 
     $retval = '';
 
     // use the CSS only if we are on the plugin's pages
     if (substr_count($_SERVER['PHP_SELF'], '/downloads/') > 0) {
-        if (version_compare(VERSION, '2.0.0') < 0) {
-            $retval .= '<link rel="stylesheet" type="text/css" href="'
-                     . $_DLM_CONF['css_url'] . '/admin.css"' . XHTML . '>' . LB;
-        }
-        $retval .= '<link rel="stylesheet" type="text/css" href="'
-                 . $_DLM_CONF['css_url'] . '/downloads.css"' . XHTML . '>' . LB;
+        $_SCRIPTS->setCSSFile('downloads', CTL_plugin_themeFindFile('downloads', 'css', 'downloads.css'));
     }
 
     return $retval;
@@ -1122,7 +1102,7 @@ function plugin_submit_downloads()
     $dldl = new DLDownload();
 
     if ($_DLM_CONF['enabled_preview_on_upload'] === true) {
-        $mode = (!empty($_REQUEST['mode'])) ? $_REQUEST['mode'] : '';
+        $mode = Geeklog\Input::fRequest('mode', '');
         if ($mode == $LANG_DLM['preview']) {
             $dldl->showPreview('submit');
         }
@@ -1200,7 +1180,7 @@ function plugin_getiteminfo_downloads($lid, $what, $uid = 0, $options = array())
 
     $sql = "SELECT " . implode(',', $fields) . " FROM {$_TABLES['downloads']} a "
          . "LEFT JOIN {$_TABLES['downloadcategories']} b ON a.cid=b.cid "
-         . ($fsingle ? " WHERE lid = '" . addslashes($lid) . "'" : '')
+         . ($fsingle ? " WHERE lid = '" . DB_escapeString($lid) . "'" : '')
          . COM_getPermSQL(($fsingle ? 'AND' : 'WHERE'), (($uid > 0) ? $uid : 0), 2, 'b')
          . DLM_helper_getLangSQL()
          . ($fsingle ? ' LIMIT 1' : '');
@@ -1230,7 +1210,7 @@ function plugin_getiteminfo_downloads($lid, $what, $uid = 0, $options = array())
                 $props['title'] = stripslashes($A['title']);
                 break;
             case 'url':
-                $props['url'] = COM_buildUrl($_CONF['site_url'] 
+                $props['url'] = COM_buildUrl($_CONF['site_url']
                     . '/downloads/index.php?id=' . (empty($A['lid']) ? $lid : $A['lid']) );
                 break;
             default:
@@ -1282,7 +1262,7 @@ function plugin_tag_scantag_downloads($id)
     }
 
     $tags = DB_getItem($_TABLES['downloads'], 'tags',
-        "lid='" . addslashes($id) . "'");
+        "lid='" . DB_escapeString($id) . "'");
     if (!empty($tags)) {
         $content = '[' . $tag_name . ':' . stripslashes($tags) . ']';
         $retval = TAG_scanTag($content);
@@ -1332,7 +1312,7 @@ function plugin_tag_gettaggeditems_downloads($id)
     if (empty($item)) return $retval;
 
     $tags = DB_getItem($_TABLES['downloads'], 'tags',
-        "lid='" . addslashes($id) . "'");
+        "lid='" . DB_escapeString($id) . "'");
     if (empty($tags)) return $retval;
 
     $tag_name = 'tag';
@@ -1351,4 +1331,3 @@ function plugin_tag_gettaggeditems_downloads($id)
 
     return $retval;
 }
-?>

@@ -6,7 +6,7 @@
 // +---------------------------------------------------------------------------+
 // | plugins/downloads/sql/mysql_install.php                                   |
 // +---------------------------------------------------------------------------+
-// | Copyright (C) 2010-2014 dengen - taharaxp AT gmail DOT com                |
+// | Copyright (C) 2010-2017 dengen - taharaxp AT gmail DOT com                |
 // |                                                                           |
 // | Downloads Plugin is based on Filemgmt plugin                              |
 // | Copyright (C) 2004 by Consult4Hire Inc.                                   |
@@ -130,5 +130,3 @@ $_SQL[] = "CREATE TABLE {$_TABLES['downloadhistories']} (
   KEY lid (lid),
   KEY uid (uid)
 ) ENGINE=MyISAM";
-
-?>

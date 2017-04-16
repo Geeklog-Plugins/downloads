@@ -43,7 +43,7 @@ if (!SEC_hasRights('downloads.edit')) {
 }
 
 COM_setArgNames(array('id'));
-$lid = addslashes(COM_applyFilter(COM_getArgument('id')));
+$lid = DB_escapeString(COM_applyFilter(COM_getArgument('id')));
 $result = DB_query("SELECT url, date FROM {$_TABLES['downloadsubmission']} WHERE lid='$lid'");
 list($url, $date) = DB_fetchArray($result);
 $filepath = $_DLM_CONF['path_filestore'] . 'tmp' . date('YmdHis', $date) . DLM_createSafeFileName($url);

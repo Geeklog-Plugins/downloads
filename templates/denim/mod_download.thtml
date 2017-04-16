@@ -1,0 +1,113 @@
+{# begin {templatelocation} #}
+
+{js_script}
+<form enctype="multipart/form-data" action="{action}" method="post" onsubmit="set_postcontent();" class="compact uk-form">
+  <div class="admin_basic">
+    <dl class="form_block">
+{mod_submitter}
+
+      <dt><label for="downloads-filetitle">{lang_filetitle}</label></dt>
+      <dd><input type="text" maxlength="200" name="title" value="{title}" id="downloads-filetitle" size="48" class="size5"{xhtml}></dd>
+
+{mod_file_id}
+{mod_dl_file_name}
+{mod_newfile}
+
+      <dt>{lang_category}</dt>
+      <dd>{categorylist}</dd>
+
+      <dt>{lang_tags}</dt>
+      <dd><input type="text" maxlength="150" name="tags" value="{tags}" id="downloads-tags" size="48" class="size5"{xhtml}></dd>
+
+      <dt><label for="downloads-homepage">{lang_homepage}</label></dt>
+      <dd><input type="text" maxlength="250" name="homepage" value="{homepage}" id="downloads-homepage" size="48" class="size5"{xhtml}></dd>
+
+      <dt><label for="downloads-ver">{lang_ver}</label></dt>
+      <dd><input type="text" maxlength="10" name="version" value="{version}" id="downloads-ver" size="10" class="size2"{xhtml}></dd>
+
+{mod_file_size}
+
+      <dt>{lang_description}</dt>
+      <dd><div id="text_editor" style="display:{show_texteditor}; width:95%">
+            <img src="{layout_url}/images/expand.png" title="{lang_expandhelp}" alt="" onclick="changeTextAreaSize('text_description','larger');"{xhtml}>
+            <img src="{layout_url}/images/collapse.png" title="{lang_reducehelp}" alt="" onclick="changeTextAreaSize('text_description','smaller');"{xhtml}>
+            <textarea id="text_description" name="text_description" style="width:100%; font-size:small;" cols="50" rows="10">{description}</textarea>
+          </div>
+
+          <div id="html_editor" style="display:{show_htmleditor}; width:95%">
+            <img src="{layout_url}/images/expand.png" title="{lang_expandhelp}" alt="" onclick="changeHTMLTextAreaSize('html_description','larger');"{xhtml}>
+            <img src="{layout_url}/images/collapse.png" title="{lang_reducehelp}" alt="" onclick="changeHTMLTextAreaSize('html_description','smaller');"{xhtml}>
+            <span style="padding-left:15px;">{lang_toolbar}:&nbsp;
+              <select id="fckeditor_toolbar_selector" name="fckeditor_toolbar_selector" onchange="changeToolbar(this.value);">
+                <option value="editor-toolbar1" selected="selected">{lang_toolbar1}</option>
+                <option value="editor-toolbar2">{lang_toolbar2}</option>
+                <option value="editor-toolbar3">{lang_toolbar3}</option>
+                <option value="Default">{lang_toolbar5}</option>
+              </select>
+            </span>
+            <textarea id="html_description" name="html_description" style="width:100%" cols="50" rows="10">{description}</textarea>
+          </div></dd>
+
+      <dt>{lang_detail}</dt>
+      <dd><div id="text_editor2" style="display:{show_texteditor}; width:95%">
+            <img src="{layout_url}/images/expand.png" title="{lang_expandhelp}" alt="" onclick="changeTextAreaSize('text_detail','larger');"{xhtml}>
+            <img src="{layout_url}/images/collapse.png" title="{lang_reducehelp}" alt="" onclick="changeTextAreaSize('text_detail','smaller');"{xhtml}>
+            <textarea id="text_detail" name="text_detail" style="width:100%; font-size:small;" cols="50" rows="10">{detail}</textarea>
+          </div>
+
+          <div id="html_editor2" style="display:{show_htmleditor}; width:95%">
+            <img src="{layout_url}/images/expand.png" title="{lang_expandhelp}" alt="" onclick="changeHTMLTextAreaSize('html_detail','larger');"{xhtml}>
+            <img src="{layout_url}/images/collapse.png" title="{lang_reducehelp}" alt="" onclick="changeHTMLTextAreaSize('html_detail','smaller');"{xhtml}>
+            <textarea id="html_detail" name="html_detail" style="width:100%" cols="50" rows="10">{detail}</textarea>
+          </div></dd>
+
+      <dt><label for="sel_editmode">{lang_postmode}</label></dt>
+      <dd><select id="sel_editmode" name="postmode" onchange="change_editmode(this);">
+{post_options}
+          </select>
+          <br{xhtml}>
+          {lang_allowed_html}</dd>
+
+{mod_logourl}
+{mod_newfileshot}
+{mod_mg_autotag}
+
+      <dt>{lang_comment_mode}</dt>
+      <dd><select name="commentcode">
+{comment_options}
+          </select></dd>
+
+      <dt>{lang_released}</dt>
+      <dd><select name="is_released">
+            <option value="1" {val_is_released_1}>{lang_yes}</option>
+            <option value="0" {val_is_released_0}>{lang_no}</option>
+          </select></dd>
+
+      <dt>{lang_listing}</dt>
+      <dd><select name="is_listing">
+            <option value="1" {val_is_listing_1}>{lang_yes}</option>
+            <option value="0" {val_is_listing_0}>{lang_no}</option>
+          </select></dd>
+
+{mod_date}
+
+      <dt><label for="downloads-project">{lang_project}</label></dt>
+      <dd><input type="text" maxlength="150" name="project" value="{project}" id="downloads-project" size="48" class="size5"{xhtml}></dd>
+    </dl>
+  </div>
+
+  <div class="submit">
+    <button type="submit" name="mode" value="{lang_submit}" class="uk-button uk-button-primary">{lang_submit}</button>
+{mod_submit_preview}
+{mod_submit_cancel}
+{mod_submit_delete}
+    <input type="hidden" name="op" value="{op}"{xhtml}>
+    <input type="hidden" name="old_lid" value="{old_lid}"{xhtml}>
+    <input type="hidden" name="old_date" value="{old_date}"{xhtml}>
+    <input type="hidden" name="{gltoken_name}" value="{gltoken}"{xhtml}>
+{hidden_values}
+  </div>
+</form>
+{mod_votes}
+
+{# end {templatelocation} #}

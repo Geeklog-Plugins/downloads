@@ -1,0 +1,7 @@
+
+<!-- start mod_newfile.thtml -->
+      <dt>{lang_dlfilename}</dt>
+      <dd><span>{url}</span>&nbsp;&nbsp;{mod_tempfile}
+          <p style="margin:5px 0;">{lang_upload}: <input type="file" name="newfile" size="48" maxlength="200"{xhtml}></p>
+          <input type="hidden" name="url" value="{url}"{xhtml}></dd>
+<!-- end mod_newfile.thtml -->

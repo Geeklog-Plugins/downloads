@@ -1,0 +1,3 @@
+{# begin {templatelocation} #}
+    <button type="submit" name="mode" value="{lang_delete}" class="uk-button uk-button-danger" onclick="return confirm('{lang_confirm_delete}');">{lang_delete}</button>
+{# end {templatelocation} #}

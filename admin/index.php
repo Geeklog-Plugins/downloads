@@ -6,7 +6,7 @@
 // +---------------------------------------------------------------------------+
 // | public_html/admin/plugins/downloads/index.php                             |
 // +---------------------------------------------------------------------------+
-// | Copyright (C) 2010-2014 dengen - taharaxp AT gmail DOT com                |
+// | Copyright (C) 2010-2017 dengen - taharaxp AT gmail DOT com                |
 // |                                                                           |
 // | Downloads Plugin is based on Filemgmt plugin                              |
 // | Copyright (C) 2004 by Consult4Hire Inc.                                   |
@@ -99,7 +99,7 @@ function listDownloads()
 
     $retval .= COM_startBlock($LANG_DLM['manager'], '', COM_getBlockTemplate('_admin_block', 'header'));
 
-    $retval .= ADMIN_createMenu($menu_arr, 
+    $retval .= ADMIN_createMenu($menu_arr,
                                 ($is_root_user ? $LANG_DLM['instructions'] : $LANG_DLM['instructions2']),
                                 plugin_geticon_downloads());
 
@@ -130,7 +130,7 @@ function listDownloads()
 function downloads_getListField_Files($fieldname, $fieldvalue, $A, $icon_arr)
 {
     global $_CONF, $_TABLES, $LANG_ADMIN, $LANG_ACCESS, $MESSAGE, $DLM_CSRF_TOKEN;
-    
+
     $retval = false;
 
     $access = SEC_hasAccess($A['owner_id'],$A['group_id'],$A['perm_owner'],
@@ -164,7 +164,7 @@ function downloads_getListField_Files($fieldname, $fieldvalue, $A, $icon_arr)
             break;
 
         case "cid":
-            $retval = DB_getItem($_TABLES['downloadcategories'], 'title', "cid='" . addslashes($A['cid']) . "'");
+            $retval = DB_getItem($_TABLES['downloadcategories'], 'title', "cid='" . DB_escapeString($A['cid']) . "'");
             $retval .= getCatName_by_language($A['cid']);
             break;
 
@@ -192,7 +192,7 @@ function DLM_reorderCategories()
         $corder += 10;
         if ($B['corder'] != $corder) {
             DB_query("UPDATE {$_TABLES['downloadcategories']} SET corder = $corder "
-                   . "WHERE cid = '" . addslashes($B['cid']) . "'");
+                   . "WHERE cid = '" . DB_escapeString($B['cid']) . "'");
         }
     }
 }
@@ -205,8 +205,9 @@ function DLM_moveCategory()
 {
     global $_TABLES, $mytree;
 
-    $cid   = addslashes(COM_applyFilter($_GET['cid']));
-    $where = COM_applyFilter($_GET['where']);
+    $cid = Geeklog\Input::fGet('cid');
+    $cid = DB_escapeString($cid);
+    $where = Geeklog\Input::fGet('where');
     $corder = DB_getItem($_TABLES['downloadcategories'], 'corder', "cid = '$cid'");
     $pid    = DB_getItem($_TABLES['downloadcategories'], 'pid',    "cid = '$cid'");
 
@@ -233,7 +234,7 @@ function DLM_moveCategory()
 function DLM_changeMenuitemStatus($itemenable)
 {
     global $_TABLES;
-    
+
     DB_query("UPDATE {$_TABLES['downloadcategories']} SET is_enabled = 0");
     foreach ($itemenable as $index => $value) {
         $index = COM_applyFilter($index, true);
@@ -243,13 +244,13 @@ function DLM_changeMenuitemStatus($itemenable)
 }
 
 /**
-* 
+*
 */
 function DLM_getCatLevel($cid)
 {
     global $_TABLES;
 
-    $pid = DB_getItem($_TABLES['downloadcategories'], 'pid', "cid = '" . addslashes($cid) . "'");
+    $pid = DB_getItem($_TABLES['downloadcategories'], 'pid', "cid = '" . DB_escapeString($cid) . "'");
     if ($pid != ROOTID) {
         return 1 + DLM_getCatLevel($pid);
     }
@@ -327,7 +328,7 @@ function listCategories()
 function downloads_getListField_Categories($fieldname, $fieldvalue, $A, $icon_arr)
 {
     global $_CONF, $LANG_ADMIN, $MESSAGE, $LANG_DLM, $DLM_CSRF_TOKEN;
-    
+
     $retval = false;
 
     $token  = "&amp;" . CSRF_TOKEN . "=" . $DLM_CSRF_TOKEN;
@@ -437,28 +438,28 @@ function DLM_updatePlugin()
 // Show message
 function showMessage()
 {
-    $msg = COM_applyFilter($_REQUEST['msg'], true);
+    $msg = (int) Geeklog\Input::fRequest('msg', 0);
     return ($msg > 0) ? COM_showMessage($msg, 'downloads') : '';
 }
 
 // MAIN
 
-$op = COM_applyFilter($_REQUEST['op']);
-$_page = COM_applyFilter($_REQUEST['page']);
-$listing_cid = COM_applyFilter($_REQUEST['listing_cid']);
+$op = Geeklog\Input::fRequest('op');
+$_page = Geeklog\Input::fRequest('page');
+$listing_cid = Geeklog\Input::fRequest('listing_cid');
 $display = '';
 
 require_once $_CONF['path'] . 'plugins/downloads/include/gltree.class.php';
 $mytree = new GLTree($_TABLES['downloadcategories'], 'cid', 'pid', 'title', '', ROOTID); // Not set $_DLM_CONF['lang_id']
 $mytree->setRoot($LANG_DLM['main']);
 
-$mode = (!empty($_REQUEST['mode'])) ? $_REQUEST['mode'] : '';
-$cid  = (!empty($_REQUEST['cid'])) ? COM_sanitizeID(trim($_REQUEST['cid'])) : '';
-$lid  = (!empty($_REQUEST['lid'])) ? COM_sanitizeID(trim($_REQUEST['lid'])) : '';
+$mode = Geeklog\Input::fRequest('mode', '');
+$cid  = COM_sanitizeID(trim(Geeklog\Input::Request('cid', '')));
+$lid  = COM_sanitizeID(trim(Geeklog\Input::Request('lid', '')));
 
 $itemenable = array();
-$itemenable = $_POST['itemenable'];
-if (isset($itemenable) && SEC_checkToken()) {
+$itemenable = Geeklog\Input::Post('itemenable');
+if (!empty($itemenable) && SEC_checkToken()) {
     DLM_changeMenuitemStatus($itemenable);
 }
 
@@ -507,7 +508,7 @@ if (in_array($op, array('uploadFile', 'modify', 'clone', 'editsubmission', 'add'
     }
 
     if ($mode == $LANG_DLM['preview']) {
-        $editor_mode = (!empty($_POST['editor_mode'])) ? COM_applyFilter($_POST['editor_mode']) : '';
+        $editor_mode = Geeklog\Input::fPost('editor_mode', '');
         if (in_array($editor_mode, array('edit', 'create', 'clone', 'editsubmission'))) {
             $dldl->showPreview($editor_mode);
         }
@@ -621,4 +622,3 @@ switch ($op) {
 }
 
 COM_output($display);
-?>

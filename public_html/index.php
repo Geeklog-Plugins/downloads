@@ -6,7 +6,7 @@
 // +---------------------------------------------------------------------------+
 // | public_html/downloads/index.php                                           |
 // +---------------------------------------------------------------------------+
-// | Copyright (C) 2010-2014 dengen - taharaxp AT gmail DOT com                |
+// | Copyright (C) 2010-2017 dengen - taharaxp AT gmail DOT com                |
 // |                                                                           |
 // | Downloads Plugin is based on Filemgmt plugin                              |
 // | Copyright (C) 2004 by Consult4Hire Inc.                                   |
@@ -33,7 +33,7 @@
 require_once '../lib-common.php';
 
 if (!in_array('downloads', $_PLUGINS)) {
-    echo COM_refresh($_CONF['site_url'] . '/index.php');
+    COM_handle404();
     exit;
 }
 
@@ -89,13 +89,13 @@ function makeProjectFileList($lid) {
     require_once $_CONF['path_system'] . 'lib-admin.php';
 
     $retval = '';
-    $project = DB_getItem($_TABLES['downloads'], 'project', "lid = '" . addslashes($lid) . "'");
+    $project = DB_getItem($_TABLES['downloads'], 'project', "lid = '" . DB_escapeString($lid) . "'");
     if ($project == false) return '';
     $permsql = $_DLM_CONF['has_edit_rights'] ? '' : COM_getPermSQL('AND', 0, 2, 'b');
     $result = DB_query("SELECT a.lid, a.title, a.url, a.version, a.size, a.date, a.cid "
                      . "FROM {$_TABLES['downloads']} a "
                      . "LEFT JOIN {$_TABLES['downloadcategories']} b ON a.cid=b.cid "
-                     . "WHERE a.project='" . addslashes($project) . "' "
+                     . "WHERE a.project='" . DB_escapeString($project) . "' "
                      . "AND a.project<>'' "
                      . "AND a.is_released=1 "
                      . $permsql
@@ -316,7 +316,7 @@ function dlformat(&$T, &$A, $isListing=false, $cid=ROOTID)
         $T->set_var('show_snapshoticon',    '');
         $T->set_var('show_snapshoticon_na', 'none');
         $T->set_var('mg_autotag',           '');
-        
+
         if ($_DLM_CONF['show_tn_image']) {
             $T->parse('snapshot', 'tsnapshot');
         } else {
@@ -371,13 +371,13 @@ function dlformat(&$T, &$A, $isListing=false, $cid=ROOTID)
     $T->set_var('md5_checksum',      $A['md5']);
 
     if ($A['commentcode'] == 0) {
-        $commentCount = DB_count($_TABLES['comments'], 'sid', addslashes($A['lid']));
+        $commentCount = DB_count($_TABLES['comments'], 'sid', DB_escapeString($A['lid']));
         $recentPostMessage = $LANG_DLM['commentswanted'];
         if ($commentCount > 0) {
             $result4 = DB_query("SELECT cid, UNIX_TIMESTAMP(date) AS day, username "
                               . "FROM {$_TABLES['comments']}, {$_TABLES['users']} "
                               . "WHERE {$_TABLES['users']}.uid = {$_TABLES['comments']}.uid "
-                              . "AND sid = '" . addslashes($A['lid']) . "' "
+                              . "AND sid = '" . DB_escapeString($A['lid']) . "' "
                               . "ORDER BY date DESC LIMIT 1");
             $C = DB_fetchArray($result4);
             $recentPostMessage = $LANG01[27] . ': ' . strftime($_CONF['daytime'], $C['day'])
@@ -407,7 +407,7 @@ function makeCategoryPart($cid)
 {
     global $_CONF, $_DLM_CONF, $LANG_DLM, $mytree;
 
-    $T = new Template($_DLM_CONF['path_layout']);
+    $T = COM_newTemplate(CTL_plugin_templatePath('downloads'));
     $T->set_file(array(
         'categorypart'   => 'filelisting_category.thtml',
         'categoryrow'    => 'filelisting_category_row.thtml',
@@ -459,7 +459,7 @@ function makeSortMenu($cid, $nppage, $orderby, $show)
 {
     global $_DLM_CONF, $LANG_DLM;
 
-    $T = new Template($_DLM_CONF['path_layout']);
+    $T = COM_newTemplate(CTL_plugin_templatePath('downloads'));
     $T->set_file('sortmenu', 'filelisting_sortmenu.thtml');
     DLM_setDefaultTemplateVars($T);
     switch ($orderby) {
@@ -512,12 +512,10 @@ $display = '';
 $pagetitle = $LANG_DLM['plugin_name'];
 
 // display message
-if (isset($_REQUEST['msg'])) {
-    $msg = COM_applyFilter($_REQUEST['msg'], true);
-    if ($msg > 0) $display .= COM_showMessage($msg, 'downloads');
-}
+$msg = (int) Geeklog\Input::fRequest('msg', 0);
+if ($msg > 0) $display .= COM_showMessage($msg, 'downloads');
 
-$T = new Template($_DLM_CONF['path_layout']);
+$T = COM_newTemplate(CTL_plugin_templatePath('downloads'));
 $T->set_file(array(
     'page'            => 'filelisting.thtml',
     'filedetail'      => 'filedetail.thtml',
@@ -544,7 +542,7 @@ $now = time();
 COM_setArgNames(array('id'));
 $lid = COM_applyFilter(COM_getArgument('id'));
 if (empty($lid)) {  // Check if the script is being called from the commentbar
-    $lid = COM_applyFilter($_POST['lid']);
+    $lid = Geeklog\Input::fPost('lid');
 }
 
 if (!empty($lid)) {
@@ -554,7 +552,7 @@ if (!empty($lid)) {
          . "imgurl, b.title AS cat_title "
          . "FROM {$_TABLES['downloads']} a "
          . "LEFT JOIN {$_TABLES['downloadcategories']} b ON a.cid=b.cid "
-         . "WHERE a.lid='" . addslashes($lid) . "' "
+         . "WHERE a.lid='" . DB_escapeString($lid) . "' "
          . "AND is_released=1 "
          . "AND date<=$now "
          . $permsql;
@@ -572,8 +570,15 @@ if (!empty($lid)) {
         require_once $_CONF['path_system'] . 'lib-comment.php';
         $A['title'] = str_replace('&#039;', "'", $A['title']);
         $A['title'] = str_replace('&amp;',  '&', $A['title']);
-        $T->set_var('comment_records', CMT_userComments($lid, $A['title'], 'downloads',
-                    $_POST['order'], $_POST['mode'] ,0 ,1 ,false ,$_DLM_CONF['has_edit_rights'], $A['commentcode']));
+        $T->set_var(
+            'comment_records',
+            CMT_userComments(
+                $lid, $A['title'], 'downloads',
+                Geeklog\Input::fPost('order'),
+                Geeklog\Input::fPost('mode'),
+                0 ,1 ,false ,$_DLM_CONF['has_edit_rights'], $A['commentcode']
+            )
+        );
 
         if ($_DLM_CONF['show_tn_only_exists']) {
             if (empty($A['logourl'])) {
@@ -597,17 +602,13 @@ if (!empty($lid)) {
 
 $T->set_var('tablewidth', $_DLM_CONF['download_shotwidth'] + 10); // probably no longer necessary
 
-$cid = COM_applyFilter($_GET['cid']);
+$cid = Geeklog\Input::fGet('cid');
 if (empty($cid)) {
-    $cid = COM_applyFilter($_POST['selbox_cat']);
+    $cid = Geeklog\Input::fPost('selbox_cat', ROOTID);
 }
-if (empty($cid)) $cid = ROOTID;
 
-$page = COM_applyFilter($_GET['page'], true);
-if (!isset($page)) {
-    $page = COM_applyFilter($_POST['selbox_page']);
-}
-$page = (!isset($page) || $page == 0) ? 1 : $page;
+$page = (int) Geeklog\Input::fGet('page', 0);
+$page = ($page === 0) ? 1 : $page;
 
 $pathstring = "<a href=\"{$_CONF['site_url']}/downloads/index.php\">" . $LANG_DLM['main'] . "</a>" . BCSEPALATOR
             . $mytree->getNicePathFromId($cid, "title", "{$_CONF['site_url']}/downloads/index.php");
@@ -623,20 +624,20 @@ $carr_count = count($carr);
 
 $maxrows = getTotalItems($carr);
 $T->set_var('filelisting_info', sprintf($LANG_DLM['listingheading'], $maxrows)); // number of file list
-$nppage = COM_applyFilter($_REQUEST['nppage'], true);
-if (!isset($nppage)) {
-    $nppage = COM_applyFilter($_POST['selbox_nppage'], true);
+
+$nppage = (int) Geeklog\Input::fRequest('nppage', 0);
+if ($nppage === 0) {
+    $nppage = (int) Geeklog\Input::fPost('selbox_nppage', 0);
 }
 
 $show = $_DLM_CONF['download_perpage'];
 $show = ($nppage > 0) ? $nppage : $show;
 $numpages = ceil($maxrows / $show);
 
-$orderby = COM_applyFilter($_GET['orderby']);
+$orderby = Geeklog\Input::fGet('orderby');
 if (empty($orderby)) {
-    $orderby = COM_applyFilter($_POST['selbox_orderby']);
+    $orderby = Geeklog\Input::fPost('selbox_orderby', 'dated');
 }
-if (empty($orderby)) $orderby = 'dated';
 
 if ($maxrows > 0) {
     $T->set_var('sort_menu', makeSortMenu($cid, $nppage, $orderby, $show)); // sort menu
@@ -698,4 +699,3 @@ $display .= PLG_replaceTags($T->finish($T->parse('output', 'page')));
 
 $display = DLM_createHTMLDocument($display, array('pagetitle' => $pagetitle));
 COM_output($display);
-?>
