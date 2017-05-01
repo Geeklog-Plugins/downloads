@@ -1,3 +1,0 @@
-{# begin {templatelocation} #}
-    <button type="submit" name="mode" value="{lang_preview}" class="uk-button uk-button-success">{lang_preview}</button>
-{# end {templatelocation} #}

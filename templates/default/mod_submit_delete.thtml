@@ -1,3 +1,0 @@
-<!-- start mod_submit_delete.thtml -->
-    <input type="submit" name="mode" value="{lang_delete}" class="button" onclick="return confirm('{lang_confirm_delete}');"{xhtml}>
-<!-- end mod_submit_delete.thtml -->

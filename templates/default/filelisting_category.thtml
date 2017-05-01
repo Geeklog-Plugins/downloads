@@ -1,5 +1,14 @@
+{# begin {templatelocation} #}
 
-<!-- start filelisting_category.thtml -->
 <div id="dlm_cat_part"><ul>
 {category_records}</ul></div>
-<!-- end filelisting_category.thtml -->
+
+{# end {templatelocation} #}
+
+<!-- BEGIN block_category_row -->
+{category_row}
+<!-- END block_category_row -->
+
+<!-- BEGIN block_category_item -->
+<li><div class="icon">{category_link}</div>&nbsp;<a href="{site_url}/downloads/index.php?cid={cid}">{chtitle}</a>&nbsp;({totaldownload})</li>
+<!-- END block_category_item -->

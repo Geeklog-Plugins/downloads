@@ -1,5 +1,5 @@
+{# begin {templatelocation} #}
 
-<!-- start filelisting.thtml -->
 {block_header}
 
 <div id="dlm_cat_path">{category_path_link}</div>
@@ -19,4 +19,236 @@
 {comment_records}
 
 {block_footer}
-<!-- end filelisting.thtml -->
+
+{# end {templatelocation} #}
+
+<!-- BEGIN block_category_selbox -->
+<div id="dlm_cat_selbox">
+<form action="{site_url}/downloads/index.php" method="post" class="uk-form"><div>
+{downloads_selbox}
+<input type="submit" value="{lang_go}" name="mode"{xhtml}>
+{hidden_values}
+</div></form>
+</div>
+<!-- END block_category_selbox -->
+
+<!-- BEGIN block_record -->
+<div class="pluginRow{cssid}" style="padding:10px; height:1%; overflow:hidden;">
+    <div class="dlm_snap_wrapper">
+{snapshot}{mg_autotag}
+    </div>
+    <div class="dlm_filelist_down_btn">
+        <a href="{visitfile_url}" title="{download_title}" class="dlbtn-green">{lang_download_button}</a>
+    </div>
+
+    <div class="dlm_filelist_heading">
+        <div class="filelist_title">
+            <a href="{filedetail_url}" title="{dtitle}">
+            <span class="dlm_catimg">{category_image}</span><span class="filelist_title">{dtitle}</span>
+            </a>
+        </div>
+
+        <div class="dlm_property">
+            <div class="lv1"><span>{lang_category}: </span>{category_path}</div>
+            <div class="lv1 {notags}"><span>{lang_tags}: </span>{tags}</div>
+            <div class="lv1">
+                <div class="lv2"><span>{lang_submitdate}: </span>{datetime}</div>
+                <div class="lv2"><span>{lang_size}: </span>{file_size}</div>
+                <div class="lv2"><span>{lang_version}: </span>{version}</div>
+            </div>
+            <div class="lv1"><span>{lang_md5_checksum}: </span>{md5_checksum}</div>
+            <div class="lv1">
+                <div class="lv2"><span>{lang_submitter}: </span>{submitter_name}</div>
+                <div class="lv2"><span>{lang_homepage}: </span>{homepage_link}</div>
+            </div>
+            <div class="lv1">
+                <div class="lv2"><span>{lang_rating}: </span><a href="{site_url}/downloads/ratefile.php?lid={lid}">{rating}</a>{votestring}</div>
+                <div class="lv2"><span>{lang_popularity}: </span>{begin_dlreport_link}{download_count}{end_dlreport_link}&nbsp;&nbsp;&nbsp;{newdownload}{popdownload}</div>
+            </div>
+        </div>
+    </div>
+    <div class="dlm_filelist_main">
+        <div class="dlm_description">{file_description}</div>
+
+        <div class="dlm_filelist_footer">
+            <a href="{visitfile_url}">{lang_download}</a>&nbsp;&nbsp;|&nbsp;
+            <span style="display:{show_comments};">{comment_link}&nbsp;&nbsp;|&nbsp;</span>
+            <a href="{filedetail_url}">{lang_filelink}</a>&nbsp;&nbsp;|&nbsp;
+            <a href="{site_url}/downloads/ratefile.php?lid={lid}">{lang_ratethisfile}</a><span style="display:{show_editlink};">&nbsp;&nbsp;|&nbsp;
+            <a href="{site_admin_url}/plugins/downloads/index.php?lid={lid}&amp;op=modify&amp;p=flist&amp;cid={listing_cid}">{lang_edit}</a></span>
+        </div>
+    </div>
+</div>
+<!-- END block_record -->
+
+<!-- BEGIN block_record_no_tn -->
+<div class="pluginRow{cssid}" style="padding:10px; height:1%; overflow:hidden;">
+    <div class="dlm_filelist_down_btn">
+        <a href="{visitfile_url}" title="{download_title}" class="dlbtn-green">{lang_download_button}</a>
+    </div>
+
+    <div class="dlm_filelist_heading_no_tn">
+        <div class="filelist_title">
+            <a href="{filedetail_url}" title="{dtitle}">
+            <span class="dlm_catimg">{category_image}</span><span class="filelist_title">{dtitle}</span>
+            </a>
+        </div>
+
+        <div class="dlm_property" style="position:relative;">
+            <div class="lv1"><span>{lang_category}: </span>{category_path}</div>
+            <div class="lv1 {notags}"><span>{lang_tags}: </span>{tags}</div>
+            <div class="lv1">
+                <div class="lv2"><span>{lang_submitdate}: </span>{datetime}</div>
+                <div class="lv2"><span>{lang_size}: </span>{file_size}</div>
+                <div class="lv2"><span>{lang_version}: </span>{version}</div>
+            </div>
+            <div class="lv1"><span>{lang_md5_checksum}: </span>{md5_checksum}</div>
+            <div class="lv1">
+                <div class="lv2"><span>{lang_submitter}: </span>{submitter_name}</div>
+                <div class="lv2"><span>{lang_homepage}: </span>{homepage_link}</div>
+            </div>
+            <div class="lv1">
+                <div class="lv2"><span>{lang_rating}: </span><a href="{site_url}/downloads/ratefile.php?lid={lid}">{rating}</a>{votestring}</div>
+                <div class="lv2"><span>{lang_popularity}: </span>{begin_dlreport_link}{download_count}{end_dlreport_link}&nbsp;&nbsp;&nbsp;{newdownload}{popdownload}</div>
+            </div>
+{snaplinkicon}
+        </div>
+
+        <div class="dlm_description">{file_description}</div>
+
+        <div class="dlm_filelist_footer">
+            <a href="{visitfile_url}">{lang_download}</a>&nbsp;&nbsp;|&nbsp;
+            <span style="display:{show_comments};">{comment_link}&nbsp;&nbsp;|&nbsp;</span>
+            <a href="{filedetail_url}">{lang_filelink}</a>&nbsp;&nbsp;|&nbsp;
+            <a href="{site_url}/downloads/ratefile.php?lid={lid}">{lang_ratethisfile}</a><span style="display:{show_editlink};">&nbsp;&nbsp;|&nbsp;
+            <a href="{site_admin_url}/plugins/downloads/index.php?lid={lid}&amp;op=modify&amp;p=flist&amp;cid={listing_cid}">{lang_edit}</a></span>
+        </div>
+    </div>
+</div>
+<!-- END block_record_no_tn -->
+
+<!-- BEGIN block_snapshot -->
+    <div class="dlm_snap_tn">
+        <a href="{snapshot_url}" title="{lang_click2see}"><img src="{thumbnail_url}" alt="snapshot"{xhtml}></a>
+    </div>
+<!-- END block_snapshot -->
+
+<!-- BEGIN block_snaplinkicon -->
+    <div class="dlm_snaplinkicon">
+        <a href="{snapshot_url}" title="{lang_click2see}"><img src="{site_url}/downloads/images/snaplinkicon.png" alt=""{xhtml}></a>
+    </div>
+<!-- END block_snaplinkicon -->
+
+<!-- BEGIN block_filedetail -->
+{block_header}
+
+<div style="padding-bottom:10px;">{category_path_link}</div>
+
+<div class="dlm_download">
+    <div class="dlm_snap_wrapper">
+{snapshot}{mg_autotag}
+    </div>
+
+    <div class="dlm_heading">
+        <div class="dlm_title">
+            <a href="{filedetail_url}" title="{dtitle}">
+            <span class="dlm_catimg">{category_image}</span><span class="dlm_title">{dtitle}</span>
+            </a>
+        </div>
+
+        <div class="dlm_property">
+            <div class="lv1"><span>{lang_category}: </span>{category_path}</div>
+            <div class="lv1 {notags}"><span>{lang_tags}: </span>{tags}</div>
+            <div class="lv1">
+                <div class="lv2"><span>{lang_submitdate}: </span>{datetime}</div>
+                <div class="lv2"><span>{lang_size}: </span>{file_size}</div>
+                <div class="lv2"><span>{lang_version}: </span>{version}</div>
+            </div>
+            <div class="lv1"><span>{lang_md5_checksum}: </span>{md5_checksum}</div>
+            <div class="lv1">
+                <div class="lv2"><span>{lang_submitter}: </span>{submitter_name}</div>
+                <div class="lv2"><span>{lang_homepage}: </span>{homepage_link}</div>
+            </div>
+            <div class="lv1">
+                <div class="lv2"><span>{lang_rating}: </span><a href="{site_url}/downloads/ratefile.php?lid={lid}">{rating}</a>{votestring}</div>
+                <div class="lv2"><span>{lang_popularity}: </span>{begin_dlreport_link}{download_count}{end_dlreport_link}&nbsp;&nbsp;&nbsp;{newdownload}{popdownload}</div>
+            </div>
+
+        </div>
+
+        <div class="dlm_down_btn">
+            <a href="{visitfile_url}" title="{download_title}" class="dlbtn-green">{lang_download_button}</a>
+        </div>
+    </div>
+    <div class="dlm_main">
+
+        <div class="dlm_description">{file_description}</div>
+
+        <div class="dlm_detail">{file_detail}</div>
+
+        <div class="dlm_footer">
+            <a href="{visitfile_url}">{lang_download}</a>&nbsp;&nbsp;|&nbsp;
+            <a href="{filedetail_url}">{lang_permalink}</a>&nbsp;&nbsp;|&nbsp;
+            <a href="{site_url}/downloads/ratefile.php?lid={lid}">{lang_ratethisfile}</a><span style="display:{show_editlink};">&nbsp;&nbsp;|&nbsp;
+            <a href="{site_admin_url}/plugins/downloads/index.php?lid={lid}&amp;op=modify&amp;p=item">{lang_edit}</a></span>
+        </div>
+    </div>
+</div>
+{project_filelist}
+{comment_records}
+{block_footer}
+<!-- END block_filedetail -->
+
+<!-- BEGIN block_filedetail_no_tn -->
+{block_header}
+
+<div style="padding-bottom:10px;">{category_path_link}</div>
+
+<div class="dlm_download">
+    <div class="dlm_heading_no_tn">
+        <div class="dlm_title">
+            <a href="{filedetail_url}" title="{dtitle}">
+            <span class="dlm_catimg">{category_image}</span><span class="dlm_title">{dtitle}</span>
+            </a>
+        </div>
+
+        <div class="dlm_property" style="position:relative;">
+            <div class="lv1"><span>{lang_category}: </span>{category_path}</div>
+            <div class="lv1 {notags}"><span>{lang_tags}: </span>{tags}</div>
+            <div class="lv1">
+                <div class="lv2"><span>{lang_submitdate}: </span>{datetime}</div>
+                <div class="lv2"><span>{lang_size}: </span>{file_size}</div>
+                <div class="lv2"><span>{lang_version}: </span>{version}</div>
+            </div>
+            <div class="lv1"><span>{lang_md5_checksum}: </span>{md5_checksum}</div>
+            <div class="lv1">
+                <div class="lv2"><span>{lang_submitter}: </span>{submitter_name}</div>
+                <div class="lv2"><span>{lang_homepage}: </span>{homepage_link}</div>
+            </div>
+            <div class="lv1">
+                <div class="lv2"><span>{lang_rating}: </span><a href="{site_url}/downloads/ratefile.php?lid={lid}">{rating}</a>{votestring}</div>
+                <div class="lv2"><span>{lang_popularity}: </span>{begin_dlreport_link}{download_count}{end_dlreport_link}&nbsp;&nbsp;&nbsp;{newdownload}{popdownload}</div>
+            </div>
+{snaplinkicon}
+        </div>
+
+        <div class="dlm_down_btn">
+            <a href="{visitfile_url}" title="{download_title}" class="dlbtn-green">{lang_download_button}</a>
+        </div>
+        <div class="dlm_description">{file_description}</div>
+    </div>
+    <div class="dlm_main">
+        <div class="dlm_detail">{file_detail}</div>
+
+        <div class="dlm_footer">
+            <a href="{visitfile_url}">{lang_download}</a>&nbsp;&nbsp;|&nbsp;
+            <a href="{filedetail_url}">{lang_permalink}</a>&nbsp;&nbsp;|&nbsp;
+            <a href="{site_url}/downloads/ratefile.php?lid={lid}">{lang_ratethisfile}</a><span style="display:{show_editlink};">&nbsp;&nbsp;|&nbsp;
+            <a href="{site_admin_url}/plugins/downloads/index.php?lid={lid}&amp;op=modify&amp;p=item">{lang_edit}</a></span>
+        </div>
+    </div>
+</div>
+{project_filelist}
+{comment_records}
+{block_footer}
+<!-- END block_filedetail_no_tn -->

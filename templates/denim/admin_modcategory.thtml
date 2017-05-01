@@ -23,7 +23,7 @@
           <span> 0 - 9999</span></dd>
 
       <dt><label for="downloads-is_enabled">{lang_is_enabled}</label></dt>
-      <dd><input type="checkbox" name="is_enabled" {val_is_enabled} id="downloads-is_enabled"{xhtml}></dd>
+      <dd class="controls_text"><input type="checkbox" name="is_enabled" {val_is_enabled} id="downloads-is_enabled"{xhtml}></dd>
     </dl>
   </div>
 

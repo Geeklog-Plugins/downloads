@@ -1,7 +1,0 @@
-
-<!-- start mod_newfileshot.thtml -->
-      <dt>{lang_shotimage}</dt>
-      <dd><input type="text" name="logourl" value="{logourl}" maxlength="250" class="size5"{xhtml}>
-          <p style="margin:5px 0;">{lang_upload}: <input type="file" name="newfileshot" size="48"{xhtml}></p>
-          <div style="margin:5px 0;" class="dlm_shot_wrapper">{shot}</div></dd>
-<!-- end mod_newfileshot.thtml -->

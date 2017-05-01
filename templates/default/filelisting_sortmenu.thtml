@@ -1,5 +1,5 @@
+{# begin {templatelocation} #}
 
-<!-- start filelisting_sortmenu.thtml -->
 <div class="header-listcontrol">
 <div>
   <div class="sortby">
@@ -18,4 +18,5 @@
   </div>
 </div>
 </div>
-<!-- end filelisting_sortmenu.thtml -->
+
+{# end {templatelocation} #}

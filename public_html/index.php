@@ -318,9 +318,9 @@ function dlformat(&$T, &$A, $isListing=false, $cid=ROOTID)
         $T->set_var('mg_autotag',           '');
 
         if ($_DLM_CONF['show_tn_image']) {
-            $T->parse('snapshot', 'tsnapshot');
+            $T->parse('snapshot', 'block_snapshot');
         } else {
-            $T->parse('snaplinkicon', 'tsnaplinkicon');
+            $T->parse('snaplinkicon', 'block_snaplinkicon');
         }
     } else {
         $tnimgurl = $_CONF['site_url'] . '/downloads/images/blank.png';
@@ -329,7 +329,7 @@ function dlformat(&$T, &$A, $isListing=false, $cid=ROOTID)
         $T->set_var('snapshot_sizeattr',    'width="200" height="200" ');
         $T->set_var('show_snapshoticon',    'none');
         $T->set_var('show_snapshoticon_na', '');
-        $T->parse('snapshot', 'tsnapshot');
+        $T->parse('snapshot', 'block_snapshot');
         $T->set_var('snaplinkicon', '');
         $T->set_var('mg_autotag',   '');
     }
@@ -408,11 +408,15 @@ function makeCategoryPart($cid)
     global $_CONF, $_DLM_CONF, $LANG_DLM, $mytree;
 
     $T = COM_newTemplate(CTL_plugin_templatePath('downloads'));
-    $T->set_file(array(
-        'categorypart'   => 'filelisting_category.thtml',
-        'categoryrow'    => 'filelisting_category_row.thtml',
-        'categoryitem'   => 'filelisting_category_item.thtml',
-    ));
+    $T->set_file('categorypart', 'filelisting_category.thtml');
+    $blocks = array(
+        'block_category_row',
+        'block_category_item'
+    );
+    foreach ($blocks as $block) {
+        $T->set_block('categorypart', $block);
+    }
+
     DLM_setDefaultTemplateVars($T);
 
     $arr = $mytree->getFirstChild($cid, 'corder'); // all child ID are listed (Affected by the language mode)
@@ -440,16 +444,16 @@ function makeCategoryPart($cid)
                                                   $_CONF['site_url'] . '/downloads/index.php?cid=' . $ele['cid']);
         }
         $T->set_var('category_link', $category_image_link);
-        $T->parse('category_row', 'categoryitem', true);
+        $T->parse('category_row', 'block_category_item', true);
         $count++;
         if ($count == $_DLM_CONF['numCategoriesPerRow']) {
-            $T->parse('category_records', 'categoryrow', true);
+            $T->parse('category_records', 'block_category_row', true);
             $T->set_var('category_row', '');
             $count = 0;
         }
     }
     if ($count > 0) {
-        $T->parse('category_records', 'categoryrow', true);
+        $T->parse('category_records', 'block_category_row', true);
     }
     return $T->finish($T->parse('category_part', 'categorypart'));
 }
@@ -516,21 +520,18 @@ $msg = (int) Geeklog\Input::fRequest('msg', 0);
 if ($msg > 0) $display .= COM_showMessage($msg, 'downloads');
 
 $T = COM_newTemplate(CTL_plugin_templatePath('downloads'));
-$T->set_file(array(
-    'page'            => 'filelisting.thtml',
-    'filedetail'      => 'filedetail.thtml',
-    'records'         => 'filelisting_record.thtml',
-    'tsnapshot'       => 'filelisting_snapshot.thtml',
-    'tsnaplinkicon'   => 'filelisting_snaplinkicon.thtml',
-    'filedetail_notn' => 'filedetail_no_tn.thtml',
-    'records_notn'    => 'filelisting_record_no_tn.thtml',
-    'categoryselbox'  => 'filelisting_category_selbox.thtml',
-));
-if (!$_DLM_CONF['show_tn_image']) {
-    $T->set_file(array(
-        'filedetail'  => 'filedetail_no_tn.thtml',
-        'records'     => 'filelisting_record_no_tn.thtml',
-    ));
+$T->set_file('filelisting', 'filelisting.thtml');
+$blocks = array(
+    'block_category_selbox',
+    'block_record',
+    'block_record_no_tn',
+    'block_snapshot',
+    'block_snaplinkicon',
+    'block_filedetail',
+    'block_filedetail_no_tn',
+);
+foreach ($blocks as $block) {
+    $T->set_block('filelisting', $block);
 }
 
 DLM_setDefaultTemplateVars($T);
@@ -579,18 +580,12 @@ if (!empty($lid)) {
                 0 ,1 ,false ,$_DLM_CONF['has_edit_rights'], $A['commentcode']
             )
         );
-
-        if ($_DLM_CONF['show_tn_only_exists']) {
-            if (empty($A['logourl'])) {
-                $filedetail = $T->finish($T->parse('filelisting_records', 'filedetail_notn'));
-            } else {
-                $filedetail = $T->finish($T->parse('filelisting_records', 'filedetail'));
-            }
-        } else {
-            $filedetail = $T->finish($T->parse('filelisting_records', 'filedetail'));
+        $template = 'block_filedetail';
+        if (!$_DLM_CONF['show_tn_image'] || ($_DLM_CONF['show_tn_only_exists'] && empty($A['logourl']))) {
+            $template = 'block_filedetail_no_tn';
         }
+        $filedetail = $T->finish($T->parse('filelisting_records', $template));
         $display .= PLG_replaceTags($filedetail);
-
         $pagetitle .= ': ' . $A['title'];
         $display = DLM_createHTMLDocument($display, array('pagetitle' => $pagetitle));
         COM_output($display);
@@ -650,7 +645,7 @@ $hidden_values .= DLM_makeForm_hidden('selbox_orderby', $orderby);
 $T->set_var('lang_go',          $LANG_DLM['go']);
 $T->set_var('downloads_selbox', $selbox);
 $T->set_var('hidden_values',    $hidden_values);
-$T->parse('category_selbox', 'categoryselbox');
+$T->parse('category_selbox', 'block_category_selbox');
 
 switch ($orderby) {
     case 'dated'  : $ordersql = 'date DESC';   break;
@@ -676,15 +671,11 @@ if (DB_numRows($result) > 0) {
     while ($A = DB_fetchArray($result)) {
         dlformat($T, $A, true, $cid);
         $T->set_var('cssid', $cssid);
-        if ($_DLM_CONF['show_tn_only_exists']) {
-            if (empty($A['logourl'])) {
-                $T->parse('filelisting_records', 'records_notn', true);
-            } else {
-                $T->parse('filelisting_records', 'records', true);
-            }
-        } else {
-            $T->parse('filelisting_records', 'records', true);
+        $template = 'block_record';
+        if (!$_DLM_CONF['show_tn_image'] || ($_DLM_CONF['show_tn_only_exists'] && empty($A['logourl']))) {
+            $template = 'block_record_no_tn';
         }
+        $T->parse('filelisting_records', $template, true);
         $cssid = ($cssid == 2) ? 1 : 2;
     }
 
@@ -695,7 +686,7 @@ if (DB_numRows($result) > 0) {
 } else {
     $T->set_var('filelisting_records', '<div class="pluginAlert dlm_alert">' . $LANG_DLM['nofiles'] . '</div>');
 }
-$display .= PLG_replaceTags($T->finish($T->parse('output', 'page')));
+$display .= PLG_replaceTags($T->finish($T->parse('output', 'filelisting')));
 
 $display = DLM_createHTMLDocument($display, array('pagetitle' => $pagetitle));
 COM_output($display);

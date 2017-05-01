@@ -336,32 +336,20 @@ class DLDownload
             }
         }
 
-        $ja = ($_CONF['language'] == 'japanese_utf-8');
         $T = COM_newTemplate(CTL_plugin_templatePath('downloads'));
-        $T->set_file(array(
-             't_mod_download'      => 'mod_download.thtml',
-             't_mod_newfile'       => 'mod_newfile.thtml',
-             't_mod_newfile2'      => 'mod_newfile2.thtml',
-             't_mod_newfileshot'   => 'mod_newfileshot.thtml',
-             't_mod_submit_delete' => 'mod_submit_delete.thtml',
-             't_mod_submit_cancel' => 'mod_submit_cancel.thtml',
-             't_mod_submit_preview' => 'mod_submit_preview.thtml',
-             't_mod_file_id'       => 'mod_file_id.thtml',
-             't_mod_dl_file_name'  => 'mod_dl_file_name.thtml',
-             't_mod_file_size'     => 'mod_file_size.thtml',
-             't_mod_votes'         => 'mod_votes.thtml',
-             't_mod_submitter'     => 'mod_submitter.thtml',
-             't_mod_tempfile'      => 'mod_tempfile.thtml',
-             't_mod_logourl'       => 'mod_logourl.thtml',
-             't_mod_tempsnap'      => 'mod_tempsnap.thtml',
-             't_mod_date'          => 'mod_date' . ($ja ? '_ja' : '') . '.thtml',
-             't_mod_mg_autotag'    => 'mod_mg_autotag.thtml',
-        ));
-        if ($mode == 'submit') {
-            $T->set_file(array(
-                 't_mod_newfile'     => 'mod_newfilesubmit.thtml',
-                 't_mod_newfileshot' => 'mod_newfileshotsubmit.thtml',
-            ));
+        $T->set_file('t_mod_download', 'mod_download.thtml');
+        $blocks = array(
+            'block_mod_newfile',
+            'block_mod_newfile2',
+            'block_mod_newfileshot',
+            'block_mod_newfilesubmit',
+            'block_mod_newfileshotsubmit',
+            'block_mod_date',
+            'block_mod_tempfile',
+            'block_mod_tempsnap'
+        );
+        foreach ($blocks as $block) {
+            $T->set_block('t_mod_download', $block);
         }
 
         DLM_setDefaultTemplateVars($T);
@@ -601,16 +589,12 @@ class DLDownload
             $T->set_var('val_commentoption_0', '');
         }
 
-        $T->parse('mod_submitter', 't_mod_submitter');
-
         if ($mode == 'editsubmission' || $mode == 'submit') {
-            $T->set_var('mod_mg_autotag','');
             $hidden_values .= $this->_makeForm_hidden('mg_autotag', $this->_mg_autotag);
         } else {
             if ($_DLM_CONF['enabled_mg_autotag'] == 1) {
-                $T->parse('mod_mg_autotag', 't_mod_mg_autotag');
+                $T->set_var('allow_mod_mg_autotag', true);
             } else {
-                $T->set_var('mod_mg_autotag','');
                 $hidden_values .= $this->_makeForm_hidden('mg_autotag', $this->_mg_autotag);
             }
         }
@@ -618,50 +602,58 @@ class DLDownload
         $T->set_var('hidden_values', $hidden_values);
 
         if ($mode == 'edit' || $mode == 'clone') {
-            $T->parse('mod_newfile',       't_mod_newfile');
-            $T->parse('mod_newfileshot',   't_mod_newfileshot');
+            $T->parse('mod_newfile',       'block_mod_newfile');
+            $T->parse('mod_newfileshot',   'block_mod_newfileshot');
+
             if ($mode == 'edit') {
-                $T->parse('mod_submit_delete', 't_mod_submit_delete');
+                $T->set_var('allow_delete', true);
             }
-            $T->parse('mod_submit_cancel', 't_mod_submit_cancel');
-            $T->parse('mod_file_size',     't_mod_file_size');
+            $T->set_var('show_file_size', true);
+            $T->set_var('allow_cancel', true);
         }
 
         if ($mode == 'editsubmission') {
-            $T->parse('mod_dl_file_name',  't_mod_dl_file_name');
-            $T->parse('mod_tempfile',      't_mod_tempfile');
-            $T->parse('mod_file_size',     't_mod_file_size');
+            $T->set_var('allow_mod_dl_file_name',  true);
+
+            $T->parse('mod_tempfile',      'block_mod_tempfile');
+            $T->set_var('show_file_size', true);
 
             $T->set_var('mod_tempsnap', '');
             if ($tempsnapurl != '') {
-                $T->parse('mod_tempsnap',  't_mod_tempsnap');
+                $T->parse('mod_tempsnap',  'block_mod_tempsnap');
             }
 
-            $T->parse('mod_logourl',       't_mod_logourl');
-            $T->parse('mod_submit_delete', 't_mod_submit_delete');
-            $T->parse('mod_submit_cancel', 't_mod_submit_cancel');
+            $T->set_var('allow_mod_logourl',  true);
+
+            $T->set_var('allow_cancel', true);
+            $T->set_var('allow_delete', true);
         }
 
         if ($mode == 'create') {
-            $T->parse('mod_newfile',       't_mod_newfile2');
-            $T->parse('mod_newfileshot',   't_mod_newfileshot');
-            $T->parse('mod_submit_cancel', 't_mod_submit_cancel');
+            $T->parse('mod_newfile',       'block_mod_newfile2');
+            $T->parse('mod_newfileshot',   'block_mod_newfileshot');
+
+            $T->set_var('allow_cancel', true);
         }
 
         if ($mode == 'submit') {
-            $T->parse('mod_newfile',     't_mod_newfile');
-            $T->parse('mod_newfileshot', 't_mod_newfileshot');
+            $T->parse('mod_newfile',       'block_mod_newfilesubmit');
+            $T->parse('mod_newfileshot',   'block_mod_newfileshotsubmit');
         }
 
-        if ($_DLM_CONF['enabled_preview_on_upload'] === false
-                && ($mode == 'create' || $mode == 'submit')) {
-            $T->set_var('mod_submit_preview','');
+        if ($_DLM_CONF['enabled_preview_on_upload'] === false && ($mode == 'create' || $mode == 'submit')) {
         } else {
-            $T->parse('mod_submit_preview', 't_mod_submit_preview');
+            $T->set_var('allow_preview', true);
         }
 
-        $T->parse('mod_file_id', 't_mod_file_id');
-        $T->parse('mod_date', 't_mod_date');
+        $t_mod_date = 'mod_date_' . $_CONF['language'] . '.thtml';
+        if ($this->_template_exists($T, $t_mod_date)) {
+            $T->set_file('t_mod_date', $t_mod_date);
+            $T->parse('mod_date', 't_mod_date');
+        } else {
+            $T->parse('mod_date', 'block_mod_date');
+        }
+
         $T->parse('output', 't_mod_download');
 
         $blocktitle = $LANG_DLM['moddl'];
@@ -699,6 +691,18 @@ class DLDownload
         }
 
         return $retval;
+    }
+
+    function _template_exists($T, $fileName)
+    {
+        $root = $T->getRoot();
+        foreach ($root as $r) {
+            $f = $r . '/' . $fileName;
+            if (file_exists($f)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     function _makeForm_shot_mg_autotag()

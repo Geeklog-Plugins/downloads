@@ -1,5 +1,6 @@
 
-<!-- start admin_modcategory.thtml -->
+{# begin {templatelocation} #}
+
 <form enctype="multipart/form-data" action="index.php" method="post" class="compact">
   <div class="admin_basic">
     <dl class="form_block">
@@ -39,4 +40,5 @@
 {hidden_values}
   </div>
 </form>
-<!-- end admin_modcategory.thtml -->
+
+{# end {templatelocation} #}

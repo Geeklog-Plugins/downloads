@@ -1,5 +1,0 @@
-
-<!-- start mod_dl_file_name.thtml -->
-      <dt><label for="downloads-dlfilename">{lang_dlfilename}</label></dt>
-      <dd><input type="text" maxlength="250" name="url" value="{url}" id="downloads-dlfilename" size="48" class="size5"{xhtml}>&nbsp;&nbsp;{mod_tempfile}</dd>
-<!-- end mod_dl_file_name.thtml -->

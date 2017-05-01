@@ -1,3 +1,0 @@
-<!-- start mod_submit_cancel.thtml -->
-    <input type="submit" name="mode" value="{lang_cancel}"{xhtml}>
-<!-- end mod_submit_cancel.thtml -->

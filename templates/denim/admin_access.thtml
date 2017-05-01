@@ -1,11 +1,12 @@
 
-<!-- start admin_access.thtml -->
+{# begin {templatelocation} #}
+
   <fieldset>
     <legend>{lang_accessrights}</legend>
 
     <dl class="form_block">
       <dt>{lang_owner}</dt>
-      <dd>{owner_name}<input type="hidden" name="owner_id" value="{ownerid}"{xhtml}></dd>
+      <dd class="controls_text">{owner_name}<input type="hidden" name="owner_id" value="{ownerid}"{xhtml}></dd>
 
       <dt><label for="group_id">{lang_group}</label></dt>
       <dd>{group_dropdown}</dd>
@@ -16,4 +17,5 @@
       <dd class="description">{lang_permmsg}</dd>
     </dl>
   </fieldset>
-<!-- end admin_access.thtml -->
+
+{# end {templatelocation} #}

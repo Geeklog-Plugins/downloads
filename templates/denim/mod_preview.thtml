@@ -1,7 +1,8 @@
+{# begin {templatelocation} #}
 
-<!-- start mod_preview.thtml -->
 <div class="dlm_main">
     <div class="dlm_description">{file_description}</div>
     <div class="dlm_detail">{file_detail}</div>
 </div>
-<!-- end mod_preview.thtml -->
+
+{# end {templatelocation} #}

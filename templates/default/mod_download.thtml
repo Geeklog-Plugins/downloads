@@ -1,16 +1,22 @@
+{# begin {templatelocation} #}
 
-<!-- start mod_download.thtml -->
 {js_script}
 <form enctype="multipart/form-data" action="{action}" method="post" onsubmit="set_postcontent();" class="compact">
   <div class="admin_basic">
     <dl class="form_block">
-{mod_submitter}
+      <dt>{lang_submitter}</dt>
+      <dd><a href="{site_url}/users.php?mode=profile&amp;uid={submitter}">{displayName}</a></dd>
 
       <dt><label for="downloads-filetitle">{lang_filetitle}</label></dt>
       <dd><input type="text" maxlength="200" name="title" value="{title}" id="downloads-filetitle" size="48" class="size5"{xhtml}></dd>
 
-{mod_file_id}
-{mod_dl_file_name}
+      <dt><label for="downloads-fileid">{lang_fileid}</label></dt>
+      <dd><input type="text" maxlength="40" name="lid" value="{lid}" id="downloads-fileid" size="48" class="size5"{xhtml}></dd>
+
+{!if allow_mod_dl_file_name}
+      <dt><label for="downloads-dlfilename">{lang_dlfilename}</label></dt>
+      <dd><input type="text" maxlength="250" name="url" value="{url}" id="downloads-dlfilename" size="48" class="size5"{xhtml}>&nbsp;&nbsp;{mod_tempfile}</dd>
+{!endif}
 {mod_newfile}
 
       <dt>{lang_category}</dt>
@@ -25,7 +31,13 @@
       <dt><label for="downloads-ver">{lang_ver}</label></dt>
       <dd><input type="text" maxlength="10" name="version" value="{version}" id="downloads-ver" size="10" class="size2"{xhtml}></dd>
 
-{mod_file_size}
+{!if show_file_size}
+      <dt>{lang_filesize}</dt>
+      <dd><input type="hidden" name="size" value="{size}"{xhtml}>{size}&nbsp;{lang_bytes}</dd>
+
+      <dt>{lang_md5}</dt>
+      <dd><input type="hidden" name="md5" value="{md5}"{xhtml}>{md5}</dd>
+{!endif}
 
       <dt>{lang_description}</dt>
       <dd><div id="text_editor" style="display:{show_texteditor}; width:95%">
@@ -68,9 +80,17 @@
           <br{xhtml}>
           {lang_allowed_html}</dd>
 
-{mod_logourl}
+{!if allow_mod_logourl}
+      <dt><label for="downloads-logourl">{lang_shotimage}</label></dt>
+      <dd><input type="text" maxlength="250" name="logourl" value="{logourl}" id="downloads-logourl" size="48" class="size5"{xhtml}>{mod_tempsnap}
+          {preview}</dd>
+{!endif}
 {mod_newfileshot}
-{mod_mg_autotag}
+{!if allow_mod_mg_autotag}
+      <dt>{lang_mg_autotag}</dt>
+      <dd><input type="text" name="mg_autotag" value="{mg_autotag}" maxlength="250" size="48" class="size5"{xhtml}>&nbsp;{lang_mg_autotag_info}
+          <div style="margin:5px 0;"><div class="dlm_snap_tn">{shot_autotag}</div></div></dd>
+{!endif}
 
       <dt>{lang_comment_mode}</dt>
       <dd><select name="commentcode">
@@ -98,9 +118,15 @@
 
   <div class="submit">
     <input type="submit" value="{lang_submit}" name="mode" class="submit"{xhtml}>
-{mod_submit_preview}
-{mod_submit_cancel}
-{mod_submit_delete}
+{!if allow_preview}
+    <input type="submit" value="{lang_preview}" name="mode" class="submit"{xhtml}>
+{!endif}
+{!if allow_cancel}
+    <input type="submit" name="mode" value="{lang_cancel}"{xhtml}>
+{!endif}
+{!if allow_delete}
+    <input type="submit" name="mode" value="{lang_delete}" class="button" onclick="return confirm('{lang_confirm_delete}');"{xhtml}>
+{!endif}
     <input type="hidden" name="op" value="{op}"{xhtml}>
     <input type="hidden" name="old_lid" value="{old_lid}"{xhtml}>
     <input type="hidden" name="old_date" value="{old_date}"{xhtml}>
@@ -108,5 +134,68 @@
 {hidden_values}
   </div>
 </form>
-{mod_votes}
-<!-- end mod_download.thtml -->
+
+{# end {templatelocation} #}
+
+<!-- BEGIN block_mod_newfile -->
+      <dt>{lang_dlfilename}</dt>
+      <dd><span>{url}</span>&nbsp;&nbsp;{mod_tempfile}
+          <p style="margin:5px 0;">{lang_upload}: <input type="file" name="newfile" size="48" maxlength="200"{xhtml}></p>
+          <input type="hidden" name="url" value="{url}"{xhtml}></dd>
+<!-- END block_mod_newfile -->
+
+<!-- BEGIN block_mod_newfile2 -->
+      <dt>{lang_dlfilename}</dt>
+      <dd><input type="file" name="newfile" size="48" maxlength="200"{xhtml}>
+          <input type="hidden" name="url" value="{url}"{xhtml}></dd>
+<!-- END block_mod_newfile2 -->
+
+<!-- BEGIN block_mod_newfileshot -->
+      <dt>{lang_shotimage}</dt>
+      <dd><input type="text" name="logourl" value="{logourl}" maxlength="250" class="size5"{xhtml}>
+          <p style="margin:5px 0;">{lang_upload}: <input type="file" name="newfileshot" size="48"{xhtml}></p>
+          <div style="margin:5px 0;" class="dlm_shot_wrapper">{shot}</div></dd>
+<!-- END block_mod_newfileshot -->
+
+<!-- BEGIN block_mod_newfilesubmit -->
+      <dt>{lang_replfilename}</dt>
+      <dd><input type="file" name="newfile" size="48" maxlength="200"{xhtml}></dd>
+<!-- END block_mod_newfilesubmit -->
+
+<!-- BEGIN block_mod_newfileshotsubmit -->
+      <dt>{lang_shotimage}</dt>
+      <dd><input type="file" name="newfileshot" size="48"{xhtml}></dd>
+<!-- END block_mod_newfileshotsubmit -->
+
+<!-- BEGIN block_mod_date -->
+      <dt>{lang_release_date}</dt>
+      <dd><span dir="ltr">
+            <select name="release_year">
+              {year_options}
+            </select>&nbsp;-
+            <select name="release_month">
+              {month_options}
+            </select>&nbsp;-
+            <select name="release_day">
+              {day_options}
+            </select>
+            &nbsp;&nbsp;
+            <select name="release_hour">
+              {hour_options}
+            </select>&nbsp;:
+            <select name="release_minute">
+              {minute_options}
+            </select>&nbsp;:
+            <select name="release_second">
+              {second_options}
+            </select>
+          </span></dd>
+<!-- END block_mod_date -->
+
+<!-- BEGIN block_mod_tempfile -->
+            &nbsp;<a href="{tempfileurl}">{lang_tempfile}</a>
+<!-- END block_mod_tempfile -->
+
+<!-- BEGIN block_mod_tempsnap -->
+            &nbsp;<a href="{tempsnapurl}">{lang_tempfile}</a>
+<!-- END block_mod_tempsnap -->
