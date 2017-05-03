@@ -120,6 +120,13 @@ class DLDownload
     */
     function _createID($str = 'file_')
     {
+        if (preg_match('/_[a-fA-F0-9]{13}/', $str, $matches, PREG_OFFSET_CAPTURE) === 1) {
+            $str = substr($str, 0, $matches[0][1] + 1);
+        }
+        if (strlen($str) > 27) { // 40 - 13
+            $str = 'file_';
+        }
+
         return $str . uniqid();
     }
 
