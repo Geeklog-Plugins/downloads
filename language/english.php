@@ -216,6 +216,10 @@ $LANG_DLM = array(
     '1301' => 'Please enter value for "Category ID".',
     '1302' => '"Category ID" entered value already exists. Please change value.',
     '1303' => '"Category ID" entered value is incorrect. Please change value.',
+    '1401' => 'Upload file parameter is invalid.',
+    '1402' => 'No file was uploaded.',
+    '1403' => 'Upload file size is too large.',
+    '1404' => 'Failed to upload file.',
     '9999' => 'OOPS! God Knows',
 );
 

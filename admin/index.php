@@ -115,7 +115,7 @@ function listDownloads()
 
     $query_arr = array('table'          => 'downloads',
                        'sql'            => $sql,
-                       'query_fields'   => array('title'),
+                       'query_fields'   => array('a.title'),
                        'default_filter' => '');
 
     $retval .= ADMIN_list('downloads', 'downloads_getListField_Files', $header_arr, $text_arr,

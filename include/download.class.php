@@ -120,6 +120,13 @@ class DLDownload
     */
     function _createID($str = 'file_')
     {
+        if (preg_match('/_[a-fA-F0-9]{13}/', $str, $matches, PREG_OFFSET_CAPTURE) === 1) {
+            $str = substr($str, 0, $matches[0][1] + 1);
+        }
+        if (strlen($str) > 27) { // 40 - 13
+            $str = 'file_';
+        }
+
         return $str . uniqid();
     }
 
@@ -885,6 +892,24 @@ class DLDownload
         if (empty($this->_lid)) $this->_lid = $this->_old_lid;
 
         // Validate the input values ----------------------->
+        if (!isset($_FILES['newfile']['error']) || !is_int($_FILES['newfile']['error'])) {
+            $this->_errno[] = '1401';
+        } else {
+            switch ($_FILES['newfile']['error']) {
+                case UPLOAD_ERR_OK:
+                    break;
+                case UPLOAD_ERR_NO_FILE:
+                    $this->_errno[] = '1402';
+                    break;
+                case UPLOAD_ERR_FORM_SIZE:
+                case UPLOAD_ERR_INI_SIZE:
+                    $this->_errno[] = '1403';
+                    break;
+                default:
+                    $this->_errno[] = '1404';
+                    break;
+            }
+        }
         if (empty($this->_title)) {
             $this->_errno[] = '1101';
         }
@@ -1122,6 +1147,21 @@ class DLDownload
         $newfile_name = $_FILES['newfile']['name'];
 
         // Validate the input values ----------------------->
+        if (isset($_FILES['newfile']['error']) && is_int($_FILES['newfile']['error'])) {
+            switch ($_FILES['newfile']['error']) {
+                case UPLOAD_ERR_OK:
+                    break;
+                case UPLOAD_ERR_NO_FILE:
+                    break;
+                case UPLOAD_ERR_FORM_SIZE:
+                case UPLOAD_ERR_INI_SIZE:
+                    $this->_errno[] = '1403';
+                    break;
+                default:
+                    $this->_errno[] = '1404';
+                    break;
+            }
+        }
         if (empty($this->_title)) {
             $this->_errno[] = '1101';
         }
@@ -1452,6 +1492,24 @@ class DLDownload
         if (empty($this->_lid)) $this->_lid = $this->_old_lid;
 
         // Validate the input values ----------------------->
+        if (!isset($_FILES['newfile']['error']) || !is_int($_FILES['newfile']['error'])) {
+            $this->_errno[] = '1401';
+        } else {
+            switch ($_FILES['newfile']['error']) {
+                case UPLOAD_ERR_OK:
+                    break;
+                case UPLOAD_ERR_NO_FILE:
+                    $this->_errno[] = '1402';
+                    break;
+                case UPLOAD_ERR_FORM_SIZE:
+                case UPLOAD_ERR_INI_SIZE:
+                    $this->_errno[] = '1403';
+                    break;
+                default:
+                    $this->_errno[] = '1404';
+                    break;
+            }
+        }
         if (empty($this->_title)) {
             $this->_errno[] = '1101';
         }
