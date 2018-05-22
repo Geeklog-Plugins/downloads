@@ -344,7 +344,7 @@ class DLDownload
         }
 
         $ja = ($_CONF['language'] == 'japanese_utf-8');
-        $T = new Template($_DLM_CONF['path_layout']);
+        $T = COM_newTemplate(CTL_plugin_templatePath('downloads'));
         $T->set_file(array(
              't_mod_download'      => 'mod_download.thtml',
              't_mod_newfile'       => 'mod_newfile.thtml',
@@ -684,7 +684,7 @@ class DLDownload
 
         if (!empty($file_description) || !empty($file_detail)) {
             // Display Preview Block
-            $T2 = new Template($_DLM_CONF['path_layout']);
+            $T2 = COM_newTemplate(CTL_plugin_templatePath('downloads'));
             $T2->set_file('t_mod_preview', 'mod_preview.thtml');
             $T2->set_var('file_description', $file_description);
             $T2->set_var('file_detail',      $file_detail);

@@ -407,7 +407,7 @@ function makeCategoryPart($cid)
 {
     global $_CONF, $_DLM_CONF, $LANG_DLM, $mytree;
 
-    $T = new Template($_DLM_CONF['path_layout']);
+    $T = COM_newTemplate(CTL_plugin_templatePath('downloads'));
     $T->set_file(array(
         'categorypart'   => 'filelisting_category.thtml',
         'categoryrow'    => 'filelisting_category_row.thtml',
@@ -459,7 +459,7 @@ function makeSortMenu($cid, $nppage, $orderby, $show)
 {
     global $_DLM_CONF, $LANG_DLM;
 
-    $T = new Template($_DLM_CONF['path_layout']);
+    $T = COM_newTemplate(CTL_plugin_templatePath('downloads'));
     $T->set_file('sortmenu', 'filelisting_sortmenu.thtml');
     DLM_setDefaultTemplateVars($T);
     switch ($orderby) {
@@ -517,7 +517,7 @@ if (isset($_REQUEST['msg'])) {
     if ($msg > 0) $display .= COM_showMessage($msg, 'downloads');
 }
 
-$T = new Template($_DLM_CONF['path_layout']);
+$T = COM_newTemplate(CTL_plugin_templatePath('downloads'));
 $T->set_file(array(
     'page'            => 'filelisting.thtml',
     'filedetail'      => 'filedetail.thtml',

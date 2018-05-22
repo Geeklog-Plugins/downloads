@@ -71,25 +71,11 @@ if (is_array($temp)) {
     $_DLM_CONF = array_merge($_DLM_CONF, $temp);
 }
 
-$_DLM_CONF['use_theme'] = true;
-
 $_DLM_CONF['lang_id'] = COM_getLanguageId();
 
 $_DLM_CONF['date_format'] = '%Y-%m-%d %H:%M';
 
 $_DLM_CONF['enabled_preview_on_upload'] = false;
-
-/**
-* Set template path and CSS url
-*/
-$_DLM_CONF['path_layout'] = $_CONF['path_html'] . 'downloads/templates/';
-$_DLM_CONF['css_url'] = $_CONF['site_url'] . '/downloads/templates';
-if ($_DLM_CONF['use_theme']) {
-    if (is_dir($_CONF['path_layout'] . 'downloads')) {
-        $_DLM_CONF['path_layout'] = $_CONF['path_layout'] . 'downloads/';
-        $_DLM_CONF['css_url'] = $_CONF['layout_url'] . '/downloads';
-    }
-}
 
 // +---------------------------------------------------------------------------+
 // | Geeklog Plugin API Implementation                                         |
@@ -748,18 +734,13 @@ function plugin_user_delete_downloads($uid)
 */
 function plugin_getheadercode_downloads()
 {
-    global $_DLM_CONF;
+    global $_SCRIPTS;
 
     $retval = '';
 
     // use the CSS only if we are on the plugin's pages
     if (substr_count($_SERVER['PHP_SELF'], '/downloads/') > 0) {
-        if (version_compare(VERSION, '2.0.0') < 0) {
-            $retval .= '<link rel="stylesheet" type="text/css" href="'
-                     . $_DLM_CONF['css_url'] . '/admin.css"' . XHTML . '>' . LB;
-        }
-        $retval .= '<link rel="stylesheet" type="text/css" href="'
-                 . $_DLM_CONF['css_url'] . '/downloads.css"' . XHTML . '>' . LB;
+        $_SCRIPTS->setCSSFile('downloads', CTL_plugin_themeFindFile('downloads', 'css', 'downloads.css'));
     }
 
     return $retval;
