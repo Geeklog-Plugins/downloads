@@ -54,8 +54,8 @@ function plugin_autoinstall_downloads($pi_name)
     $info = array(
         'pi_name'         => $pi_name,
         'pi_display_name' => $pi_display_name,
-        'pi_version'      => '1.2.0',
-        'pi_gl_version'   => '1.8.0',
+        'pi_version'      => '1.2.1',
+        'pi_gl_version'   => '2.1.2',
         'pi_homepage'     => 'http://www.trybase.com/~dengen/log/'
     );
 
@@ -189,11 +189,15 @@ function plugin_compatible_with_this_version_downloads($pi_name)
     if (!function_exists('SEC_loginRequiredForm')) {
         return false;
     }
-
+    
     if (!function_exists('COM_newTemplate')) {
         // the plugin requires Geeklog 1.8.0 or older
         return false;
     }
+    
+    if (!function_exists('CTL_plugin_templatePath')) {
+        return false;
+    }    
 
     return true;
 }
@@ -275,6 +279,10 @@ function DLM_upgrade()
             }
             $current_version = '1.2.0';
             break;
+        case '1.2.0':
+            $current_version = '1.2.1';
+            break;
+            
         default:
             $done = true;
             break;

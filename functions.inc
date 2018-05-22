@@ -53,9 +53,6 @@ if (file_exists($langfile)) {
     require_once $plugin_path . 'language/english.php';
 }
 
-$_DLM_CONF = array();
-$_DLM_CONF['version'] = '1.2.0';
-
 $_TABLES['downloadcategories'] = $_DB_table_prefix . 'downloadcategories';
 $_TABLES['downloads']          = $_DB_table_prefix . 'downloads';
 $_TABLES['downloadvotes']      = $_DB_table_prefix . 'downloadvotes';
@@ -66,6 +63,7 @@ $_TABLES['downloadsubmission'] = $_DB_table_prefix . 'downloadsubmission';
 /**
 * Check and see if we need to load the plugin configuration
 */
+$_DLM_CONF = array();
 require_once $_CONF['path_system'] . 'classes/config.class.php';
 $plg_config = config::get_instance();
 $temp = $plg_config->get_config('downloads');
@@ -271,9 +269,13 @@ function plugin_autotags_downloads($op, $content = '', $autotag = '')
 */
 function plugin_chkVersion_downloads()
 {
-    global $_DLM_CONF;
+    global $_CONF;
 
-    return $_DLM_CONF['version'];
+    require_once $_CONF['path'] . 'plugins/downloads/autoinstall.php';
+
+    $inst_parms = plugin_autoinstall_downloads('downloads');
+
+    return $inst_parms['info']['pi_version'];    
 }
 
 
@@ -575,12 +577,7 @@ function plugin_savecomment_downloads($title, $comment, $id, $pid, $postmode)
         $retval = CMT_commentForm($title, $comment, $id, $pid, 'downloads',
                                   $LANG03[14], $postmode);
         if (!defined('COMMENT_ON_SAME_PAGE') || !COMMENT_ON_SAME_PAGE) {
-//          $retval = COM_createHTMLDocument($retval, array('pagetitle' => $LANG03[1]));
-            if (function_exists('COM_createHTMLDocument')) {
-                $retval = COM_createHTMLDocument($retval, array('pagetitle' => $LANG03[1]));
-            } else {
-                $retval = COM_siteHeader('menu', $LANG03[1]) . $retval . COM_siteFooter();
-            }
+            $retval = COM_createHTMLDocument($retval, array('pagetitle' => $LANG03[1]));
         }
     } else { // success
         $retval = COM_refresh(COM_buildURL($_CONF['site_url'] . "/downloads/index.php?id=$id"));

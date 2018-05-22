@@ -43,7 +43,7 @@ if (!SEC_hasRights('downloads.edit')) {
 }
 
 $installed_version = DB_getItem($_TABLES['plugins'], 'pi_version', "pi_name = 'downloads'");
-if (version_compare($installed_version, $_DLM_CONF['version']) < 0) {
+if (version_compare($installed_version, plugin_chkVersion_downloads()) < 0) {
     $display = COM_showMessageText($LANG_DLM['please_update']);
     $display = DLM_createHTMLDocument($display, array('pagetitle' => $LANG_DLM['manager']));
     COM_output($display);
