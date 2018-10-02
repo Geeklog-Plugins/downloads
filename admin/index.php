@@ -443,9 +443,10 @@ function showMessage()
 
 // MAIN
 
-$op = COM_applyFilter($_REQUEST['op']);
-$_page = COM_applyFilter($_REQUEST['page']);
-$listing_cid = COM_applyFilter($_REQUEST['listing_cid']);
+$op             = isset($_REQUEST['op'])            ? COM_applyFilter($_REQUEST['op'])              : '';
+$_page          = isset($_REQUEST['page'])          ? COM_applyFilter($_REQUEST['page'])            : '';
+$listing_cid    = isset($_REQUEST['listing_cid'])   ? COM_applyFilter($_REQUEST['listing_cid'])     : '';
+
 $display = '';
 
 require_once $_CONF['path'] . 'plugins/downloads/include/gltree.class.php';
