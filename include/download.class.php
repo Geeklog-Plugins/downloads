@@ -522,17 +522,8 @@ class DLDownload
 
         if ($enabled_adv_editor) {
             // Add JavaScript
-            if (version_compare(VERSION, '2.1.0') >= 0) {
-                $_SCRIPTS->setJavaScriptFile('postmode_control', '/javascript/postmode_control.js');
-                COM_setupAdvancedEditor('/downloads/adveditor.js', 'story.edit');
-            } else {
-                if (version_compare(VERSION, '2.0.0') < 0) {
-                    $js = 'geeklogEditorBasePath = "' . $_CONF['site_url'] . '/fckeditor/";';
-                    $_SCRIPTS->setJavaScript($js, true);
-                }
-                $_SCRIPTS->setJavaScriptFile('fckeditor', '/fckeditor/fckeditor.js');
-                $_SCRIPTS->setJavaScriptFile('downloadeditor_fckeditor', '/downloads/downloadeditor_fckeditor.js');
-            }
+            $_SCRIPTS->setJavaScriptFile('postmode_control', '/javascript/postmode_control.js');
+            COM_setupAdvancedEditor('/downloads/adveditor.js', 'story.edit');
         }
 
         if (empty($this->_postmode)) {
