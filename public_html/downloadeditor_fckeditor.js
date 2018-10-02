@@ -28,8 +28,8 @@
         oFCKeditor2.Height = 200 ;
         oFCKeditor2.ReplaceTextarea() ;
 
-        document.getElementById('fckeditor_toolbar_selector').options[bar].selected = true;
-        document.getElementById('fckeditor_toolbar_selector2').options[bar].selected = true;
+        document.getElementById('adveditor_toolbar_selector').options[bar].selected = true;
+        document.getElementById('adveditor_toolbar_selector2').options[bar].selected = true;
     }
 
     function change_editmode(obj) {
