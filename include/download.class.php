@@ -275,7 +275,7 @@ class DLDownload
             // deny access
             COM_accessLog("User {$_USER['username']} tried illegally to edit download information $this->_lid.");
             $display = COM_showMessage(7, 'downloads');
-            $display = DLM_createHTMLDocument($display, array('pagetitle' => $LANG_DLM['manager']));
+            $display = COM_createHTMLDocument($display, array('pagetitle' => $LANG_DLM['manager']));
             COM_output($display);
             exit;
         }
@@ -693,7 +693,7 @@ class DLDownload
         }
 
         if ($mode != 'submit' || $this->_retry == true) {
-            $retval = DLM_createHTMLDocument($retval, array('pagetitle' => $blocktitle));
+            $retval = COM_createHTMLDocument($retval, array('pagetitle' => $blocktitle));
         }
 
         return $retval;

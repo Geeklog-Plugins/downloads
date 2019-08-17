@@ -154,7 +154,7 @@ class DLCategory
             // deny access
             COM_accessLog("User {$_USER['username']} tried illegally to edit category $this->_cid.");
             $display = COM_showMessage(6, 'downloads');
-            $display = DLM_createHTMLDocument($display, array('pagetitle' => $LANG_DLM['manager']));
+            $display = COM_createHTMLDocument($display, array('pagetitle' => $LANG_DLM['manager']));
             COM_output($display);
             exit;
         }
@@ -259,7 +259,7 @@ class DLCategory
         $T->parse('output', 't_modcategory');
         $retval .= $T->finish($T->get_var('output'));
         $retval .= COM_endBlock(COM_getBlockTemplate('_admin_block', 'footer'));
-        $retval = DLM_createHTMLDocument($retval, array('pagetitle' => $blocktitle));
+        $retval = COM_createHTMLDocument($retval, array('pagetitle' => $blocktitle));
 
         return $retval;
     }

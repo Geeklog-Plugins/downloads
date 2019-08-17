@@ -36,7 +36,7 @@ require_once $_CONF['path'] . 'plugins/downloads/include/functions.php';
 
 if (!SEC_hasRights('downloads.edit')) {
     $display = COM_showMessageText($MESSAGE[29], $MESSAGE[30]);
-    $display = DLM_createHTMLDocument($display, array('pagetitle' => $MESSAGE[30]));
+    $display = COM_createHTMLDocument($display, array('pagetitle' => $MESSAGE[30]));
     COM_accessLog("User {$_USER['username']} tried to illegally access the downloads temporary file.");
     COM_output($display);
     exit;
@@ -60,4 +60,3 @@ if (file_exists($filepath)) {
     flush();
     @readfile($filepath);
 }
-?>

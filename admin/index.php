@@ -36,7 +36,7 @@ require_once $_CONF['path'] . 'plugins/downloads/include/functions.php';
 
 if (!SEC_hasRights('downloads.edit')) {
     $display = COM_showMessageText($MESSAGE[29], $MESSAGE[30]);
-    $display = DLM_createHTMLDocument($display, array('pagetitle' => $MESSAGE[30]));
+    $display = COM_createHTMLDocument($display, array('pagetitle' => $MESSAGE[30]));
     COM_accessLog("User {$_USER['username']} tried to illegally access the downloads administration screen.");
     COM_output($display);
     exit;
@@ -45,7 +45,7 @@ if (!SEC_hasRights('downloads.edit')) {
 $installed_version = DB_getItem($_TABLES['plugins'], 'pi_version', "pi_name = 'downloads'");
 if (version_compare($installed_version, plugin_chkVersion_downloads()) < 0) {
     $display = COM_showMessageText($LANG_DLM['please_update']);
-    $display = DLM_createHTMLDocument($display, array('pagetitle' => $LANG_DLM['manager']));
+    $display = COM_createHTMLDocument($display, array('pagetitle' => $LANG_DLM['manager']));
     COM_output($display);
     exit;
 }
@@ -471,7 +471,7 @@ if (in_array($op, array('newCategory', 'modCat', 'cloneCat', 'addCategory', 'del
     // only users who belong to the Root group can access
     if (!SEC_inGroup('Root')) {
         $display = COM_showMessageText($MESSAGE[29], $MESSAGE[30]);
-        $display = DLM_createHTMLDocument($display, array('pagetitle' => $MESSAGE[30]));
+        $display = COM_createHTMLDocument($display, array('pagetitle' => $MESSAGE[30]));
         COM_accessLog("User {$_USER['username']} tried to illegally access the downloads administration screen.");
         COM_output($display);
         exit;
@@ -600,7 +600,7 @@ switch ($op) {
         $DLM_CSRF_TOKEN = SEC_createToken();
         $display .= showMessage();
         $display .= listCategories();
-        $display = DLM_createHTMLDocument($display, array('pagetitle' => $LANG_DLM['manager']));
+        $display = COM_createHTMLDocument($display, array('pagetitle' => $LANG_DLM['manager']));
         break;
 
     case "move":
@@ -608,7 +608,7 @@ switch ($op) {
         $DLM_CSRF_TOKEN = SEC_createToken();
         $display .= showMessage();
         $display .= listCategories();
-        $display = DLM_createHTMLDocument($display, array('pagetitle' => $LANG_DLM['manager']));
+        $display = COM_createHTMLDocument($display, array('pagetitle' => $LANG_DLM['manager']));
         break;
 
     case "listDownloads":
@@ -617,9 +617,8 @@ switch ($op) {
         $display .= DLM_updatePlugin();
         $display .= showMessage();
         $display .= listDownloads();
-        $display = DLM_createHTMLDocument($display, array('pagetitle' => $LANG_DLM['manager']));
+        $display = COM_createHTMLDocument($display, array('pagetitle' => $LANG_DLM['manager']));
         break;
 }
 
 COM_output($display);
-?>

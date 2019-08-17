@@ -71,14 +71,14 @@ default:
 
 if (!in_array('downloads', $_PLUGINS)) {
     $display = COM_showMessageText($_LANG_UPDATE['dm_not_installed'], $MESSAGE[40]);
-    $display = DLM_createHTMLDocument($display, array('menu' => $MESSAGE[40]));
+    $display = COM_createHTMLDocument($display, array('menu' => $MESSAGE[40]));
     COM_output($display);
     exit;
 }
 
 if (!SEC_hasRights('downloads.edit')) {
     $display = COM_showMessageText($MESSAGE[29], $MESSAGE[30]);
-    $display = DLM_createHTMLDocument($display, array('menu' => $MESSAGE[30]));
+    $display = COM_createHTMLDocument($display, array('menu' => $MESSAGE[30]));
     COM_accessLog("User {$_USER['username']} tried to illegally access "
                 . "the downloads administration screen.");
     COM_output($display);
@@ -136,7 +136,7 @@ switch ($mode) {
     case $_LANG_UPDATE['submit']:
         $display .= '<h1>' . $title . '</h1>' . LB;
         $display .= DLM_update_001();
-        $display = DLM_createHTMLDocument($display, array('menu' => $title));
+        $display = COM_createHTMLDocument($display, array('menu' => $title));
         break;
 
     case $_LANG_UPDATE['cancel']:
@@ -165,8 +165,7 @@ switch ($mode) {
         $display .= '<input type="submit" name="mode" value="'
                   . $_LANG_UPDATE['cancel'] . '" class="button"' . XHTML . '>' . LB;
         $display .= '</div></form>' . LB;
-        $display = DLM_createHTMLDocument($display, array('menu' => $title));
+        $display = COM_createHTMLDocument($display, array('menu' => $title));
         break;
 }
 COM_output($display);
-?>

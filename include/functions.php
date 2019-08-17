@@ -78,16 +78,14 @@ function DLM_showErrorMessage($e_code, $pages=1)
     $message = $LANG_DLM[$e_code];
     $timestamp = strftime($_CONF['daytime']);
 
-    $display = COM_siteHeader('menu')
-             . COM_startBlock($MESSAGE[40] . ' - ' . $timestamp, '', COM_getBlockTemplate('_msg_block', 'header'))
+    $content = COM_startBlock($MESSAGE[40] . ' - ' . $timestamp, '', COM_getBlockTemplate('_msg_block', 'header'))
              . '<p class="sysmessage"><img src="' . $_CONF['layout_url'] . '/images/sysmessage.'
              . $_IMAGE_TYPE . '" alt="" ' . XHTML . '>' . $message . '</p>'
              . '<p class="sysmessage" style="text-align:center;">[ <a href="javascript:history.go(-' . $pages . ')">'
              . $LANG_DLM['goback'] . '</a> ]</p>'
-             . COM_endBlock(COM_getBlockTemplate('_msg_block', 'footer'))
-             . COM_siteFooter();
-
-    echo $display;
+             . COM_endBlock(COM_getBlockTemplate('_msg_block', 'footer'));
+    $display = COM_createHTMLDocument($content, array('what' => 'menu'));
+    COM_output($display);
     exit;
 }
 
@@ -412,7 +410,7 @@ function DLM_modTNPath($url)
     $parts = pathinfo($url);
     $extary = array('jpg', 'png');
     foreach ($extary as $ext) {
-        $len = strlen(ext);
+        $len = strlen($ext);
         $modurl = substr($url, 0, -$len) . $ext;
         if (file_exists($modurl)) {
             return $modurl;
@@ -508,36 +506,3 @@ function DLM_hasAccess_history()
         break;
     }
 }
-
-function DLM_createHTMLDocument(&$content, $information = array())
-{
-    if (function_exists('COM_createHTMLDocument')) {
-        return COM_createHTMLDocument($content, $information);
-    }
-
-    // Retrieve required variables from information array
-    $what = 'menu';
-    if (isset($information['what'])) {
-        $what = $information['what'];
-    }
-    $pagetitle = '';
-    if (isset($information['pagetitle'])) {
-        $pagetitle = $information['pagetitle'];
-    }
-    $headercode = '';
-    if (isset($information['headercode'])) {
-        $headercode = $information['headercode'];
-    }
-    $rightblock = -1;
-    if (isset($information['rightblock'])) {
-        $rightblock = $information['rightblock'];
-    } 
-    $custom = '';
-    if (isset($information['custom'])) {
-        $custom = $information['custom'];
-    }
-
-    return COM_siteHeader($what, $pagetitle, $headercode) . $content
-         . COM_siteFooter($rightblock, $custom);
-}
-?>

@@ -76,7 +76,6 @@ while ($A = DB_fetchArray($result)) {
 }
 
 $display .= ADMIN_simpleList('', $header_arr, $text_arr, $data_arr);
-$display = DLM_createHTMLDocument($display, array('pagetitle' => $pagetitle));
+$display = COM_createHTMLDocument($display, array('pagetitle' => $pagetitle));
 
 COM_output($display);
-?>

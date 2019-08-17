@@ -41,7 +41,7 @@ require_once $_CONF['path'] . 'plugins/downloads/include/functions.php';
 
 if (COM_isAnonUser() && ($_CONF['loginrequired'] == 1 || $_DLM_CONF['loginrequired'] == 1)) {
     $display = SEC_loginRequiredForm();
-    $display = DLM_createHTMLDocument($display);
+    $display = COM_createHTMLDocument($display);
     COM_output($display);
     exit;
 }
@@ -587,7 +587,7 @@ if (!empty($lid)) {
         $display .= PLG_replaceTags($filedetail);
 
         $pagetitle .= ': ' . $A['title'];
-        $display = DLM_createHTMLDocument($display, array('pagetitle' => $pagetitle));
+        $display = COM_createHTMLDocument($display, array('pagetitle' => $pagetitle));
         COM_output($display);
 
         exit;
@@ -696,6 +696,5 @@ if (DB_numRows($result) > 0) {
 }
 $display .= PLG_replaceTags($T->finish($T->parse('output', 'page')));
 
-$display = DLM_createHTMLDocument($display, array('pagetitle' => $pagetitle));
+$display = COM_createHTMLDocument($display, array('pagetitle' => $pagetitle));
 COM_output($display);
-?>
