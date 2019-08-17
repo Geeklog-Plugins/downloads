@@ -41,7 +41,7 @@ require_once $_CONF['path'] . 'plugins/downloads/include/functions.php';
 
 if (COM_isAnonUser() && ($_CONF['loginrequired'] == 1 || $_DLM_CONF['loginrequired'] == 1)) {
     $display = SEC_loginRequiredForm();
-    $display = DLM_createHTMLDocument($display);
+    $display = COM_createHTMLDocument($display);
     COM_output($display);
     exit;
 }
@@ -135,6 +135,5 @@ $T->set_var('lang_cancel',      $LANG_DLM['cancel']);
 $T->parse('output', 't_vote');
 $display .= $T->finish($T->get_var('output'));
 $display .= COM_endBlock();
-$display = DLM_createHTMLDocument($display, array('pagetitle' => $pagetitle));
+$display = COM_createHTMLDocument($display, array('pagetitle' => $pagetitle));
 COM_output($display);
-?>
