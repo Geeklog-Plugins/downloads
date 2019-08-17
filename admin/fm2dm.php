@@ -117,34 +117,30 @@ default:
 }
 
 if (!in_array('downloads', $_PLUGINS)) {
-    $display .= COM_siteHeader('menu', $MESSAGE[40])
-             . COM_showMessageText($_LANG_CONV['dm_not_installed'], $MESSAGE[40])
-             . COM_siteFooter();
+    $display .= COM_showMessageText($_LANG_CONV['dm_not_installed'], $MESSAGE[40]);
+    $display = COM_createHTMLDocument($display, array('pagetitle' => $MESSAGE[40]));
     COM_output($display);
     exit;
 }
 
 if (!in_array('filemgmt', $_PLUGINS)) {
-    $display .= COM_siteHeader('menu', $MESSAGE[40])
-             . COM_showMessageText($_LANG_CONV['fm_not_installed'], $MESSAGE[40])
-             . COM_siteFooter();
+    $display .= COM_showMessageText($_LANG_CONV['fm_not_installed'], $MESSAGE[40]);
+    $display = COM_createHTMLDocument($display, array('pagetitle' => $MESSAGE[40]));
     COM_output($display);
     exit;
 }
 
 if (!SEC_hasRights('downloads.edit')) {
-    $display .= COM_siteHeader('menu', $MESSAGE[30])
-             . COM_showMessageText($MESSAGE[29], $MESSAGE[30])
-             . COM_siteFooter();
+    $display .= COM_showMessageText($MESSAGE[29], $MESSAGE[30]);
+    $display = COM_createHTMLDocument($display, array('pagetitle' => $MESSAGE[30]));
     COM_accessLog("User {$_USER['username']} tried to illegally access the downloads administration screen.");
     COM_output($display);
     exit;
 }
 
 if (!SEC_hasRights('filemgmt.edit')) {
-    $display .= COM_siteHeader('menu', $MESSAGE[30])
-             . COM_showMessageText($MESSAGE[29], $MESSAGE[30])
-             . COM_siteFooter();
+    $display .= COM_showMessageText($MESSAGE[29], $MESSAGE[30]);
+    $display = COM_createHTMLDocument($display, array('pagetitle' => $MESSAGE[30]));
     COM_accessLog("User {$_USER['username']} tried to illegally access the downloads administration screen.");
     COM_output($display);
     exit;
@@ -732,9 +728,8 @@ $_SUCCESS = true;
 
 switch ($op) {
     case $_LANG_CONV['submit']:
-        $display = COM_siteHeader('menu', $_LANG_CONV['title']);
-        $display .= DL_convert();
-        $display .= COM_siteFooter();
+        $display = DL_convert();
+        $display = COM_createHTMLDocument($display, array('pagetitle' => $_LANG_CONV['title']));
         break;
 
     case $_LANG_CONV['cancel']:
@@ -742,8 +737,7 @@ switch ($op) {
         break;
 
     default:
-        $display = COM_siteHeader('menu', $_LANG_CONV['title']);
-        $display .= '<h1>' . $_LANG_CONV['title'] . '</h1>' . LB;
+        $display = '<h1>' . $_LANG_CONV['title'] . '</h1>' . LB;
         $display .= '<p>' . $_LANG_CONV['description1'] . '</p>' . LB;
         $display .= '<p style="color:red; font-weight:bold">' . $_LANG_CONV['description2'] . '</p>' . LB;
         $display .= '<p>' . $_LANG_CONV['description3'] . '</p>' . LB;
@@ -752,7 +746,7 @@ switch ($op) {
         $display .= '<input type="submit" name="mode" value="'. $_LANG_CONV['submit'] .'" class="button">' . LB;
         $display .= '<input type="submit" name="mode" value="'. $_LANG_CONV['cancel'] .'" class="button">' . LB;
         $display .= '</div></form>' . LB;
-        $display .= COM_siteFooter();
+        $display = COM_createHTMLDocument($display, array('pagetitle' => $_LANG_CONV['title']));
         break;
 }
 COM_output($display);

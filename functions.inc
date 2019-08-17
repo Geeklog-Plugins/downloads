@@ -53,9 +53,6 @@ if (file_exists($langfile)) {
     require_once $plugin_path . 'language/english.php';
 }
 
-$_DLM_CONF = array();
-$_DLM_CONF['version'] = '1.2.0';
-
 $_TABLES['downloadcategories'] = $_DB_table_prefix . 'downloadcategories';
 $_TABLES['downloads']          = $_DB_table_prefix . 'downloads';
 $_TABLES['downloadvotes']      = $_DB_table_prefix . 'downloadvotes';
@@ -66,6 +63,7 @@ $_TABLES['downloadsubmission'] = $_DB_table_prefix . 'downloadsubmission';
 /**
 * Check and see if we need to load the plugin configuration
 */
+$_DLM_CONF = array();
 require_once $_CONF['path_system'] . 'classes/config.class.php';
 $plg_config = config::get_instance();
 $temp = $plg_config->get_config('downloads');
@@ -73,25 +71,11 @@ if (is_array($temp)) {
     $_DLM_CONF = array_merge($_DLM_CONF, $temp);
 }
 
-$_DLM_CONF['use_theme'] = true;
-
 $_DLM_CONF['lang_id'] = COM_getLanguageId();
 
 $_DLM_CONF['date_format'] = '%Y-%m-%d %H:%M';
 
 $_DLM_CONF['enabled_preview_on_upload'] = false;
-
-/**
-* Set template path and CSS url
-*/
-$_DLM_CONF['path_layout'] = $_CONF['path_html'] . 'downloads/templates/';
-$_DLM_CONF['css_url'] = $_CONF['site_url'] . '/downloads/templates';
-if ($_DLM_CONF['use_theme']) {
-    if (is_dir($_CONF['path_layout'] . 'downloads')) {
-        $_DLM_CONF['path_layout'] = $_CONF['path_layout'] . 'downloads/';
-        $_DLM_CONF['css_url'] = $_CONF['layout_url'] . '/downloads';
-    }
-}
 
 // +---------------------------------------------------------------------------+
 // | Geeklog Plugin API Implementation                                         |
@@ -271,9 +255,13 @@ function plugin_autotags_downloads($op, $content = '', $autotag = '')
 */
 function plugin_chkVersion_downloads()
 {
-    global $_DLM_CONF;
+    global $_CONF;
 
-    return $_DLM_CONF['version'];
+    require_once $_CONF['path'] . 'plugins/downloads/autoinstall.php';
+
+    $inst_parms = plugin_autoinstall_downloads('downloads');
+
+    return $inst_parms['info']['pi_version'];    
 }
 
 
@@ -575,12 +563,7 @@ function plugin_savecomment_downloads($title, $comment, $id, $pid, $postmode)
         $retval = CMT_commentForm($title, $comment, $id, $pid, 'downloads',
                                   $LANG03[14], $postmode);
         if (!defined('COMMENT_ON_SAME_PAGE') || !COMMENT_ON_SAME_PAGE) {
-//          $retval = COM_createHTMLDocument($retval, array('pagetitle' => $LANG03[1]));
-            if (function_exists('COM_createHTMLDocument')) {
-                $retval = COM_createHTMLDocument($retval, array('pagetitle' => $LANG03[1]));
-            } else {
-                $retval = COM_siteHeader('menu', $LANG03[1]) . $retval . COM_siteFooter();
-            }
+            $retval = COM_createHTMLDocument($retval, array('pagetitle' => $LANG03[1]));
         }
     } else { // success
         $retval = COM_refresh(COM_buildURL($_CONF['site_url'] . "/downloads/index.php?id=$id"));
@@ -751,18 +734,13 @@ function plugin_user_delete_downloads($uid)
 */
 function plugin_getheadercode_downloads()
 {
-    global $_DLM_CONF;
+    global $_SCRIPTS;
 
     $retval = '';
 
     // use the CSS only if we are on the plugin's pages
     if (substr_count($_SERVER['PHP_SELF'], '/downloads/') > 0) {
-        if (version_compare(VERSION, '2.0.0') < 0) {
-            $retval .= '<link rel="stylesheet" type="text/css" href="'
-                     . $_DLM_CONF['css_url'] . '/admin.css"' . XHTML . '>' . LB;
-        }
-        $retval .= '<link rel="stylesheet" type="text/css" href="'
-                 . $_DLM_CONF['css_url'] . '/downloads.css"' . XHTML . '>' . LB;
+        $_SCRIPTS->setCSSFile('downloads', CTL_plugin_themeFindFile('downloads', 'css', 'downloads.css'));
     }
 
     return $retval;

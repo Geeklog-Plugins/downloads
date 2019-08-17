@@ -208,7 +208,7 @@ class DLCategory
         $retval .= $this->_showMessage();
         $retval .= COM_startBlock($blocktitle, '', COM_getBlockTemplate('_admin_block', 'header'));
 
-        $T = new Template($_DLM_CONF['path_layout']);
+        $T = COM_newTemplate(CTL_plugin_templatePath('downloads'));
         $T->set_file(array(
             't_modcategory'         => 'admin_modcategory.thtml',
             't_admin_access'        => 'admin_access.thtml',

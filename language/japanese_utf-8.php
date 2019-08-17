@@ -323,7 +323,8 @@ $LANG_configselects['downloads'] = array(
     0 => array('はい' => 1, 'いいえ' => 0),
     1 => array('はい' => TRUE, 'いいえ' => FALSE),
     2 => array('登録順' => 'submitorder', '得票順' => 'voteorder'),
-    5 => array_flip($LANG_postmodes),
+    //5 => array_flip($LANG_postmodes), // This doesn't work when upgrading Geeklog (error happened when upgrading to v2.2.0) so use hard coded variables below
+    5 => array('テキスト' => 'plaintext', 'HTML' => 'html'),
     9 => array('作成したファイルを表示する' => 'item', 'ダウンロード管理を表示する' => 'list', 'ファイル一覧を表示する' => 'plugin', 'Homeを表示する' => 'home', '管理画面TOPを表示する' => 'admin'),
     12 => array('アクセス不可' => 0, '表示' => 2, '表示・編集' => 3),
     20 => array('全てのユーザ' => 'all', '登録ユーザまで' => 'user', 'ダウンロード編集者まで' => 'editor'),

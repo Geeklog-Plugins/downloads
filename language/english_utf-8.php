@@ -323,7 +323,8 @@ $LANG_configselects['downloads'] = array(
     0 => array('True' => 1, 'False' => 0),
     1 => array('True' => TRUE, 'False' => FALSE),
     2 => array('As Submitted' => 'submitorder', 'By Votes' => 'voteorder'),
-    5 => array_flip($LANG_postmodes),
+    //5 => array_flip($LANG_postmodes), // This doesn't work when upgrading Geeklog (error happened when upgrading to v2.2.0) so use hard coded variables below
+    5 => array('Plain Old Text' => 'plaintext', 'HTML Formatted' => 'html'),
     9 => array('Forward to Created File' => 'item', 'Display Admin List' => 'list', 'Display Public List' => 'plugin', 'Display Home' => 'home', 'Display Admin' => 'admin'),
     12 => array('No access' => 0, 'Read-Only' => 2, 'Read-Write' => 3),
     20 => array('All' => 'all', 'Login User' => 'user', 'Downloads Editor' => 'editor'),

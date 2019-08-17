@@ -344,7 +344,7 @@ class DLDownload
         }
 
         $ja = ($_CONF['language'] == 'japanese_utf-8');
-        $T = new Template($_DLM_CONF['path_layout']);
+        $T = COM_newTemplate(CTL_plugin_templatePath('downloads'));
         $T->set_file(array(
              't_mod_download'      => 'mod_download.thtml',
              't_mod_newfile'       => 'mod_newfile.thtml',
@@ -522,17 +522,8 @@ class DLDownload
 
         if ($enabled_adv_editor) {
             // Add JavaScript
-            if (version_compare(VERSION, '2.1.0') >= 0) {
-                $_SCRIPTS->setJavaScriptFile('postmode_control', '/javascript/postmode_control.js');
-                COM_setupAdvancedEditor('/downloads/adveditor.js', 'story.edit');
-            } else {
-                if (version_compare(VERSION, '2.0.0') < 0) {
-                    $js = 'geeklogEditorBasePath = "' . $_CONF['site_url'] . '/fckeditor/";';
-                    $_SCRIPTS->setJavaScript($js, true);
-                }
-                $_SCRIPTS->setJavaScriptFile('fckeditor', '/fckeditor/fckeditor.js');
-                $_SCRIPTS->setJavaScriptFile('downloadeditor_fckeditor', '/downloads/downloadeditor_fckeditor.js');
-            }
+            $_SCRIPTS->setJavaScriptFile('postmode_control', '/javascript/postmode_control.js');
+            COM_setupAdvancedEditor('/downloads/adveditor.js', 'story.edit');
         }
 
         if (empty($this->_postmode)) {
@@ -684,7 +675,7 @@ class DLDownload
 
         if (!empty($file_description) || !empty($file_detail)) {
             // Display Preview Block
-            $T2 = new Template($_DLM_CONF['path_layout']);
+            $T2 = COM_newTemplate(CTL_plugin_templatePath('downloads'));
             $T2->set_file('t_mod_preview', 'mod_preview.thtml');
             $T2->set_var('file_description', $file_description);
             $T2->set_var('file_detail',      $file_detail);

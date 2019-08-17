@@ -114,7 +114,7 @@ $title = DLM_htmlspecialchars($title);
 $pagetitle = $LANG_DLM['plugin_name'];
 $display = '';
 $display .= COM_startBlock($LANG_DLM['plugin_name']);
-$T = new Template($_DLM_CONF['path_layout']);
+$T = COM_newTemplate(CTL_plugin_templatePath('downloads'));
 $T->set_file(array('t_vote' => 'vote.thtml'));
 DLM_setDefaultTemplateVars($T);
 $T->set_var('val_lid',          $lid);

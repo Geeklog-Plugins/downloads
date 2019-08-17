@@ -38,7 +38,7 @@
             <img src="{layout_url}/images/expand.png" title="{lang_expandhelp}" alt="" onclick="changeHTMLTextAreaSize('html_description','larger');"{xhtml}>
             <img src="{layout_url}/images/collapse.png" title="{lang_reducehelp}" alt="" onclick="changeHTMLTextAreaSize('html_description','smaller');"{xhtml}>
             <span style="padding-left:15px;">{lang_toolbar}:&nbsp;
-              <select id="fckeditor_toolbar_selector" name="fckeditor_toolbar_selector" onchange="changeToolbar(this.value);">
+              <select id="adveditor_toolbar_selector" name="adveditor_toolbar_selector" onchange="changeToolbar(this.value);">
                 <option value="editor-toolbar1" selected="selected">{lang_toolbar1}</option>
                 <option value="editor-toolbar2">{lang_toolbar2}</option>
                 <option value="editor-toolbar3">{lang_toolbar3}</option>

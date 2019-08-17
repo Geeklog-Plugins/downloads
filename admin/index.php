@@ -43,7 +43,7 @@ if (!SEC_hasRights('downloads.edit')) {
 }
 
 $installed_version = DB_getItem($_TABLES['plugins'], 'pi_version', "pi_name = 'downloads'");
-if (version_compare($installed_version, $_DLM_CONF['version']) < 0) {
+if (version_compare($installed_version, plugin_chkVersion_downloads()) < 0) {
     $display = COM_showMessageText($LANG_DLM['please_update']);
     $display = DLM_createHTMLDocument($display, array('pagetitle' => $LANG_DLM['manager']));
     COM_output($display);
@@ -443,9 +443,10 @@ function showMessage()
 
 // MAIN
 
-$op = COM_applyFilter($_REQUEST['op']);
-$_page = COM_applyFilter($_REQUEST['page']);
-$listing_cid = COM_applyFilter($_REQUEST['listing_cid']);
+$op             = isset($_REQUEST['op'])            ? COM_applyFilter($_REQUEST['op'])              : '';
+$_page          = isset($_REQUEST['page'])          ? COM_applyFilter($_REQUEST['page'])            : '';
+$listing_cid    = isset($_REQUEST['listing_cid'])   ? COM_applyFilter($_REQUEST['listing_cid'])     : '';
+
 $display = '';
 
 require_once $_CONF['path'] . 'plugins/downloads/include/gltree.class.php';
