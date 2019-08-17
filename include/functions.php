@@ -410,7 +410,7 @@ function DLM_modTNPath($url)
     $parts = pathinfo($url);
     $extary = array('jpg', 'png');
     foreach ($extary as $ext) {
-        $len = strlen(ext);
+        $len = strlen($ext);
         $modurl = substr($url, 0, -$len) . $ext;
         if (file_exists($modurl)) {
             return $modurl;
