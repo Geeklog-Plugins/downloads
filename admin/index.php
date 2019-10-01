@@ -30,6 +30,8 @@
 // |                                                                           |
 // +---------------------------------------------------------------------------+
 
+use Geeklog\Input;
+
 require_once '../../../lib-common.php';
 require_once '../../auth.inc.php';
 require_once $_CONF['path'] . 'plugins/downloads/include/functions.php';
@@ -187,7 +189,9 @@ function DLM_reorderCategories()
 {
     global $_TABLES, $mytree;
 
+    $corder = 0;
     $A = $mytree->getChildTreeArray(ROOTID, 'corder');
+
     foreach ($A as $B) {
         $corder += 10;
         if ($B['corder'] != $corder) {
@@ -437,7 +441,7 @@ function DLM_updatePlugin()
 // Show message
 function showMessage()
 {
-    $msg = COM_applyFilter($_REQUEST['msg'], true);
+    $msg = (int) Input::fRequest('msg', 0);
     return ($msg > 0) ? COM_showMessage($msg, 'downloads') : '';
 }
 
@@ -457,9 +461,8 @@ $mode = (!empty($_REQUEST['mode'])) ? $_REQUEST['mode'] : '';
 $cid  = (!empty($_REQUEST['cid'])) ? COM_sanitizeID(trim($_REQUEST['cid'])) : '';
 $lid  = (!empty($_REQUEST['lid'])) ? COM_sanitizeID(trim($_REQUEST['lid'])) : '';
 
-$itemenable = array();
-$itemenable = $_POST['itemenable'];
-if (isset($itemenable) && SEC_checkToken()) {
+$itemenable = Input::post('itemenable', array());
+if ((count($itemenable) > 0) && SEC_checkToken()) {
     DLM_changeMenuitemStatus($itemenable);
 }
 

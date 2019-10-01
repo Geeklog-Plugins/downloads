@@ -750,4 +750,3 @@ switch ($op) {
         break;
 }
 COM_output($display);
-?>

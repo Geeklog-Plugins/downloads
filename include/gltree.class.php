@@ -44,25 +44,23 @@ class GLTree {
 
     /**
     * Vars
-    *
-    * @access  private
     */
-    var $_table;     // table with parent-child structure
-    var $_id;        // name of unique id for records in table $_table
-    var $_pid;       // name of parent id used in table $_table
-    var $_title;     // name of a field in table $_table which will be used when selection box and paths are generated
-    var $_order;     // specifies the order of query results
-    var $_filtersql; // 
-    var $_rootid;    // 
-    var $_langid;    // 
-    var $_sepalator; // 
-    var $_root;      // 
+    private $_table;     // table with parent-child structure
+    private $_id;        // name of unique id for records in table $_table
+    private $_pid;       // name of parent id used in table $_table
+    private $_title;     // name of a field in table $_table which will be used when selection box and paths are generated
+    private $_order;     // specifies the order of query results
+    private $_filtersql; // 
+    private $_rootid;    // 
+    private $_langid;    // 
+    private $_sepalator; // 
+    private $_root;      // 
 
-    var $_is_multi_language; // 
+    private $_is_multi_language; // 
 
     // constructor of class GLTree
     // sets the names of table, unique id, and parend id
-    function GLTree($table, $id, $pid, $title, $filtersql='', $rootid='0', $langid='')
+    public function __construct($table, $id, $pid, $title, $filtersql='', $rootid='0', $langid='')
     {
         $this->_table     = $table;
         $this->_id        = $id;
@@ -381,4 +379,3 @@ class GLTree {
     }
 
 }
-?>

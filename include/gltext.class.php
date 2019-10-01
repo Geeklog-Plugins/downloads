@@ -37,18 +37,16 @@ if (strpos(strtolower($_SERVER['PHP_SELF']), 'gltext.class.php') !== false) {
 class GLPText
 {
     // Variables:
-
-    //Private
-    var $_text;
-    var $_postmode;
-    var $_advanced_editor_mode;
+    private $_text;
+    private $_postmode;
+    private $_advanced_editor_mode;
 
     // Public Methods:
 
     /**
      * Constructor
      */
-    function GLPText()
+    public function __construct()
     {
         global $_CONF, $_USER;
 
@@ -282,5 +280,3 @@ class GLPText
         return $out;
     }
 }
-
-?>

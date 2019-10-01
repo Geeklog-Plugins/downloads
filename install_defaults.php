@@ -222,4 +222,3 @@ function DLM_update_ConfValues_addTabs()
 
     return true;
 }
-?>

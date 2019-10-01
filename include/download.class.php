@@ -30,6 +30,8 @@
 // |                                                                           |
 // +---------------------------------------------------------------------------+
 
+use Geeklog\Input;
+
 if (strpos(strtolower($_SERVER['PHP_SELF']), 'download.class.php') !== false) {
     die('This file can not be used on its own.');
 }
@@ -40,56 +42,52 @@ class DLDownload
 {
     /**
     * Vars
-    *
-    * @access  private
     */
-    var $_lid;
-    var $_cid;
-    var $_title;
-    var $_url;
-    var $_homepage;
-    var $_version;
-    var $_size;
-    var $_secret_id;
-    var $_md5;
-    var $_logourl;
-    var $_mg_autotag;
-    var $_date;
-    var $_commentcode;
-    var $_project;
-    var $_description;
-    var $_detail;
-    var $_text_version;
-    var $_owner_id;
-    var $_postmode;
-    var $_is_released;
-    var $_is_listing;
-    var $_createddate;
-    var $_tags;
+    private $_lid;
+    private $_cid;
+    private $_title;
+    private $_url;
+    private $_homepage;
+    private $_version;
+    private $_size;
+    private $_secret_id;
+    private $_md5;
+    private $_logourl;
+    private $_mg_autotag;
+    private $_date;
+    private $_commentcode;
+    private $_project;
+    private $_description;
+    private $_detail;
+    private $_text_version;
+    private $_owner_id;
+    private $_postmode;
+    private $_is_released;
+    private $_is_listing;
+    private $_createddate;
+    private $_tags;
 
-    var $_year;
-    var $_month;
-    var $_day;
-    var $_hour;
-    var $_minute;
-    var $_second;
-    var $_old_lid;
-    var $_old_date;
+    private $_year;
+    private $_month;
+    private $_day;
+    private $_hour;
+    private $_minute;
+    private $_second;
+    private $_old_lid;
+    private $_old_date;
 
-    var $_cat_tree;
+    private $_cat_tree;
 
-    var $_editor_mode;
-    var $_retry;
-    var $_errno;
-    var $_page; // previous page
-    var $_listing_cid; // previous listing page category
+    private $_editor_mode;
+    private $_retry;
+    private $_errno;
+    private $_page; // previous page
+    private $_listing_cid; // previous listing page category
 
     /**
     * Constructor
-    *
-    * @access  public
     */
-    function DLDownload()
+    public function __construct()
     {
         $this->_errno = array();
         $this->_retry = false;
@@ -139,7 +137,7 @@ class DLDownload
     {
         global $_CONF;
 
-        $this->_url          = COM_applyFilter(trim($array['url']));
+        $this->_url          = COM_applyFilter(trim(@$array['url']));
         $this->_postmode     = COM_applyFilter($array['postmode']);
         $this->_version      = COM_applyFilter($array['version']);
         $this->_commentcode  = COM_applyFilter($array['commentcode'], true);
@@ -152,15 +150,15 @@ class DLDownload
         $this->_minute       = COM_applyFilter($array['release_minute'], true);
         $this->_second       = COM_applyFilter($array['release_second'], true);
         $this->_owner_id     = COM_applyFilter($array['owner_id'], true);
-        $this->_cid          = COM_applyFilter(trim($array['cid']));
+        $this->_cid          = COM_applyFilter(trim(@$array['cid']));
         $this->_lid          = COM_applyFilter(trim($array['lid']));
         $this->_old_lid      = COM_applyFilter(trim($array['old_lid']));
         $this->_title        = COM_checkHTML(COM_checkWords(trim($array['title'])));
         $this->_project      = COM_checkHTML(COM_checkWords(trim($array['project'])));
         $this->_homepage     = strip_tags($array['homepage']);
-        $this->_size         = intval(COM_applyFilter($array['size'], true));
-        $this->_md5          = COM_applyFilter($array['md5']);
-        $this->_logourl      = COM_applyFilter(trim($array['logourl']));
+        $this->_size         = intval(COM_applyFilter(@$array['size'], true));
+        $this->_md5          = COM_applyFilter(@$array['md5']);
+        $this->_logourl      = COM_applyFilter(trim(@$array['logourl']));
         $this->_mg_autotag   = COM_applyFilter(trim($array['mg_autotag']));
         $this->_tags         = COM_applyFilter($this->_modifyTags($array['tags']));
         $this->_old_date     = intval(COM_applyFilter($array['old_date'], true));
@@ -183,7 +181,7 @@ class DLDownload
 
         $this->_is_listing = ($this->_is_released == 0) ? 0 : $this->_is_listing;
 
-        $this->_deletesnap = ($array['deletesnap'] == 'on') ? 1 : 0;
+        $this->_deletesnap = (isset($array['deletesnap']) && ($array['deletesnap'] == 'on')) ? 1 : 0;
         
         $this->_editor_mode = COM_applyFilter($array['editor_mode']);
         if ($this->_editor_mode == 'submit') {
@@ -300,10 +298,15 @@ class DLDownload
 
         $this->initCatTree();
 
-        $p = COM_applyFilter($_GET['p']);
-        if (!empty($p)) $this->_page = $p;
-        $lc = COM_applyFilter($_GET['cid']);
-        if (!empty($lc)) $this->_listing_cid = $lc;
+        $p = Input::fGet('p');
+        if (!empty($p)) {
+            $this->_page = $p;
+        }
+        
+        $lc = Input::fGet('cid');
+        if (!empty($lc)) {
+            $this->_listing_cid = $lc;
+        }
 
         if (!empty($this->_editor_mode)) {
             $mode = $this->_editor_mode;
@@ -315,7 +318,7 @@ class DLDownload
             if ($this->_retry == true) {
                 $this->_loadFromArgs($_POST);
             } else {
-                $this->_lid = COM_applyFilter($_GET['lid']);
+                $this->_lid = Input::fGet('lid');
                 $this->_loadFromDatabase($this->_lid);
             }
         }
@@ -415,14 +418,15 @@ class DLDownload
         }
 
         $categorylist = $this->_cat_tree->makeSelBox('title', 'corder', $this->_cid, 0, 'cid');
-
+        $pathstring = '';
+        
         if ($mode == 'edit' || $mode == 'clone' || $mode == 'editsubmission') {
             if (empty($this->_old_lid)) {
                 $this->_old_lid = $this->_lid;
             }
             $this->_title       = DLM_htmlspecialchars(stripslashes($this->_title));
             $this->_project     = DLM_htmlspecialchars(stripslashes($this->_project));
-            $pathstring         = $this->_cat_tree->getNicePathFromId($cid, "title", "{$_CONF['site_url']}/downloads/index.php?op=");
+            $pathstring         = $this->_cat_tree->getNicePathFromId($this->_cid, "title", "{$_CONF['site_url']}/downloads/index.php?op=");
             $this->_url         = DLM_htmlspecialchars(stripslashes($this->_url));
             $this->_logourl     = DLM_htmlspecialchars(stripslashes($this->_logourl));
             $this->_mg_autotag  = DLM_htmlspecialchars(stripslashes($this->_mg_autotag));
@@ -714,7 +718,7 @@ class DLDownload
         $tnimgurl = $_CONF['site_url'] . '/downloads/images/blank.png';
         $snapwidth  = $_DLM_CONF['max_tnimage_width'];
         $snapheight = $_DLM_CONF['max_tnimage_height'];
-//        $sizeattributes = 'width="' . $snapwidth . '" height="' . $snapheight . '" ';
+        $sizeattributes = 'width="' . $snapwidth . '" height="' . $snapheight . '" ';
         return '<img src="' . $tnimgurl . '" ' . $sizeattributes . ' alt=""' . XHTML . '>' . LB;
     }
 
@@ -753,7 +757,7 @@ class DLDownload
             $tnimgurl = $_CONF['site_url'] . '/downloads/images/blank.png';
             $snapwidth  = $_DLM_CONF['max_tnimage_width'];
             $snapheight = $_DLM_CONF['max_tnimage_height'];
-//            $sizeattributes = 'width="' . $snapwidth . '" height="' . $snapheight . '" ';
+            $sizeattributes = 'width="' . $snapwidth . '" height="' . $snapheight . '" ';
             $shot ='<div class="dlm_snap_tn"><img src="' . $tnimgurl . '" ' . $sizeattributes . ' alt=""' . XHTML . '></div>' . LB;
         }
         return $shot;

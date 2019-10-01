@@ -130,5 +130,3 @@ $_SQL[] = "CREATE TABLE {$_TABLES['downloadhistories']} (
   KEY lid (lid),
   KEY uid (uid)
 ) ENGINE=MyISAM";
-
-?>

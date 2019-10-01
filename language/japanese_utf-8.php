@@ -202,6 +202,7 @@ $LANG_DLM = array(
     'tags'              => 'タグ',
     'please_update'     => 'ダウンロードプラグインをアップデートしてください。',
     'preview'           => 'プレビュー',
+    'commentoption'     => 'コメントオプション',
 
     '1001' => 'Upload approval error: Temporary file does not exist. Check error.log',
     '1002' => 'Upload approval error: New file does not exist after move of tmp file. Check error.log',
@@ -330,5 +331,3 @@ $LANG_configselects['downloads'] = array(
     20 => array('全てのユーザ' => 'all', '登録ユーザまで' => 'user', 'ダウンロード編集者まで' => 'editor'),
     30 => array('PNG' => 'png', 'JPEG' => 'jpg')
 );
-
-?>

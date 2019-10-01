@@ -44,6 +44,8 @@ define('ROOTID', 'root');
 /**
 * Include language file
 */
+global $LANG24, $LANG32, $LANG_postmodes;
+
 $plugin_path = $_CONF['path'] . 'plugins/downloads/';
 $langfile = $plugin_path . 'language/' . $_CONF['language'] . '.php';
 
@@ -1329,4 +1331,3 @@ function plugin_tag_gettaggeditems_downloads($id)
 
     return $retval;
 }
-?>

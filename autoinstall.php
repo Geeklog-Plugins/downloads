@@ -303,5 +303,3 @@ function DLM_upgrade()
 
     return true;
 }
-
-?>

@@ -38,36 +38,32 @@ class DLCategory
 {
     /**
     * Vars
-    *
-    * @access  private
     */
-    var $_cid;
-    var $_pid;
-    var $_title;
-    var $_imgurl;
-    var $_corder;
-    var $_is_enabled;
-    var $_owner_id;
-    var $_group_id;
-    var $_perm_owner;
-    var $_perm_group;
-    var $_perm_members;
-    var $_perm_anon;
-    var $_old_cid;
-    var $_imgurlold;
+    private $_cid;
+    private $_pid;
+    private $_title;
+    private $_imgurl;
+    private $_corder;
+    private $_is_enabled;
+    private $_owner_id;
+    private $_group_id;
+    private $_perm_owner;
+    private $_perm_group;
+    private $_perm_members;
+    private $_perm_anon;
+    private $_old_cid;
+    private $_imgurlold;
 
-    var $_deleteimg;
+    private $_deleteimg;
 
-    var $_editor_mode;
-    var $_retry;
-    var $_errno;
+    private $_editor_mode;
+    private $_retry;
+    private $_errno;
 
     /**
     * Constructor
-    *
-    * @access  public
     */
-    function DLCategory()
+    public function __construct()
     {
         $this->_errno = array();
         $this->_retry = false;
@@ -96,8 +92,8 @@ class DLCategory
         $this->_imgurl     = COM_applyFilter($array['imgurl']);
         $this->_imgurlold  = COM_applyFilter($array['imgurlold']);
         $this->_title      = COM_checkHTML(COM_checkWords(trim($array['title'])));
-        $this->_is_enabled = ($array['is_enabled'] == 'on') ? 1 : 0;
-        $this->_deleteimg  = ($array['deleteimg'] == 'on') ? 1 : 0;
+        $this->_is_enabled = isset($array['is_enabled']) && ($array['is_enabled'] === 'on') ? 1 : 0;
+        $this->_deleteimg  = isset($array['deleteimg']) && ($array['deleteimg'] === 'on') ? 1 : 0;
 
         // Convert array values to numeric permission values
         list($this->_perm_owner, $this->_perm_group, $this->_perm_members, $this->_perm_anon)

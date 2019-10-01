@@ -43,5 +43,3 @@ $_UPDATES = array(
         "ALTER TABLE {$_TABLES['downloadsubmission']} ADD text_version tinyint(2) unsigned NOT NULL default '1' AFTER detail"
     )
 );
-
-?>

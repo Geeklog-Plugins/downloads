@@ -30,6 +30,8 @@
 // |                                                                           |
 // +---------------------------------------------------------------------------+
 
+use Geeklog\Input;
+
 require_once '../lib-common.php';
 
 if (!in_array('downloads', $_PLUGINS)) {
@@ -263,7 +265,11 @@ function dlformat(&$T, &$A, $isListing=false, $cid=ROOTID)
         $image_pop = COM_createImage($_CONF['site_url'] . '/downloads/images/pop.gif',
                                      $LANG_DLM['popular']);
         $popdownload = '<span class="badgepop">POP</span>';
+    } else {
+        $image_pop = '';
+        $popdownload = '';
     }
+    
     $T->set_var('image_popular', $image_pop);     // Image (Pop)
     $T->set_var('popdownload', $popdownload);     // Badge (Pop)
 
@@ -286,6 +292,8 @@ function dlformat(&$T, &$A, $isListing=false, $cid=ROOTID)
 
     if ($A['rating'] != "0" || $A['rating'] != "0.00") {
         $votestring = sprintf($LANG_DLM['numvotes'], $A['votes']);
+    } else {
+        $votestring = '';
     }
     $T->set_var('votestring', $votestring);
 
@@ -421,6 +429,10 @@ function makeCategoryPart($cid)
 //  if ($_DLM_CONF['numCategoriesPerRow'] < 1) $_DLM_CONF['numCategoriesPerRow'] = 1; // probably no longer necessary
 //  if ($_DLM_CONF['numCategoriesPerRow'] > 6) $_DLM_CONF['numCategoriesPerRow'] = 6; // probably no longer necessary
 
+    if (!isset($_DLM_CONF['numCategoriesPerRow'])) {
+        $_DLM_CONF['numCategoriesPerRow'] = 5;
+    }
+
     $count = 0;
     foreach ($arr as $ele) { // Each category
         $chtitle = DLM_htmlspecialchars($ele['title']);
@@ -544,7 +556,7 @@ $now = time();
 COM_setArgNames(array('id'));
 $lid = COM_applyFilter(COM_getArgument('id'));
 if (empty($lid)) {  // Check if the script is being called from the commentbar
-    $lid = COM_applyFilter($_POST['lid']);
+    $lid = Input::fPost('lid');
 }
 
 if (!empty($lid)) {
@@ -572,8 +584,10 @@ if (!empty($lid)) {
         require_once $_CONF['path_system'] . 'lib-comment.php';
         $A['title'] = str_replace('&#039;', "'", $A['title']);
         $A['title'] = str_replace('&amp;',  '&', $A['title']);
+        $order = Input::fPost('order', 'ASC');
+        $mode = Input::fPost('mode', 'flat');
         $T->set_var('comment_records', CMT_userComments($lid, $A['title'], 'downloads',
-                    $_POST['order'], $_POST['mode'] ,0 ,1 ,false ,$_DLM_CONF['has_edit_rights'], $A['commentcode']));
+                    $order, $mode, 0, 1, false, $_DLM_CONF['has_edit_rights'], $A['commentcode']));
 
         if ($_DLM_CONF['show_tn_only_exists']) {
             if (empty($A['logourl'])) {
@@ -597,17 +611,12 @@ if (!empty($lid)) {
 
 $T->set_var('tablewidth', $_DLM_CONF['download_shotwidth'] + 10); // probably no longer necessary
 
-$cid = COM_applyFilter($_GET['cid']);
-if (empty($cid)) {
-    $cid = COM_applyFilter($_POST['selbox_cat']);
-}
-if (empty($cid)) $cid = ROOTID;
+$cid = Input::fGet('cid', Input::fPost('selbox_cat', ROOTID));
 
-$page = COM_applyFilter($_GET['page'], true);
-if (!isset($page)) {
-    $page = COM_applyFilter($_POST['selbox_page']);
+$page = (int) Input::fGet('page', Input::fPost('selbox_page', 0));
+if ($page <= 0) {
+    $page = 1;
 }
-$page = (!isset($page) || $page == 0) ? 1 : $page;
 
 $pathstring = "<a href=\"{$_CONF['site_url']}/downloads/index.php\">" . $LANG_DLM['main'] . "</a>" . BCSEPALATOR
             . $mytree->getNicePathFromId($cid, "title", "{$_CONF['site_url']}/downloads/index.php");
@@ -623,20 +632,12 @@ $carr_count = count($carr);
 
 $maxrows = getTotalItems($carr);
 $T->set_var('filelisting_info', sprintf($LANG_DLM['listingheading'], $maxrows)); // number of file list
-$nppage = COM_applyFilter($_REQUEST['nppage'], true);
-if (!isset($nppage)) {
-    $nppage = COM_applyFilter($_POST['selbox_nppage'], true);
-}
+$nppage = (int) Input::fRequest('nppage', Input::fPost('selbox_nppage', 0));
 
 $show = $_DLM_CONF['download_perpage'];
 $show = ($nppage > 0) ? $nppage : $show;
 $numpages = ceil($maxrows / $show);
-
-$orderby = COM_applyFilter($_GET['orderby']);
-if (empty($orderby)) {
-    $orderby = COM_applyFilter($_POST['selbox_orderby']);
-}
-if (empty($orderby)) $orderby = 'dated';
+$orderby = Input::fGet('orderby', Input::fPost('selbox_orderby', 'dated'));
 
 if ($maxrows > 0) {
     $T->set_var('sort_menu', makeSortMenu($cid, $nppage, $orderby, $show)); // sort menu
