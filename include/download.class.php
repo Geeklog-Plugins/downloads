@@ -1335,7 +1335,7 @@ class DLDownload
         $lid = addslashes(COM_applyFilter($_POST['old_lid']));
 
         if (DB_count($_TABLES['downloadsubmission'], 'lid', $lid) != 1) {
-            return COM_refresh($_CONF['site_admin_url'] . '/moderation.php');
+            COM_redirect($_CONF['site_admin_url'] . '/moderation.php');
         }
 
         $result = DB_query("SELECT url, logourl, date "

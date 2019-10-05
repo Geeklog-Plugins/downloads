@@ -33,8 +33,7 @@
 require_once '../lib-common.php';
 
 if (!in_array('downloads', $_PLUGINS)) {
-    echo COM_refresh($_CONF['site_url'] . '/index.php');
-    exit;
+    COM_redirect($_CONF['site_url'] . '/index.php');
 }
 
 require_once $_CONF['path'] . 'plugins/downloads/include/functions.php';
@@ -58,8 +57,7 @@ list($count) = DB_fetchArray(DB_query($sql));
 if ($count == 0 || DB_count($_TABLES['downloads'], "lid", $lid) == 0) {
     COM_errorLog("Downloads: invalid attempt to download a file. "
                . "User:{$_USER['username']}, IP:{$_SERVER['REMOTE_ADDR']}, File ID:{$lid}");
-    echo COM_refresh($_CONF['site_url'] . '/downloads/index.php');
-    exit;
+    COM_redirect($_CONF['site_url'] . '/downloads/index.php');
 }
 
 $result = DB_query("SELECT url, secret_id, owner_id FROM {$_TABLES['downloads']} WHERE lid='$lid'");

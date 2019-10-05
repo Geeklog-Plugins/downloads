@@ -557,7 +557,7 @@ function plugin_savecomment_downloads($title, $comment, $id, $pid, $postmode)
     $commentcode = DB_getItem($_TABLES['downloads'], 'commentcode',
                               "lid = '" . addslashes($id) . "'");
     if ($commentcode != 0) {
-        return COM_refresh($_CONF['site_url'] . '/index.php');
+        COM_redirect($_CONF['site_url'] . '/index.php');
     }
 
     $ret = CMT_saveComment($title, $comment, $id, $pid, 'downloads', $postmode);
@@ -568,7 +568,7 @@ function plugin_savecomment_downloads($title, $comment, $id, $pid, $postmode)
             $retval = COM_createHTMLDocument($retval, array('pagetitle' => $LANG03[1]));
         }
     } else { // success
-        $retval = COM_refresh(COM_buildURL($_CONF['site_url'] . "/downloads/index.php?id=$id"));
+        COM_redirect(COM_buildURL($_CONF['site_url'] . "/downloads/index.php?id=$id"));
     }
 
     return $retval;
@@ -600,11 +600,11 @@ function plugin_deletecomment_downloads($cid, $id)
 
     if ($has_editPermissions && $access == 3) {
         CMT_deleteComment($cid, $id, 'downloads');
-        $retval .= COM_refresh(COM_buildURL($_CONF['site_url'] . "/downloads/index.php?id=$id"));
+        COM_redirect(COM_buildURL($_CONF['site_url'] . "/downloads/index.php?id=$id"));
     } else {
         COM_errorLog("User {$_USER['username']} (IP: {$_SERVER['REMOTE_ADDR']}) "
                    . "tried to illegally delete comment $cid from downloads $id");
-        $retval .= COM_refresh($_CONF['site_url'] . '/index.php');
+        COM_redirect($_CONF['site_url'] . '/index.php');
     }
 
     return $retval;

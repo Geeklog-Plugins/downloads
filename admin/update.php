@@ -140,7 +140,7 @@ switch ($mode) {
         break;
 
     case $_LANG_UPDATE['cancel']:
-        $display = COM_refresh($_CONF['site_url'] . '/index.php');
+        COM_redirect($_CONF['site_url'] . '/index.php');
         break;
 
     default:

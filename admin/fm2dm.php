@@ -733,7 +733,7 @@ switch ($op) {
         break;
 
     case $_LANG_CONV['cancel']:
-        $display = COM_refresh($_CONF['site_url'] . '/index.php');
+        COM_redirect($_CONF['site_url'] . '/index.php');
         break;
 
     default:
