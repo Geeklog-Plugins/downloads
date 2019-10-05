@@ -55,7 +55,7 @@ $pagetitle = $LANG_DLM['DownloadReport'];
 $display = '';
 
 COM_setArgNames(array('lid'));
-$lid = addslashes(COM_applyFilter(COM_getArgument('lid')));
+$lid = DB_escapeString(COM_applyFilter(COM_getArgument('lid')));
 $title = DB_getItem($_TABLES['downloads'], 'title', "lid = '$lid'");
 $result = DB_query("SELECT date, uid, remote_ip "
                  . "FROM {$_TABLES['downloadhistories']} WHERE lid = '$lid'");

@@ -238,7 +238,7 @@ function plugin_autotags_downloads($op, $content = '', $autotag = '')
         $url = COM_buildUrl($_CONF['site_url'] . '/downloads/index.php?id=' . $file_id);
         if (empty($autotag['parm2'])) {
             $linktext = stripslashes(DB_getItem($_TABLES['downloads'],
-                                     'title', "lid = '" . addslashes($file_id) . "'"));
+                                     'title', "lid = '" . DB_escapeString($file_id) . "'"));
         } else {
             $linktext = $autotag['parm2'];
         }
@@ -389,7 +389,7 @@ function plugin_dopluginsearch_downloads($query, $datestart, $dateend, $topic, $
     global $_TABLES, $LANG_DLM;
 
     // Make sure the query is SQL safe
-    $query = trim(addslashes($query));
+    $query = trim(DB_escapeString($query));
 
     // downloads search
     $sql  = "SELECT lid AS id, a.title AS title, date, a.owner_id AS uid, hits, "
@@ -555,7 +555,7 @@ function plugin_savecomment_downloads($title, $comment, $id, $pid, $postmode)
 
     $retval = '';
     $commentcode = DB_getItem($_TABLES['downloads'], 'commentcode',
-                              "lid = '" . addslashes($id) . "'");
+                              "lid = '" . DB_escapeString($id) . "'");
     if ($commentcode != 0) {
         COM_redirect($_CONF['site_url'] . '/index.php');
     }
@@ -592,7 +592,7 @@ function plugin_deletecomment_downloads($cid, $id)
     $result = DB_query("SELECT a.owner_id, group_id, perm_owner, perm_group, perm_members, perm_anon "
                      . "FROM {$_TABLES['downloads']} a "
                      . "LEFT JOIN {$_TABLES['downloadcategories']} b ON b.cid=a.cid "
-                     . "WHERE lid = '" . addslashes($id) . "'");
+                     . "WHERE lid = '" . DB_escapeString($id) . "'");
     $A = DB_fetchArray($result);
     $access = SEC_hasAccess($A['owner_id'], $A['group_id'],
                             $A['perm_owner'], $A['perm_group'],
@@ -633,7 +633,7 @@ function plugin_displaycomment_downloads($id, $commentid, $title, $order, $forma
          . "perm_group, perm_members, perm_anon "
          . "FROM {$_TABLES['downloads']} a "
          . "LEFT JOIN {$_TABLES['downloadcategories']} b ON b.cid=a.cid "
-         . "WHERE lid = '" . addslashes($id) . "' " . COM_getPermSQL('AND', 0, 2, 'b')
+         . "WHERE lid = '" . DB_escapeString($id) . "' " . COM_getPermSQL('AND', 0, 2, 'b')
          . " GROUP BY lid";
 
     $result = DB_query($sql);
@@ -1180,7 +1180,7 @@ function plugin_getiteminfo_downloads($lid, $what, $uid = 0, $options = array())
 
     $sql = "SELECT " . implode(',', $fields) . " FROM {$_TABLES['downloads']} a "
          . "LEFT JOIN {$_TABLES['downloadcategories']} b ON a.cid=b.cid "
-         . ($fsingle ? " WHERE lid = '" . addslashes($lid) . "'" : '')
+         . ($fsingle ? " WHERE lid = '" . DB_escapeString($lid) . "'" : '')
          . COM_getPermSQL(($fsingle ? 'AND' : 'WHERE'), (($uid > 0) ? $uid : 0), 2, 'b')
          . DLM_helper_getLangSQL()
          . ($fsingle ? ' LIMIT 1' : '');
@@ -1262,7 +1262,7 @@ function plugin_tag_scantag_downloads($id)
     }
 
     $tags = DB_getItem($_TABLES['downloads'], 'tags',
-        "lid='" . addslashes($id) . "'");
+        "lid='" . DB_escapeString($id) . "'");
     if (!empty($tags)) {
         $content = '[' . $tag_name . ':' . stripslashes($tags) . ']';
         $retval = TAG_scanTag($content);
@@ -1312,7 +1312,7 @@ function plugin_tag_gettaggeditems_downloads($id)
     if (empty($item)) return $retval;
 
     $tags = DB_getItem($_TABLES['downloads'], 'tags',
-        "lid='" . addslashes($id) . "'");
+        "lid='" . DB_escapeString($id) . "'");
     if (empty($tags)) return $retval;
 
     $tag_name = 'tag';

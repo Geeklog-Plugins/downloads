@@ -90,13 +90,13 @@ function makeProjectFileList($lid) {
     require_once $_CONF['path_system'] . 'lib-admin.php';
 
     $retval = '';
-    $project = DB_getItem($_TABLES['downloads'], 'project', "lid = '" . addslashes($lid) . "'");
+    $project = DB_getItem($_TABLES['downloads'], 'project', "lid = '" . DB_escapeString($lid) . "'");
     if ($project == false) return '';
     $permsql = $_DLM_CONF['has_edit_rights'] ? '' : COM_getPermSQL('AND', 0, 2, 'b');
     $result = DB_query("SELECT a.lid, a.title, a.url, a.version, a.size, a.date, a.cid "
                      . "FROM {$_TABLES['downloads']} a "
                      . "LEFT JOIN {$_TABLES['downloadcategories']} b ON a.cid=b.cid "
-                     . "WHERE a.project='" . addslashes($project) . "' "
+                     . "WHERE a.project='" . DB_escapeString($project) . "' "
                      . "AND a.project<>'' "
                      . "AND a.is_released=1 "
                      . $permsql
@@ -378,13 +378,13 @@ function dlformat(&$T, &$A, $isListing=false, $cid=ROOTID)
     $T->set_var('md5_checksum',      $A['md5']);
 
     if ($A['commentcode'] == 0) {
-        $commentCount = DB_count($_TABLES['comments'], 'sid', addslashes($A['lid']));
+        $commentCount = DB_count($_TABLES['comments'], 'sid', DB_escapeString($A['lid']));
         $recentPostMessage = $LANG_DLM['commentswanted'];
         if ($commentCount > 0) {
             $result4 = DB_query("SELECT cid, UNIX_TIMESTAMP(date) AS day, username "
                               . "FROM {$_TABLES['comments']}, {$_TABLES['users']} "
                               . "WHERE {$_TABLES['users']}.uid = {$_TABLES['comments']}.uid "
-                              . "AND sid = '" . addslashes($A['lid']) . "' "
+                              . "AND sid = '" . DB_escapeString($A['lid']) . "' "
                               . "ORDER BY date DESC LIMIT 1");
             $C = DB_fetchArray($result4);
             $recentPostMessage = $LANG01[27] . ': ' . strftime($_CONF['daytime'], $C['day'])
@@ -565,7 +565,7 @@ if (!empty($lid)) {
          . "imgurl, b.title AS cat_title "
          . "FROM {$_TABLES['downloads']} a "
          . "LEFT JOIN {$_TABLES['downloadcategories']} b ON a.cid=b.cid "
-         . "WHERE a.lid='" . addslashes($lid) . "' "
+         . "WHERE a.lid='" . DB_escapeString($lid) . "' "
          . "AND is_released=1 "
          . "AND date<=$now "
          . $permsql;

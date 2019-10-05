@@ -47,7 +47,7 @@ if (COM_isAnonUser() && ($_CONF['loginrequired'] == 1 || $_DLM_CONF['loginrequir
 
 $uid = (isset($_USER['uid'])) ? $_USER['uid'] : 1;
 COM_setArgNames(array('id'));
-$lid = addslashes(COM_applyFilter(COM_getArgument('id')));
+$lid = DB_escapeString(COM_applyFilter(COM_getArgument('id')));
 
 $sql = "SELECT COUNT(*) FROM {$_TABLES['downloads']} a "
      . "LEFT JOIN {$_TABLES['downloadcategories']} b ON a.cid=b.cid "

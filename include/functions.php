@@ -52,7 +52,7 @@ function DLM_updaterating($sel_id)
 {
     global $_TABLES;
 
-    $sel_id = addslashes($sel_id);
+    $sel_id = DB_escapeString($sel_id);
     $voteresult = DB_query("SELECT rating FROM {$_TABLES['downloadvotes']} "
                           ."WHERE lid = '$sel_id'");
     $votesDB = DB_numRows($voteresult);
@@ -207,7 +207,7 @@ function DLM_approveNewDownload($id)
 
     $result = DB_query("SELECT url, logourl, date, secret_id "
                      . "FROM {$_TABLES['downloads']} "
-                     . "WHERE lid = '" . addslashes($id) . "'");
+                     . "WHERE lid = '" . DB_escapeString($id) . "'");
     list($url, $logourl, $date, $secret_id) = DB_fetchArray($result);
 
     $safename = DLM_encodeFileName($url);
@@ -252,14 +252,14 @@ function DLM_delNewDownload($id)
 
     $result = DB_query("SELECT url, logourl, date "
                      . "FROM {$_TABLES['downloadsubmission']} "
-                     . "WHERE lid = '" . addslashes($id) . "'");
+                     . "WHERE lid = '" . DB_escapeString($id) . "'");
     list($url, $logourl, $date) = DB_fetchArray($result);
     if (empty($url)) return;
     $tmpfilename = $_DLM_CONF['path_filestore'] . 'tmp' . date('YmdHis', $date) . DLM_encodeFileName($url);
     $tmpshotname = $_DLM_CONF['path_snapstore'] . 'tmp' . date('YmdHis', $date) . DLM_encodeFileName($logourl);
     DLM_unlink($tmpfilename);
     DLM_unlink($tmpshotname);
-    DB_delete($_TABLES['downloadsubmission'], 'lid', addslashes($id));
+    DB_delete($_TABLES['downloadsubmission'], 'lid', DB_escapeString($id));
 }
 
 function DLM_changeFileExt($src_path, $ext)
@@ -470,7 +470,7 @@ function DLM_sendNotification($lid)
 {
     global $_CONF, $_TABLES, $LANG_DLM, $LANG08;
 
-    $lid = addslashes($lid);
+    $lid = DB_escapeString($lid);
     $result = DB_query("SELECT username, email, b.url "
                      . "FROM {$_TABLES['users']} a, {$_TABLES['downloads']} b "
                      . "WHERE a.uid = b.owner_id AND b.lid = '$lid'");

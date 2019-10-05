@@ -406,7 +406,7 @@ function DLM_convertData()
     while ($A = DB_fetchArray($result)) {
         foreach ($A as $key => $val) $$key = $val;
 
-        $description = addslashes(stripslashes($description));
+        $description = DB_escapeString(stripslashes($description));
         $descri = '';
         $detail = '';
 
@@ -504,11 +504,11 @@ function DLM_createCatImgFilename($name)
     $parts = pathinfo($name);
     $extension = $parts['extension'];
     $filename  = $parts['filename'];
-    $count = DB_count($_TABLES['downloadcategories'], 'imgurl', addslashes($name));
+    $count = DB_count($_TABLES['downloadcategories'], 'imgurl', DB_escapeString($name));
     $i = 1;
     while ($count > 0) {
         $name = $filename . "_$i." . $extension;
-        $count = DB_count($_TABLES['downloadcategories'], 'imgurl', addslashes($name));
+        $count = DB_count($_TABLES['downloadcategories'], 'imgurl', DB_escapeString($name));
         $i++;
     }
     return $name;
@@ -519,11 +519,11 @@ function DLM_createSnapFilename($name, $table, $field)
     $parts = pathinfo($name);
     $extension = $parts['extension'];
     $filename  = $parts['filename'];
-    $count = DB_count($table, $field, addslashes($name));
+    $count = DB_count($table, $field, DB_escapeString($name));
     $i = 1;
     while ($count > 0) {
         $name = $filename . "_$i." . $extension;
-        $count = DB_count($table, $field, addslashes($name));
+        $count = DB_count($table, $field, DB_escapeString($name));
         $i++;
     }
     return $name;
@@ -536,13 +536,13 @@ function DLM_saveComment(&$C)
 
     $retval = '';
 
-    $title     = addslashes($C['title']);
-    $comment   = addslashes($C['comment']);
-    $sid       = addslashes(str_replace('fileid_', '', $C['sid']));
+    $title     = DB_escapeString($C['title']);
+    $comment   = DB_escapeString($C['comment']);
+    $sid       = DB_escapeString(str_replace('fileid_', '', $C['sid']));
     $pid       = (int) $C['pid'];
     $type      = 'downloads';
-    $name      = addslashes($C['name']);
-    $ipaddress = addslashes($C['ipaddress']);
+    $name      = DB_escapeString($C['name']);
+    $ipaddress = DB_escapeString($C['ipaddress']);
     $uid       = (int) $C['uid'];
 
     if ($pid > 0) {
@@ -607,8 +607,8 @@ function DLM_saveComment(&$C)
     DB_unlockTable($_TABLES['comments']);
 
     $cid     = (int) $C['new_cid'];
-    $date    = addslashes($C['date']);
-    $name    = addslashes($C['name']);
+    $date    = DB_escapeString($C['date']);
+    $name    = DB_escapeString($C['name']);
     $score   = (int) $C['score'];
     $reason  = (int) $C['reason'];
     DB_query("UPDATE {$_TABLES['comments']} SET "

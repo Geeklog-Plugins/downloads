@@ -166,7 +166,7 @@ function downloads_getListField_Files($fieldname, $fieldvalue, $A, $icon_arr)
             break;
 
         case "cid":
-            $retval = DB_getItem($_TABLES['downloadcategories'], 'title', "cid='" . addslashes($A['cid']) . "'");
+            $retval = DB_getItem($_TABLES['downloadcategories'], 'title', "cid='" . DB_escapeString($A['cid']) . "'");
             $retval .= getCatName_by_language($A['cid']);
             break;
 
@@ -196,7 +196,7 @@ function DLM_reorderCategories()
         $corder += 10;
         if ($B['corder'] != $corder) {
             DB_query("UPDATE {$_TABLES['downloadcategories']} SET corder = $corder "
-                   . "WHERE cid = '" . addslashes($B['cid']) . "'");
+                   . "WHERE cid = '" . DB_escapeString($B['cid']) . "'");
         }
     }
 }
@@ -209,7 +209,7 @@ function DLM_moveCategory()
 {
     global $_TABLES, $mytree;
 
-    $cid   = addslashes(COM_applyFilter($_GET['cid']));
+    $cid   = DB_escapeString(COM_applyFilter($_GET['cid']));
     $where = COM_applyFilter($_GET['where']);
     $corder = DB_getItem($_TABLES['downloadcategories'], 'corder', "cid = '$cid'");
     $pid    = DB_getItem($_TABLES['downloadcategories'], 'pid',    "cid = '$cid'");
@@ -253,7 +253,7 @@ function DLM_getCatLevel($cid)
 {
     global $_TABLES;
 
-    $pid = DB_getItem($_TABLES['downloadcategories'], 'pid', "cid = '" . addslashes($cid) . "'");
+    $pid = DB_getItem($_TABLES['downloadcategories'], 'pid', "cid = '" . DB_escapeString($cid) . "'");
     if ($pid != ROOTID) {
         return 1 + DLM_getCatLevel($pid);
     }
