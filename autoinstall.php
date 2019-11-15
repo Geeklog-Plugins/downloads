@@ -6,7 +6,7 @@
 // +---------------------------------------------------------------------------+
 // | plugins/downloads/autoinstall.inc                                         |
 // +---------------------------------------------------------------------------+
-// | Copyright (C) 2010-2014 dengen - taharaxp AT gmail DOT com                |
+// | Copyright (C) 2010-2019 dengen - taharaxp AT gmail DOT com                |
 // |                                                                           |
 // | Downloads Plugin is based on Filemgmt plugin                              |
 // | Copyright (C) 2004 by Consult4Hire Inc.                                   |
@@ -54,7 +54,7 @@ function plugin_autoinstall_downloads($pi_name)
     $info = array(
         'pi_name'         => $pi_name,
         'pi_display_name' => $pi_display_name,
-        'pi_version'      => '1.2.2',
+        'pi_version'      => '1.2.3',
         'pi_gl_version'   => '2.1.2',
         'pi_homepage'     => 'http://www.trybase.com/~dengen/log/'
     );
@@ -268,28 +268,35 @@ function DLM_upgrade()
         $current_version = '1.1.0';
     }
     $done = false;
+
     while (!$done) {
         switch ($current_version) {
-        case '1.1.0':
-            if (isset($_UPDATES[$current_version])) {
-                $_SQL = $_UPDATES[$current_version];
-                foreach ($_SQL as $sql) {
-                    DB_query($sql);
+            case '1.1.0':
+                if (isset($_UPDATES[$current_version])) {
+                    $_SQL = $_UPDATES[$current_version];
+                    foreach ($_SQL as $sql) {
+                        DB_query($sql);
+                    }
                 }
-            }
-            $current_version = '1.2.0';
-            break;
-        case '1.2.0':
-            $current_version = '1.2.1';
-            break;
+                $current_version = '1.2.0';
+                break;
 
-        case '1.2.1':
-            $current_version = '1.2.2';
-            break;
-            
-        default:
-            $done = true;
-            break;
+            case '1.2.0':
+                $current_version = '1.2.1';
+                break;
+
+            case '1.2.1':
+                $current_version = '1.2.2';
+                break;
+
+            case '1.2.2':
+                $current_version = '1.2.3';
+                $done = true;
+                break;
+
+            default:
+                $done = true;
+                break;
         }
     }
 

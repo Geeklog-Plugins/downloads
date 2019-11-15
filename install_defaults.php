@@ -6,7 +6,7 @@
 // +---------------------------------------------------------------------------+
 // | plugins/downloads/install_defaults.php                                    |
 // +---------------------------------------------------------------------------+
-// | Copyright (C) 2010-2014 dengen - taharaxp AT gmail DOT com                |
+// | Copyright (C) 2010-2019 dengen - taharaxp AT gmail DOT com                |
 // |                                                                           |
 // | Downloads Plugin is based on Filemgmt plugin                              |
 // | Copyright (C) 2004 by Consult4Hire Inc.                                   |
