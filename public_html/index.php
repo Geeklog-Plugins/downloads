@@ -523,9 +523,9 @@ $display = '';
 $pagetitle = $LANG_DLM['plugin_name'];
 
 // display message
-if (isset($_REQUEST['msg'])) {
-    $msg = COM_applyFilter($_REQUEST['msg'], true);
-    if ($msg > 0) $display .= COM_showMessage($msg, 'downloads');
+$msg = (int) Geeklog\Input::fRequest('msg', 0);
+if ($msg > 0) {
+    $display .= COM_showMessage($msg, 'downloads');
 }
 
 $T = COM_newTemplate(CTL_plugin_templatePath('downloads'));
