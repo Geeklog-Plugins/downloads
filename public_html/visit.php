@@ -45,7 +45,8 @@ if (COM_isAnonUser() && ($_CONF['loginrequired'] == 1 || $_DLM_CONF['loginrequir
     exit;
 }
 
-$uid = (isset($_USER['uid'])) ? $_USER['uid'] : 1;
+$uid = isset($_USER['uid']) ? (int) $_USER['uid'] : 1;
+
 COM_setArgNames(array('id'));
 $rawLid = COM_getArgument('id');
 $lid = preg_replace('/[^0-9A-Za-z_]/', '', $rawLid);
@@ -58,7 +59,7 @@ $sql = "SELECT COUNT(*) FROM {$_TABLES['downloads']} a "
 list($count) = DB_fetchArray(DB_query($sql));
 if ($count == 0 || DB_count($_TABLES['downloads'], "lid", $escapedLid) == 0) {
     DLM_errorLog("Downloads: invalid attempt to download a file. "
-               . "User:{$_USER['username']}, IP:{$_SERVER['REMOTE_ADDR']}, File ID:{$lid}, File ID(raw):{$rawLid}");
+               . "User:{$_USER['username']}, User ID:{$uid}, IP:{$_SERVER['REMOTE_ADDR']}, File ID:{$lid}, File ID(raw):{$rawLid}");
     COM_redirect($_CONF['site_url'] . '/downloads/index.php');
 }
 
