@@ -6,7 +6,7 @@
 // +---------------------------------------------------------------------------+
 // | plugins/downloads/include/functions.php                                   |
 // +---------------------------------------------------------------------------+
-// | Copyright (C) 2010-2014 dengen - taharaxp AT gmail DOT com                |
+// | Copyright (C) 2010-2020 dengen - taharaxp AT gmail DOT com                |
 // |                                                                           |
 // | Downloads Plugin is based on Filemgmt plugin                              |
 // | Copyright (C) 2004 by Consult4Hire Inc.                                   |
@@ -185,13 +185,13 @@ function DLM_moveNewFile($tmpfile, $newfile)
         $chown = @chmod($newfile, intval((string)$_DLM_CONF['filepermissions'], 8));
         $success = true;
         if (!file_exists($newfile)) {
-            COM_errorLog("Downloads: upload approve error: "
+            DLM_errorLog("Downloads: upload approve error: "
                        . "New file does not exist after move of tmp file: '" . $newfile . "'");
             DLM_showErrorMessage('1002');
             $success = false;
         }
     } else {
-        COM_errorLog("Downloads: upload approve error: "
+        DLM_errorLog("Downloads: upload approve error: "
                    . "Temporary file does not exist: '" . $tmpfile . "'");
         DLM_showErrorMessage('1001');
         $success = false;
@@ -444,18 +444,18 @@ function DLM_uploadNewFile($newfile, $directory, $name = '')
     $newfilepath = $directory . DLM_encodeFileName($name);
 
     if (!is_uploaded_file($tmp)) {
-        COM_errorLog("Downloads: upload error: Temporary file does not exist: '" . $tmp . "'");
+        DLM_errorLog("Downloads: upload error: Temporary file does not exist: '" . $tmp . "'");
         DLM_showErrorMessage('1003');
         return false;
     }
 
     if (file_exists($newfilepath)) {
-        COM_errorLog("Downloads: warning: Added new filelisting for a file that already exists " . $newfilepath);
+        DLM_errorLog("Downloads: warning: Added new filelisting for a file that already exists " . $newfilepath);
         return true; // not uploaded. this OK? or upload and overwrite force.
     }
 
     if (!move_uploaded_file($tmp, $newfilepath)) {
-        COM_errorLog("Downloads: upload error: Could not move an uploaded file: " . $tmp . " to " . $name);
+        DLM_errorLog("Downloads: upload error: Could not move an uploaded file: " . $tmp . " to " . $name);
         DLM_showErrorMessage('1004');
         return false;
     }

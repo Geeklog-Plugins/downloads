@@ -6,7 +6,7 @@
 // +---------------------------------------------------------------------------+
 // | plugins/downloads/include/download.class.php                              |
 // +---------------------------------------------------------------------------+
-// | Copyright (C) 2010-2014 dengen - taharaxp AT gmail DOT com                |
+// | Copyright (C) 2010-2020 dengen - taharaxp AT gmail DOT com                |
 // |                                                                           |
 // | Downloads Plugin is based on Filemgmt plugin                              |
 // | Copyright (C) 2004 by Consult4Hire Inc.                                   |
@@ -1420,7 +1420,7 @@ class DLDownload
         global $_DLM_CONF;
 
         if (!file_exists($tmpfile) || is_dir($tmpfile)) {
-            COM_errorLog("Downloads: upload approve error: "
+            DLM_errorLog("Downloads: upload approve error: "
                        . "Temporary file does not exist: '" . $tmpfile . "'");
             $this->_errno[] = '1001';
             return false;
@@ -1430,7 +1430,7 @@ class DLDownload
         $chown = @chmod($newfile, intval((string)$_DLM_CONF['filepermissions'], 8));
 
         if (!file_exists($newfile)) {
-            COM_errorLog("Downloads: upload approve error: "
+            DLM_errorLog("Downloads: upload approve error: "
                        . "New file does not exist after move of tmp file: '" . $newfile . "'");
             $this->_errno[] = '1002';
             return false;

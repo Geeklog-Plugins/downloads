@@ -6,7 +6,7 @@
 // +---------------------------------------------------------------------------+
 // | public_html/downloads/visit.php                                           |
 // +---------------------------------------------------------------------------+
-// | Copyright (C) 2010-2014 dengen - taharaxp AT gmail DOT com                |
+// | Copyright (C) 2010-2020 dengen - taharaxp AT gmail DOT com                |
 // |                                                                           |
 // | Downloads Plugin is based on Filemgmt plugin                              |
 // | Copyright (C) 2004 by Consult4Hire Inc.                                   |
@@ -47,16 +47,18 @@ if (COM_isAnonUser() && ($_CONF['loginrequired'] == 1 || $_DLM_CONF['loginrequir
 
 $uid = (isset($_USER['uid'])) ? $_USER['uid'] : 1;
 COM_setArgNames(array('id'));
-$lid = DB_escapeString(COM_applyFilter(COM_getArgument('id')));
+$rawLid = COM_getArgument('id');
+$lid = preg_replace('/[^0-9A-Za-z_]/', '', $rawLid);
+$escapedLid = DB_escapeString($lid);
 
 $sql = "SELECT COUNT(*) FROM {$_TABLES['downloads']} a "
      . "LEFT JOIN {$_TABLES['downloadcategories']} b ON a.cid=b.cid "
-     . "WHERE a.lid='$lid' " . COM_getPermSQL('AND', 0, 2, 'b');
+     . "WHERE a.lid='{$escapedLid}' " . COM_getPermSQL('AND', 0, 2, 'b');
 
 list($count) = DB_fetchArray(DB_query($sql));
-if ($count == 0 || DB_count($_TABLES['downloads'], "lid", $lid) == 0) {
-    COM_errorLog("Downloads: invalid attempt to download a file. "
-               . "User:{$_USER['username']}, IP:{$_SERVER['REMOTE_ADDR']}, File ID:{$lid}");
+if ($count == 0 || DB_count($_TABLES['downloads'], "lid", $escapedLid) == 0) {
+    DLM_errorLog("Downloads: invalid attempt to download a file. "
+               . "User:{$_USER['username']}, IP:{$_SERVER['REMOTE_ADDR']}, File ID:{$lid}, File ID(raw):{$rawLid}");
     COM_redirect($_CONF['site_url'] . '/downloads/index.php');
 }
 

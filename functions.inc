@@ -6,7 +6,7 @@
 // +---------------------------------------------------------------------------+
 // | plugins/downloads/functions.inc                                           |
 // +---------------------------------------------------------------------------+
-// | Copyright (C) 2010-2019 dengen - taharaxp AT gmail DOT com                |
+// | Copyright (C) 2010-2020 dengen - taharaxp AT gmail DOT com                |
 // |                                                                           |
 // | Downloads Plugin is based on Filemgmt plugin                              |
 // | Copyright (C) 2004 by Consult4Hire Inc.                                   |
@@ -133,6 +133,20 @@ function DLM_helper_getLangSQL()
     if (empty($_DLM_CONF['lang_id'])) return '';
     $len = strlen($_DLM_CONF['lang_id']) + 1;
     return "AND RIGHT(b.cid, $len)='_{$_DLM_CONF['lang_id']}' ";
+}
+
+/**
+ * Log an entry
+ *
+ * @param  string  $entry
+ */
+function DLM_errorLog($entry)
+{
+    if (version_compare(VERSION, '2.2.1', '>=')) {
+        Geeklog\Log::downloads($entry);
+    } else {
+        COM_errorLog($entry);
+    }
 }
 
 /**
@@ -602,7 +616,7 @@ function plugin_deletecomment_downloads($cid, $id)
         CMT_deleteComment($cid, $id, 'downloads');
         COM_redirect(COM_buildURL($_CONF['site_url'] . "/downloads/index.php?id=$id"));
     } else {
-        COM_errorLog("User {$_USER['username']} (IP: {$_SERVER['REMOTE_ADDR']}) "
+        DLM_errorLog("User {$_USER['username']} (IP: {$_SERVER['REMOTE_ADDR']}) "
                    . "tried to illegally delete comment $cid from downloads $id");
         COM_redirect($_CONF['site_url'] . '/index.php');
     }
