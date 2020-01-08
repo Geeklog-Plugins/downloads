@@ -49,7 +49,7 @@ $uid = isset($_USER['uid']) ? (int) $_USER['uid'] : 1;
 
 COM_setArgNames(array('id'));
 $rawLid = COM_getArgument('id');
-$lid = preg_replace('/[^0-9A-Za-z_]/', '', $rawLid);
+$lid = COM_sanitizeID($rawLid , false); // use same character filter as when a file id is saved
 $escapedLid = DB_escapeString($lid);
 
 $sql = "SELECT COUNT(*) FROM {$_TABLES['downloads']} a "
