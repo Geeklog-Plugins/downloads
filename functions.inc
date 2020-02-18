@@ -537,18 +537,55 @@ function plugin_commentsupport_downloads()
 }
 
 /**
-* Provide URL and ID for the link to a comment's parent
-*
-* @return   array   array consisting of the base URL and the ID name
-*
-*/
-function plugin_getcommenturlid_downloads()
+ * Provide URL for the link to a comment's parent item.
+ * NOTE: The Plugin API does not support $_CONF['url_rewrite'] here,
+ *       so we'll end up with a non-rewritten URL ...
+ *
+ * @return   string   string of URL
+ */
+function plugin_getcommenturlid_downloads($id)
 {
     global $_CONF;
 
-    return array($_CONF['site_url'] . '/downloads/index.php', 'id');
+	return $_CONF['site_url'] . "/downloads/index.php?id=$id";
 }
 
+/**
+ * Return the comment code to this plugin item. This is based not only the code of the actual plugin item but the access the user has to the item
+ *
+ * @param   string $id   Item id to which $cid belongs
+ * @return  int    Return a CommentCode: COMMENT_CODE_ENABLED (0), COMMENT_CODE_DISABLED (-1), COMMENT_CODE_CLOSED (1)
+ */
+function plugin_commentenabled_downloads($id)
+{
+    global $_CONF, $_TABLES;
+
+    // CommentCode: COMMENT_CODE_ENABLED (0), COMMENT_CODE_DISABLED (-1), COMMENT_CODE_CLOSED (1)
+    $commentCode = COMMENT_CODE_DISABLED;
+	
+    $sql = "SELECT a.commentcode, a.owner_id, group_id, perm_owner, perm_group, perm_members, perm_anon "
+                     . "FROM {$_TABLES['downloads']} a "
+                     . "LEFT JOIN {$_TABLES['downloadcategories']} b ON b.cid=a.cid "
+                     . "WHERE lid = '" . DB_escapeString($id) . "'";
+    $result = DB_query($sql);
+    $A = DB_fetchArray($result);
+    if (DB_numRows($result) == 1) {
+        if ($A['commentcode'] == COMMENT_CODE_ENABLED) {
+            $commentCode = COMMENT_CODE_ENABLED;
+        } elseif ($A['commentcode'] == COMMENT_CODE_CLOSED) { // Closed but still visible so give admins access
+            if (SEC_hasRights('downloads.edit') &&
+                (SEC_hasAccess($A['owner_id'], $A['group_id'],
+                        $A['perm_owner'], $A['perm_group'], $A['perm_members'],
+                        $A['perm_anon']) == 3)) {
+                $commentCode = COMMENT_CODE_ENABLED; // If Admin then treat comment like enabled
+            } else {
+                $commentCode = COMMENT_CODE_CLOSED;
+            }
+        }
+    }
+
+    return $commentCode;
+}
 
 /**
  * Plugin function that is called after comment form is submitted.
@@ -568,10 +605,11 @@ function plugin_savecomment_downloads($title, $comment, $id, $pid, $postmode)
     global $_CONF, $_TABLES, $LANG03;
 
     $retval = '';
-    $commentcode = DB_getItem($_TABLES['downloads'], 'commentcode',
-                              "lid = '" . DB_escapeString($id) . "'");
-    if ($commentcode != 0) {
-        COM_redirect($_CONF['site_url'] . '/index.php');
+	
+    // Use plugin_commentenabled_foo permission check to determine if user has permissions to save a comment for this item
+    // CommentCode: COMMENT_CODE_ENABLED (0), COMMENT_CODE_DISABLED (-1), COMMENT_CODE_CLOSED (1)
+    if (plugin_commentenabled_downloads($id) != COMMENT_CODE_ENABLED) {
+        COM_handle404($_CONF['site_url'] . '/index.php');
     }
 
     $ret = CMT_saveComment($title, $comment, $id, $pid, 'downloads', $postmode);
@@ -588,19 +626,32 @@ function plugin_savecomment_downloads($title, $comment, $id, $pid, $postmode)
     return $retval;
 }
 
+/**
+ * Comment Submission approved
+ *
+ * @param   string $id       Item id to which $cid belongs
+ * @param   int     $cid    Approved Comment id
+ */
+function plugin_moderationcommentapprove_downloads($id, $cid)
+{
+    // Nothing needed to do on approval of comment to plugin item
+    
+    return true;
+}
 
 /**
- * Plugin API to delete a comment
+ * Delete a comment
  *
- * @param   int     $cid    Comment to be deleted
- * @param   string  $id     Item id to which $cid belongs
- * @return  mixed   false for failure, HTML string (redirect?) for success
+ * @param   int    $cid Comment to be deleted
+ * @param   string $id  Item id to which $cid belongs
+ * @param   boolean $returnOption  Either return a boolean on success or not, or redirect
+ * @return  mixed        Based on $returnOption. false for failure or true for success, else a redirect for success or failure
  */
-function plugin_deletecomment_downloads($cid, $id)
+function plugin_deletecomment_downloads($cid, $id, $returnBoolean)
 {
     global $_CONF, $_TABLES, $_USER;
 
-    $retval = '';
+    $retval = false;
 
     $has_editPermissions = SEC_hasRights('downloads.edit');
     $result = DB_query("SELECT a.owner_id, group_id, perm_owner, perm_group, perm_members, perm_anon "
@@ -614,11 +665,19 @@ function plugin_deletecomment_downloads($cid, $id)
 
     if ($has_editPermissions && $access == 3) {
         CMT_deleteComment($cid, $id, 'downloads');
-        COM_redirect(COM_buildURL($_CONF['site_url'] . "/downloads/index.php?id=$id"));
+        if ($returnBoolean) {
+            $retval = true;
+        } else {		
+			COM_redirect(COM_buildURL($_CONF['site_url'] . "/downloads/index.php?id=$id"));
+		}
     } else {
         DLM_errorLog("User {$_USER['username']} (IP: {$_SERVER['REMOTE_ADDR']}) "
                    . "tried to illegally delete comment $cid from downloads $id");
-        COM_redirect($_CONF['site_url'] . '/index.php');
+        if ($returnBoolean) {
+            $retval = false;
+        } else {				   
+			COM_redirect($_CONF['site_url'] . '/index.php');
+		}
     }
 
     return $retval;
