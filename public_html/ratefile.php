@@ -32,6 +32,10 @@
 
 use Geeklog\Input;
 
+// The lowest and highest of the rating
+define('RATING_LOWEST', 1);
+define('RATING_HIGHEST', 10);
+
 require_once '../lib-common.php';
 
 if (!in_array('downloads', $_PLUGINS)) {
@@ -55,9 +59,9 @@ if (isset($_POST['submit'])) {
     $anonwaitdays = 1;
     $ip = Input::server('REMOTE_ADDR', '');
     $lid = Input::fPost('lid');
-    $rating = Input::fPost('rating');
-    // Check if Rating is Null
-    if ($rating === '--') {
+    $rating = (int) Input::fPost('rating', RATING_LOWEST - 1);
+    // Check if Rating is valid
+    if (empty($rating) || ($rating < RATING_LOWEST) || ($rating > RATING_HIGHEST)) {
         echo DLM_showErrorMessage('norating');
         exit();
     }
@@ -125,8 +129,12 @@ $T->set_var('lang_voteonce',    $LANG_DLM['voteonce']);
 $T->set_var('lang_ratingscale', $LANG_DLM['ratingscale']);
 $T->set_var('lang_beobjective', $LANG_DLM['beobjective']);
 $T->set_var('lang_donotvote',   $LANG_DLM['donotvote']);
-$option_list = '<option>--</option>';
-for($i = 10; $i > 0; $i--) $option_list .=  '<option value="' . $i . '">' . $i . '</option>';
+
+$option_list = '<option>--</option>' . PHP_EOL;
+for ($i = RATING_HIGHEST; $i >= RATING_LOWEST; $i--) {
+	$option_list .=  '<option value="' . $i . '">' . $i . '</option>' . PHP_EOL;
+}
+
 $T->set_var('option_list',      $option_list);
 $T->set_var('lang_rateit',      $LANG_DLM['rateit']);
 $T->set_var('lang_cancel',      $LANG_DLM['cancel']);
