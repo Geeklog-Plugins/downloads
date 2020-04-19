@@ -1,0 +1,45 @@
+Install/Upgrade/Uninstall instructions for the Geeklog Downloads Plugin v1.1.3+
+
+These instructions assume you have installed a Geeklog plugin before.
+
+You must be using at least Geeklog version v2.1.2 to install this plugin.
+
+
+INSTALL/UPGRADE:
+
+Step 1:  Back up your Geeklog Database.  The Downloads Plugin adds tables to your Geeklog database.  You can do this with the built in admin backup facility.
+
+Step 2:  Either A) Log in to your Geeklog as a root user and upload the plugin using the Geeklog upload functionality found in the Admin Plugins page. If you do this, skip to Step 7, OR B) Go to Step 3.
+
+Step 3:  Uncompress the Downloads Plugin archive from the path.to.geeklog/plugins directory.  The archive will create a directory called "downloads" in the plugins directory.
+
+Step 4:  Create the public_html and admin directories.  Under your html directory (usually public_html) create a directory called "downloads".  Under your admin/plugins/ directory create a directory called "downloads".
+
+Step 5:  From the path.to.geeklog/plugins/downloads/ directory, copy the files in the admin directory to the admin/plugins/downloads/ directory your created in Step 4.  Likewise, copy the files and directories in the public_html directory to the public_html/downloads/ directory your created in Step 4. Then copy the directory downloads_data into the public_html/ directory.
+
+Step 6:  Log in to your Geeklog as a root user and visit the Admin Plugins page.  For new installs look at the list of Uninstalled Plugins and you should fine the Downloads Plugin listed. Click the install button. For upgrades, look at the plugin list, there should be an upgrade button visible that you can press to start the upgrade process. 
+
+Once installed/upgraded a success message will be displayed. If not examine Geeklog's logs/error.log for possible problems.
+
+Step 7:  The Downloads Plugin should now be installed and functioning.  From the Geeklog Admin Control Panel, click on the Downloads icon and it will take you to the admin page.
+
+Step 8:  Go to the Geeklog Configuration and find the Downloads Configuration. Update any configuration options as needed.
+
+Step 9:  All root users will have access to the features of the Downloads Plugin since they belong to the Downloads Admin group. If you wish other users to have access, either add them to this user group or create/use another user group (that the user belongs too) and give that group one or more of the following security rights:
+
+- Downloads.edit      = Access to downloads editor
+- Downloads.upload    = Downloads file upload rights
+- Downloads.moderate  = Ability to moderate pending downloads
+- Downloads.submit    = May skip the downloads submission queue
+
+
+UNINSTALL:
+
+Step 1:  From the Admin Plugins page, you can uninstall the Downloads Plugin by clicking on the Delete button.
+
+Step 2:  You then must manually delete the three plugin directories created in the install process:  
+
+<geeklog-dir>plugins/downloads/ 
+<public_html>/downloads/
+<public_html>/downloads_data/
+<admin>/plugins/downloads/
