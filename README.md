@@ -10,7 +10,10 @@ Downloads plugin adds a file downloads section to your Geeklog site.
 
 ## Other Information
 
-Plugin Homepage:
+Geeklog Homepage:
+https://www.geeklog.net
+
+Downloads Plugin Homepage:
 https://github.com/Geeklog-Plugins/downloads
 
 To find the latest releases see:
