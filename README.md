@@ -1,7 +1,20 @@
 # Geeklog Downloads plugin
 
-Downloads plugin adds downloads section to your Geeklog site.
+* Original Author: Dengen
+* Maintainers: [Geeklog Community Members] (https://github.com/Geeklog-Plugins/downloads/graphs/contributors)
+* Latest Release Supports: Geeklog v2.2.0+
 
-Latest release is v1.2.3 which supports Geeklog v2.2.0 and higher.
+## Summary
 
-https://www.geeklog.net/downloads/index.php/1070_5b194f8a81859
+Downloads plugin adds a file downloads section to your Geeklog site.
+
+## Other Information
+
+Plugin Homepage:
+https://github.com/Geeklog-Plugins/downloads
+
+To find the latest releases see:
+https://github.com/Geeklog-Plugins/downloads/releases
+
+To request a feature or report an issue see: 
+https://github.com/Geeklog-Plugins/downloads/issues
