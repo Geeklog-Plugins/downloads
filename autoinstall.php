@@ -56,7 +56,7 @@ function plugin_autoinstall_downloads($pi_name)
         'pi_display_name' => $pi_display_name,
         'pi_version'      => '1.2.3',
         'pi_gl_version'   => '2.1.2',
-        'pi_homepage'     => 'http://www.trybase.com/~dengen/log/'
+        'pi_homepage'     => 'https://github.com/Geeklog-Plugins/downloads'
     );
 
     if ($_CONF['language'] == 'japanese_utf-8') { // Japanese
@@ -299,14 +299,11 @@ function DLM_upgrade()
                 break;
         }
     }
+	
+    // Update plugin version number and other info
+    DB_query("UPDATE {$_TABLES['plugins']} SET pi_version = '$code_version', pi_gl_version = '{$inst_parms['info']['pi_gl_version']}', pi_homepage = '{$inst_parms['info']['pi_homepage']}' WHERE pi_name = '$pi_name'");
 
-    // Update the version numbers
-    DB_query("UPDATE {$_TABLES['plugins']} "
-           . "SET pi_version = '$code_version', pi_gl_version = '$pi_gl_version' "
-           . "WHERE pi_name = '$pi_name'");
-
-    COM_errorLog(ucfirst($pi_name)
-        . " plugin was successfully updated to version $code_version.");
+    COM_errorLog("Updated " . ucfirst($pi_name) . " plugin from v$installed_version to v$code_version", 1 );	
 
     return true;
 }
