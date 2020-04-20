@@ -142,7 +142,7 @@ function DLM_helper_getLangSQL()
  */
 function DLM_errorLog($entry)
 {
-    if (version_compare(VERSION, '2.2.1', '>=')) {
+	if (COM_versionCompare(VERSION, '2.2.1', '>=')) {
         Geeklog\Log::downloads($entry, '');
     } else {
         COM_errorLog($entry);
