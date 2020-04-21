@@ -98,8 +98,14 @@ function listDownloads()
 
     $menu_arr[] = array('url'  => $_CONF['site_admin_url'],
                         'text' => $LANG_ADMIN['admin_home']);
+						
+    if ($_DLM_CONF['lang_id'] == 'ja') {
+        $readme_url = $_CONF['site_admin_url'] . '/plugins/downloads/readme_ja.html';
+    } else {
+        $readme_url = $_CONF['site_admin_url'] . '/plugins/downloads/readme.html';
+    }						
 
-    $retval .= COM_startBlock($LANG_DLM['manager'], '', COM_getBlockTemplate('_admin_block', 'header'));
+    $retval .= COM_startBlock($LANG_DLM['manager'], $readme_url, COM_getBlockTemplate('_admin_block', 'header'));
 
     $retval .= ADMIN_createMenu($menu_arr, 
                                 ($is_root_user ? $LANG_DLM['instructions'] : $LANG_DLM['instructions2']),
@@ -262,7 +268,7 @@ function DLM_getCatLevel($cid)
 
 function listCategories()
 {
-    global $_CONF, $_TABLES, $LANG_ADMIN, $LANG_DLM;
+    global $_CONF, $_TABLES, $LANG_ADMIN, $LANG_DLM, $_DLM_CONF;
 
     require_once $_CONF['path_system'] . 'lib-admin.php';
 
@@ -304,8 +310,14 @@ function listCategories()
                     array('url'  => $_CONF['site_admin_url'],
                           'text' => $LANG_ADMIN['admin_home'])
     ));
+	
+    if ($_DLM_CONF['lang_id'] == 'ja') {
+        $readme_url = $_CONF['site_admin_url'] . '/plugins/downloads/readme_ja.html';
+    } else {
+        $readme_url = $_CONF['site_admin_url'] . '/plugins/downloads/readme.html';
+    }	
 
-    $retval .= COM_startBlock($LANG_DLM['manager'], '', COM_getBlockTemplate('_admin_block', 'header'));
+    $retval .= COM_startBlock($LANG_DLM['manager'], $readme_url, COM_getBlockTemplate('_admin_block', 'header'));
 
     $retval .= ADMIN_createMenu($menu_arr, $LANG_DLM['instructions'], plugin_geticon_downloads());
 
