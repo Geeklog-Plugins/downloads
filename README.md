@@ -10,12 +10,14 @@ The Downloads Plugin adds a file downloads section to your Geeklog site.
 
 ## Main Features
 
-* Files can be organized by categories
+* Files can be organized by categories and sub categories
 * Users can submit files which then can be approved by the Admin
+* The Advanced Editor can be used  for file descriptions
 * Files can have comments and ratings
 * Can group files by Name
-* Files can have an image, version number, summary, etc...
+* Files can have a snapshot, version number, summary, etc...
 * Uses Geeklog Configuration system
+* Multi-language support
 
 ## Other Information
 
@@ -30,3 +32,6 @@ https://github.com/Geeklog-Plugins/downloads/releases
 
 To request a feature or report an issue see: 
 https://github.com/Geeklog-Plugins/downloads/issues
+
+For more help on how to use the Downloads Plugin see: 
+<admin>/plugins/downloads/readme.html or (readme_ja.html)
