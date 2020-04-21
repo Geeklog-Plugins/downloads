@@ -54,7 +54,7 @@ if (version_compare($installed_version, plugin_chkVersion_downloads()) < 0) {
 
 function listDownloads()
 {
-    global $_CONF, $_TABLES, $LANG_ADMIN, $LANG_DLM;
+    global $_CONF, $_TABLES, $LANG_ADMIN, $LANG_DLM, $_DLM_CONF;
 
     require_once $_CONF['path_system'] . 'lib-admin.php';
 
