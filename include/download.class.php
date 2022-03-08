@@ -156,9 +156,9 @@ class DLDownload
         $this->_title        = COM_checkHTML(COM_checkWords(trim($array['title'])));
         $this->_project      = COM_checkHTML(COM_checkWords(trim($array['project'])));
         $this->_homepage     = strip_tags($array['homepage']);
-        $this->_size         = intval(COM_applyFilter(@$array['size'], true));
-        $this->_md5          = COM_applyFilter(@$array['md5']);
-        $this->_logourl      = COM_applyFilter(trim(@$array['logourl']));
+        $this->_size         = isset($array['size']) ? intval(COM_applyFilter($array['size'], true)) : 0;
+        $this->_md5          = isset($array['md5']) ? COM_applyFilter($array['md5']) : '';
+        $this->_logourl      = isset($array['logourl']) ? COM_applyFilter(trim($array['logourl'])) : '';
         $this->_mg_autotag   = COM_applyFilter(trim($array['mg_autotag']));
         $this->_tags         = COM_applyFilter($this->_modifyTags($array['tags']));
         $this->_old_date     = intval(COM_applyFilter($array['old_date'], true));
