@@ -567,7 +567,7 @@ function plugin_commentenabled_downloads($id, $uid = 0)
     $sql = "SELECT a.commentcode, a.owner_id, group_id, perm_owner, perm_group, perm_members, perm_anon "
                      . "FROM {$_TABLES['downloads']} a "
                      . "LEFT JOIN {$_TABLES['downloadcategories']} b ON b.cid=a.cid "
-                     . "WHERE lid = '" . DB_escapeString($id) . "'" . COM_getPermSQL('AND', $uid, 2 'a') . COM_getPermSQL('AND', $uid, 2 'b');
+                     . "WHERE lid = '" . DB_escapeString($id) . "'" . COM_getPermSQL('AND', $uid, 2, 'a') . COM_getPermSQL('AND', $uid, 2, 'b');
     $result = DB_query($sql);
     $A = DB_fetchArray($result);
     if (DB_numRows($result) == 1) {
