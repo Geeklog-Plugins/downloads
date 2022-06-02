@@ -76,7 +76,11 @@ function DLM_showErrorMessage($e_code, $pages=1)
 
     $e_code = (in_array($e_code, array_keys($LANG_DLM))) ? $e_code : '9999';
     $message = $LANG_DLM[$e_code];
-    $timestamp = strftime($_CONF['daytime']);
+	if (is_callable('COM_strftime')) {
+		$timestamp = COM_strftime($_CONF['daytime']);
+	} else {
+		$timestamp = strftime($_CONF['daytime']);
+	}
 
     $content = COM_startBlock($MESSAGE[40] . ' - ' . $timestamp, '', COM_getBlockTemplate('_msg_block', 'header'))
              . '<p class="sysmessage"><img src="' . $_CONF['layout_url'] . '/images/sysmessage.'
@@ -96,7 +100,11 @@ function DLM_showMessage($e_code)
 
     $e_code = (in_array($e_code, array_keys($LANG_DLM))) ? $e_code : '9999';
     $message = $LANG_DLM[$e_code];
-    $timestamp = strftime($_CONF['daytime']);
+	if (is_callable('COM_strftime')) {
+		$timestamp = COM_strftime($_CONF['daytime']);
+	} else {
+		$timestamp = strftime($_CONF['daytime']);
+	}	
 
     $retval = COM_startBlock($MESSAGE[40] . ' - ' . $timestamp, '', COM_getBlockTemplate('_msg_block', 'header'))
             . '<p class="sysmessage"><img src="' . $_CONF['layout_url'] . '/images/sysmessage.'
@@ -119,7 +127,12 @@ function DLM_showMessageArray($e_code_array)
         }
         $message .= $LANG_DLM[$e_code];
     }
-    $timestamp = strftime($_CONF['daytime']);
+	if (is_callable('COM_strftime')) {
+		$timestamp = COM_strftime($_CONF['daytime']);
+	} else {
+		$timestamp = strftime($_CONF['daytime']);
+	}
+	
     $retval = COM_startBlock($MESSAGE[40] . ' - ' . $timestamp, '', COM_getBlockTemplate('_msg_block', 'header'))
             . '<p class="sysmessage"><img src="' . $_CONF['layout_url'] . '/images/sysmessage.'
             . $_IMAGE_TYPE . '" alt="" ' . XHTML . '>' . '<div>'.$message.'</div>' . '</p>'
