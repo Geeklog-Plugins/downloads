@@ -252,6 +252,8 @@ function dlformat(&$T, &$A, $isListing=false, $cid=ROOTID)
     $T->set_var('lang_download_button', $LANG_DLM['download_button']);
 
     $startdate = (time() - 60 * 60 * 24 * 7);
+	$image_new = '';
+	$newdownload = '';
     if ($startdate < $A['date']) {
         $image_new = COM_createImage($_CONF['site_url'] . '/downloads/images/newred.gif',
                                      $LANG_DLM['newthisweek']);
