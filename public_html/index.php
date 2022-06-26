@@ -212,14 +212,15 @@ function dlformat(&$T, &$A, $isListing=false, $cid=ROOTID)
     $result = DB_query("SELECT username, fullname, photo "
                      . "FROM {$_TABLES['users']} "
                      . "WHERE uid = {$A['owner_id']}");
-    $B = DB_fetchArray($result);
+	$nrows = DB_numRows($result);                                     
 
-    $submitter_name = COM_getDisplayName($A['owner_id'], $B['username'], $B['fullname']);
-    if (empty($submitter_name)) {
-        $submitter_name = $LANG_DLM['unknown_uid'];
-    } else {
+	if ($nrows == 1) {
+		$B = DB_fetchArray($result);
+		$submitter_name = COM_getDisplayName($A['owner_id'], $B['username'], $B['fullname']);
         $submitter_name = COM_createLink($submitter_name, $_CONF['site_url']
                         . '/users.php?mode=profile&amp;uid=' . $A['owner_id']);
+    } else {
+        $submitter_name = $LANG_DLM['unknown_uid'];
     }
 
     $path = $mytree->getNicePathFromId($A['cid'], 'title', $_CONF['site_url'] . '/downloads/index.php');
