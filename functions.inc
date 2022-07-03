@@ -235,6 +235,27 @@ function plugin_getwhatsnewcomment_downloads($numreturn = 0, $uid = 0)
     }
 }
 
+/**
+ * Did user submit any downloads
+ *
+ * @param    int     $uid
+ * @return   string        number of pages user contributed. If nothing leave blank
+ */
+function plugin_usercontributed_downloads($uid)
+{
+    global $_TABLES, $LANG_DLM;
+
+    $retval = '';
+
+    // Include downloads and downloads submissions
+    $count = DB_getItem($_TABLES['downloads'], 'COUNT(owner_id)', "owner_id = {$uid}") + DB_getItem($_TABLES['downloadsubmission'], 'COUNT(owner_id)', "owner_id = {$uid}");
+
+    if ($count > 0) {
+        $retval = str_replace('%s', $count, $LANG_DLM['num_downloads']);
+    }
+
+    return $retval;
+}
 
 /**
 * Implements the [download:] autotag.

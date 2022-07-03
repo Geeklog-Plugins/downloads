@@ -203,6 +203,7 @@ $LANG_DLM = array(
     'please_update'     => 'ダウンロードプラグインをアップデートしてください。',
     'preview'           => 'プレビュー',
     'commentoption'     => 'コメントオプション',
+	'num_downloads' 		=> '%s Download(s)',
 
     '1001' => 'Upload approval error: Temporary file does not exist. Check error.log',
     '1002' => 'Upload approval error: New file does not exist after move of tmp file. Check error.log',
