@@ -206,9 +206,11 @@ function plugin_getwhatsnewcomment_downloads($numreturn = 0, $uid = 0)
 
     if ($numreturn == 0) {
         $select = "SELECT DISTINCT COUNT(*) AS dups, type, c.title, sid, max(c.date) AS lastdate ";
+		$onlyNew = " AND (c.date >= (DATE_SUB(NOW(), INTERVAL {$_CONF['newcommentsinterval']} SECOND))) ";
         $order  = "GROUP BY c.sid, type, d.title ORDER BY 5 DESC LIMIT 15";
     } else {
         $select = "SELECT c.sid, c.title, c.cid, UNIX_TIMESTAMP(c.date) AS unixdate ";
+		$onlyNew = " ";
         $order  = "ORDER BY unixdate DESC LIMIT $numreturn";
     }
 
@@ -219,7 +221,7 @@ function plugin_getwhatsnewcomment_downloads($numreturn = 0, $uid = 0)
          . "AND (is_released = 1) "
          . DLM_helper_getLangSQL()
          . COM_getPermSQL('AND', 0, 2, 'b')
-         . " AND (c.date >= (DATE_SUB(NOW(), INTERVAL {$_CONF['newcommentsinterval']} SECOND))) "
+         . $onlyNew 
          . $stwhere . $order;
 
     $result = DB_query($sql);
