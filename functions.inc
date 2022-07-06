@@ -809,7 +809,7 @@ function plugin_user_delete_downloads($uid)
 
     if (DB_count($_TABLES['downloads'], 'owner_id', $uid) == 0) return;
 
-    if ($_DLM_CONF['delete_downloads'] == 1) {
+    if ($_DLM_CONF['delete_download'] == 1) {
         // delete the downloads
         require_once $_CONF['path'] . 'plugins/downloads/include/functions.php';
         require_once $_CONF['path'] . 'plugins/downloads/include/download.class.php';
