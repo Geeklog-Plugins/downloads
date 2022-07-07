@@ -439,17 +439,28 @@ function plugin_dopluginsearch_downloads($query, $datestart, $dateend, $topic, $
           . "WHERE is_released=1 "
           . "AND date<=UNIX_TIMESTAMP(NOW()) "
           . COM_getPermSQL('AND', 0, 2, 'b'). ' ';
+	
+	if (!empty($datestart) || !empty($dateend)) {
+		// Do some date checking and fill in missing dates
+		$delim = '-';
+		if (empty($datestart) || (strtotime($datestart) == false)) {
+			$datestart = "0000-00-00";
+		} else {
+			$datestart = date('Y-m-d', strtotime($datestart));
+		}
+		if (empty($dateend) || (strtotime($dateend) == false)) {
+			$dateend = date('Y-m-d');
+		} else {
+			$dateend = date('Y-m-d', strtotime($dateend));
+		}
 
-    if (!empty($datestart) && !empty($dateend)) {
-        $delim = substr($datestart, 4, 1);
-        if (!empty($delim)) {
-            $DS = explode($delim, $datestart);
-            $DE = explode($delim, $dateend);
-            $startdate = mktime(0,  0,  0,  $DS[1], $DS[2], $DS[0]);
-            $enddate   = mktime(23, 59, 59, $DE[1], $DE[2], $DE[0]);
-            $sql .= "AND (date BETWEEN '$startdate' AND '$enddate') ";
-        }
-    }
+		$DS = explode($delim, $datestart);
+		$DE = explode($delim, $dateend);
+		$startdate = mktime(0,0,0,$DS[1],$DS[2],$DS[0]);
+		$enddate = mktime(23,59,59,$DE[1],$DE[2],$DE[0]);
+
+		$sql .= "AND (date BETWEEN '$startdate' AND '$enddate') ";
+	}	
 
     if (!empty($author)) {
         $sql .= "AND (a.owner_id = '$author') ";
