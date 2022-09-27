@@ -136,8 +136,9 @@ class DLDownload
     function _loadFromArgs(&$array)
     {
         global $_CONF;
-
-        $this->_url          = COM_applyFilter(trim(@$array['url']));
+		if (isset($array['url'])) {
+			$this->_url          = COM_applyFilter(trim(@$array['url']));
+		}
         $this->_postmode     = COM_applyFilter($array['postmode']);
         $this->_version      = COM_applyFilter($array['version']);
         $this->_commentcode  = COM_applyFilter($array['commentcode'], true);
@@ -748,7 +749,7 @@ class DLDownload
                 $snapwidth  = $_DLM_CONF['max_tnimage_width'];
                 $snapheight = $_DLM_CONF['max_tnimage_height'];
             }
-//            $sizeattributes = 'width="' . $snapwidth . '" height="' . $snapheight . '" ';
+            $sizeattributes = 'width="' . $snapwidth . '" height="' . $snapheight . '" ';
             $shot = '<div class="dlm_snap_tn"><a href="' . $_DLM_CONF['snapstore_url'] . '/' . $safename . '" title="">'
                   . '<img src="' . $tnimgurl . '" ' . $sizeattributes . ' alt=""' . XHTML . '></a></div>' . LB
                   . '<input type="checkbox" name="deletesnap"' . XHTML . '>&nbsp;'

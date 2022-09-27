@@ -319,6 +319,7 @@ function DLM_makeThumbnail($filename)
         default: return false; break;
     }
 
+	$thumb2 = '';
     if (($width <= $_DLM_CONF['max_tnimage_width']) && ($height <= $_DLM_CONF['max_tnimage_height'])) {
         // Create an image
         $thumb = imagecreatetruecolor($width, $height);
