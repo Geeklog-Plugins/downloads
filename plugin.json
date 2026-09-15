@@ -1,0 +1,9 @@
+{
+  "schema": 1,
+  "id": "downloads",
+  "name": "Downloads",
+  "icon": "public_html/images/arrow-dn.png",
+  "requires": {
+    "geeklog": "2.1.2"
+  }
+}
