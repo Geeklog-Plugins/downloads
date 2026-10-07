@@ -40,6 +40,7 @@ if (!defined ('UC_READONLY')) define('UC_READONLY', (XHTML == '') ? 'readonly' :
 if (!defined ('UC_DISABLED')) define('UC_DISABLED', (XHTML == '') ? 'disabled' : 'disabled="disabled"');
 
 define('ROOTID', 'root');
+define('DOWNLOADS_VERSION', '1.3.0');
 
 /**
 * Include language file
@@ -884,7 +885,11 @@ function plugin_getheadercode_downloads()
 
     // use the CSS only if we are on the plugin's pages
     if (substr_count($_SERVER['PHP_SELF'], '/downloads/') > 0) {
-        $_SCRIPTS->setCSSFile('downloads', CTL_plugin_themeFindFile('downloads', 'css', 'downloads.css'));
+        $_SCRIPTS->setCSSFile(
+            'downloads',
+            CTL_plugin_themeFindFile('downloads', 'css', 'downloads.css')
+            . '?v=' . rawurlencode(DOWNLOADS_VERSION)
+        );
     }
 
     return $retval;
