@@ -711,3 +711,9 @@ a.dlbtn-green:active {
     font-weight: 700;
     line-height: 1;
 }
+
+
+/* Space between download content and Geeklog comments */
+.dlm-comments {
+    margin-top: 1.5rem;
+}
