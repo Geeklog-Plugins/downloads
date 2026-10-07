@@ -66,6 +66,7 @@ $LANG_DLM = array(
     'submission_state_pending' => 'Pending',
     'submission_state_published' => 'Published',
     'no_user_submissions' => 'You have not submitted any downloads yet.',
+    'approval_failed_pending' => 'The download could not be finalized. It has been returned to the pending submissions queue.',
     'admin_menu'        => 'Downloads',
     'no_new_files'      => 'No new files',
     'no_comments'       => 'No new comments',
