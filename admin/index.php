@@ -574,16 +574,19 @@ function downloads_getListField_Categories($fieldname, $fieldvalue, $A, $icon_ar
             $title = DLM_htmlspecialchars($fieldvalue)
                    . getCatName_by_language($A['cid']);
             $next_state = ((int) $A['is_enabled'] === 1) ? 0 : 1;
-            $checked = ((int) $A['is_enabled'] === 1) ? ' checked="checked"' : '';
             $toggle_url = $_CONF['site_admin_url'] . '/plugins/downloads/index.php'
                         . '?op=toggleCategory'
                         . '&amp;cid=' . rawurlencode($A['cid'])
                         . '&amp;enabled=' . $next_state
                         . $token;
+            $state_icon = ((int) $A['is_enabled'] === 1) ? '&#10003;' : '&#8212;';
+            $state_text = ((int) $A['is_enabled'] === 1)
+                ? $LANG_DLM['category_enabled'] : $LANG_DLM['category_disabled'];
             $retval = '<a href="' . $toggle_url . '" class="dlm-category-toggle"'
-                    . ' title="' . DLM_htmlspecialchars($LANG_DLM['toggle_category']) . '">'
-                    . '<input type="checkbox" tabindex="-1" aria-hidden="true"'
-                    . $checked . XHTML . '>'
+                    . ' title="' . DLM_htmlspecialchars($LANG_DLM['toggle_category']) . ': '
+                    . DLM_htmlspecialchars($state_text) . '">'
+                    . '<span class="dlm-category-toggle-icon" aria-hidden="true">'
+                    . $state_icon . '</span>'
                     . '<span>' . $title . '</span></a>';
             break;
 
