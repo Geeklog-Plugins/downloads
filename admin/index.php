@@ -77,6 +77,7 @@ function listDownloads()
                     array('text' => $LANG_DLM['size'],       'field' => 'size',    'sort' => true),
                     array('text' => $LANG_DLM['submitdate'], 'field' => 'date',    'sort' => true),
                     array('text' => $LANG_DLM['status'],     'field' => 'status',  'sort' => false),
+                    array('text' => $LANG_DLM['file_health'], 'field' => 'file_health', 'sort' => false),
     );
 
     $defsort_arr  = array('field' => 'date', 'direction' => 'desc');
@@ -120,10 +121,16 @@ function listDownloads()
                                 ($is_root_user ? $LANG_DLM['instructions'] : $LANG_DLM['instructions2']),
                                 plugin_geticon_downloads());
 
+    if (!DLM_ensureDirectory($_DLM_CONF['path_filestore'])) {
+        $retval .= COM_showMessageText(
+            sprintf($LANG_DLM['storage_warning'], DLM_htmlspecialchars($_DLM_CONF['path_filestore']))
+        );
+    }
+
     $text_arr  = array('has_extras'     => true,
                        'form_url'       => $admin_url);
 
-    $sql  = "SELECT lid, url, a.title, a.cid, date, version, size, project, "
+    $sql  = "SELECT lid, url, secret_id, a.title, a.cid, date, version, size, project, "
           . "is_released, is_listing, "
           . "b.owner_id, group_id, perm_owner, perm_group, perm_members, perm_anon "
           . "FROM {$_TABLES['downloads']} a "
@@ -147,7 +154,7 @@ function listDownloads()
 
 function downloads_getListField_Files($fieldname, $fieldvalue, $A, $icon_arr)
 {
-    global $_CONF, $_TABLES, $LANG_ADMIN, $LANG_ACCESS, $MESSAGE, $DLM_CSRF_TOKEN;
+    global $_CONF, $_TABLES, $_DLM_CONF, $LANG_DLM, $LANG_ADMIN, $LANG_ACCESS, $MESSAGE, $DLM_CSRF_TOKEN;
     
     $retval = false;
 
@@ -197,6 +204,17 @@ function downloads_getListField_Files($fieldname, $fieldvalue, $A, $icon_arr)
                 $retval = $GLOBALS['LANG_DLM']['status_hidden'];
             } else {
                 $retval = $GLOBALS['LANG_DLM']['status_published'];
+            }
+            break;
+
+        case "file_health":
+            $filename = DLM_createSafeFileName($A['url'], $A['secret_id']);
+            $filepath = rtrim($_DLM_CONF['path_filestore'], "/\\")
+                      . DIRECTORY_SEPARATOR . $filename;
+            if (is_file($filepath)) {
+                $retval = $LANG_DLM['file_health_ok'];
+            } else {
+                $retval = '<strong>' . $LANG_DLM['file_health_missing'] . '</strong>';
             }
             break;
 
