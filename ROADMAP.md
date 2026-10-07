@@ -41,3 +41,35 @@ Implemented in the development branch:
 
 The remaining sections below are the acceptance roadmap for the release.
 
+## Release readiness
+
+### Validated on a real installation
+
+- [x] Fresh installation
+- [x] Uninstall
+- [x] Plugin activation / deactivation
+- [x] Upgrade from the previous Downloads version
+
+### Functional validation still required before PR
+
+- [ ] Add / edit / replace / delete a download
+- [ ] Add / edit / enable / disable a category
+- [ ] Public search with matches and with no results
+- [ ] Download image and lightbox
+- [ ] Comments and rating
+- [ ] User submission creates Pending state
+- [ ] Approval through Geeklog moderation creates Published state
+- [ ] Approval through Downloads administration
+- [ ] Rejection creates Rejected state
+- [ ] New-submission email notification
+- [ ] Submitter approval email notification
+- [ ] Missing physical file produces admin diagnostic and public 404
+- [ ] XMLSitemap / IndexNow integration
+- [ ] Oversized upload produces a controlled user-facing error
+
+### Deferred from the 1.3.0 release candidate
+
+- Multisite-safe automatic migration of persistent storage outside `public_html`.
+- Default download image enhancement.
+- Legacy File Manager conversion cleanup unless a reproducible 1.3.0 regression is found.
+
