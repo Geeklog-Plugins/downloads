@@ -42,8 +42,10 @@ require_once $_CONF['path'] . 'plugins/downloads/include/functions.php';
 
 $_SCRIPTS->setJavaScriptFile(
     'downloads_lightbox',
-    rtrim($_CONF['site_url'], '/') . '/downloads/lightbox.js?v='
-    . rawurlencode(DOWNLOADS_VERSION)
+    DLM_getVersionedAssetUrl(
+        '/downloads/lightbox.js',
+        $_CONF['path_html'] . 'downloads/lightbox.js'
+    )
 );
 
 if (COM_isAnonUser() && ($_CONF['loginrequired'] == 1 || $_DLM_CONF['loginrequired'] == 1)) {
