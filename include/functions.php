@@ -313,6 +313,7 @@ function DLM_approveNewDownload($id)
         return false;
     }
 
+    DLM_recordSubmissionStatus($id, 'published', $id);
     PLG_itemSaved($id, 'downloads');
     COM_rdfUpToDateCheck('downloads', $A['cid'], $id);
 
@@ -334,6 +335,8 @@ function DLM_unlink($path)
 function DLM_delNewDownload($id)
 {
     global $_CONF, $_TABLES, $_DLM_CONF, $LANG_DLM;
+
+    DLM_recordSubmissionStatus($id, 'rejected');
 
     $result = DB_query("SELECT url, logourl, date "
                      . "FROM {$_TABLES['downloadsubmission']} "
