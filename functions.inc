@@ -877,6 +877,46 @@ function plugin_user_delete_downloads($uid)
 * @return   string
 *
 */
+/**
+ * Return deterministic cache version for a shipped asset.
+ *
+ * @param string $file Absolute filesystem path
+ * @return string
+ */
+function DLM_getAssetVersion($file)
+{
+    $version = DOWNLOADS_VERSION;
+    if (is_file($file)) {
+        $mtime = @filemtime($file);
+        if ($mtime !== false) {
+            $version .= '-' . (int) $mtime;
+        }
+    }
+
+    return $version;
+}
+
+/**
+ * Return a public URL for a plugin asset with deterministic cache versioning.
+ *
+ * @param string $url
+ * @param string $file
+ * @return string
+ */
+function DLM_getVersionedAssetUrl($url, $file)
+{
+    global $_CONF;
+
+    if (stripos($url, 'http://') !== 0
+        && stripos($url, 'https://') !== 0
+        && strpos($url, '//') !== 0
+    ) {
+        $url = rtrim($_CONF['site_url'], '/') . '/' . ltrim($url, '/');
+    }
+
+    return $url . '?v=' . rawurlencode(DLM_getAssetVersion($file));
+}
+
 function plugin_getheadercode_downloads()
 {
     global $_CONF;
@@ -885,10 +925,10 @@ function plugin_getheadercode_downloads()
 
     // Use the CSS only if we are on the plugin's pages.
     if (substr_count($_SERVER['PHP_SELF'], '/downloads/') > 0) {
-        $css = CTL_plugin_themeFindFile('downloads', 'css', 'downloads.css');
-        if (!empty($css)) {
-            $href = rtrim($_CONF['site_url'], '/') . $css
-                  . '?v=' . rawurlencode(DOWNLOADS_VERSION);
+        $css_url = CTL_plugin_themeFindFile('downloads', 'css', 'downloads.css', true);
+        $css_file = CTL_plugin_themeFindFile('downloads', 'css', 'downloads.css', false);
+        if (!empty($css_url) && !empty($css_file)) {
+            $href = DLM_getVersionedAssetUrl($css_url, $css_file);
             $retval = '<link rel="stylesheet" href="'
                     . htmlspecialchars($href, ENT_QUOTES, 'UTF-8')
                     . '" type="text/css"' . XHTML . '>' . LB;
