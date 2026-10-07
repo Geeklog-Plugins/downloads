@@ -1,0 +1,11 @@
+<!-- start filelisting_search.thtml -->
+<form action="{site_url}/downloads/index.php" method="get" class="dlm-search-form">
+    <label for="downloads-search">{lang_search_downloads}</label>
+    <div class="dlm-search-controls">
+        <input type="search" id="downloads-search" name="q" value="{search_query_value}" maxlength="120" placeholder="{lang_search_placeholder}"{xhtml}>
+        <input type="hidden" name="cid" value="{search_cid}"{xhtml}>
+        <button type="submit">{lang_search}</button>
+        <a href="{search_reset_url}" class="dlm-search-reset">{lang_clear}</a>
+    </div>
+</form>
+<!-- end filelisting_search.thtml -->
