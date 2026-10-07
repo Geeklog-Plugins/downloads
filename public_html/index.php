@@ -735,7 +735,11 @@ $nppage = (int) Input::fRequest('nppage', Input::fPost('selbox_nppage', 0));
 
 $show = $_DLM_CONF['download_perpage'];
 $show = ($nppage > 0) ? $nppage : $show;
-$numpages = ceil($maxrows / $show);
+$numpages = ($maxrows > 0) ? (int) ceil($maxrows / $show) : 0;
+if (($page > 1 && $numpages === 0) || ($numpages > 0 && $page > $numpages)) {
+    COM_handle404($_CONF['site_url'] . '/downloads/index.php');
+    exit;
+}
 $orderby = Input::fGet('orderby', Input::fPost('selbox_orderby', 'dated'));
 
 if ($maxrows > 0) {
