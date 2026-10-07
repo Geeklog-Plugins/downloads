@@ -470,3 +470,21 @@ a.dlbtn-green:active {
 .dlm-search-reset {
     white-space: nowrap;
 }
+
+
+/* Downloads administration editor sections */
+.dlm-admin-editor .dlm-admin-section {
+    margin: 0 0 1rem;
+    padding: 0.75rem 1rem 1rem;
+    border: 1px solid rgba(128, 128, 128, 0.35);
+    border-radius: 0.35rem;
+}
+
+.dlm-admin-editor .dlm-admin-section legend {
+    padding: 0 0.4rem;
+    font-weight: 700;
+}
+
+.dlm-admin-editor .dlm-admin-section .form_block {
+    margin-bottom: 0;
+}
