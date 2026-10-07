@@ -652,6 +652,36 @@ function DLM_recordSubmissionStatus($lid, $status, $public_lid = '')
 }
 
 /**
+ * Render matching HTML and plaintext Downloads email templates.
+ *
+ * @param string $template
+ * @param array  $vars
+ * @return array
+ */
+function DLM_renderEmailTemplates($template, $vars)
+{
+    global $LANG31;
+
+    $T = COM_newTemplate(CTL_plugin_templatePath('downloads', 'emails'));
+    $T->set_file(array('email_html' => $template . '-html.thtml'));
+    $T->preprocess_fn = 'CTL_removeLineFeeds';
+    $T->set_file(array('email_plaintext' => $template . '-plaintext.thtml'));
+
+    $T->set_var('email_divider', $LANG31['email_divider']);
+    $T->set_var('email_divider_html', $LANG31['email_divider_html']);
+    $T->set_var('LB', LB);
+
+    foreach ($vars as $key => $value) {
+        $T->set_var($key, $value);
+    }
+
+    return array(
+        $T->parse('output', 'email_html'),
+        $T->parse('output', 'email_plaintext')
+    );
+}
+
+/**
  * Notify the configured moderator address about a new submission.
  *
  * @param string $lid
@@ -688,36 +718,61 @@ function DLM_sendSubmissionNotification($lid)
     $A = DB_fetchArray($result);
     $subject = $_CONF['site_name'] . ' - ' . $LANG_DLM['submission_notification_subject'];
     $moderation_url = $_CONF['site_admin_url'] . '/moderation.php';
-    $body = $LANG_DLM['submission_notification_intro'] . "\n\n"
-          . $LANG_DLM['submission_notification_title'] . ': ' . $A['title'] . "\n"
-          . $LANG_DLM['submission_notification_submitter'] . ': '
-          . COM_getDisplayName((int) $A['owner_id'], $A['username']) . "\n\n"
-          . $LANG_DLM['submission_notification_moderate'] . ': ' . $moderation_url . "\n";
+    $message = DLM_renderEmailTemplates('download_submission', array(
+        'notification_intro' => $LANG_DLM['submission_notification_intro'],
+        'lang_title' => $LANG_DLM['submission_notification_title'],
+        'submission_title' => DLM_htmlspecialchars($A['title']),
+        'lang_submitter' => $LANG_DLM['submission_notification_submitter'],
+        'submission_submitter' => DLM_htmlspecialchars(
+            COM_getDisplayName((int) $A['owner_id'], $A['username'])
+        ),
+        'lang_moderate' => $LANG_DLM['submission_notification_moderate'],
+        'moderation_url' => $moderation_url
+    ));
 
-    COM_mail($email, $subject, $body);
-    return true;
+    return COM_mail($email, $subject, $message, '', true);
 }
 
-// Send a email to submitter notifying them that file was approved
+/**
+ * Notify a submitter after their download is approved.
+ *
+ * @param string $lid
+ * @return bool
+ */
 function DLM_sendNotification($lid)
 {
-    global $_CONF, $_TABLES, $LANG_DLM, $LANG08;
+    global $_CONF, $_TABLES, $LANG_DLM;
 
-    $lid = DB_escapeString($lid);
-    $result = DB_query("SELECT username, email, b.url "
-                     . "FROM {$_TABLES['users']} a, {$_TABLES['downloads']} b "
-                     . "WHERE a.uid = b.owner_id AND b.lid = '$lid'");
-    list($username, $email, $url) = DB_fetchArray($result);
-    $body  = sprintf($LANG_DLM['hello'], $username). "\n\n"
-           . $LANG_DLM['weapproved'] . " " . $url . " \n"
-           . $LANG_DLM['thankssubmit'] . "\n\n"
-           . "{$_CONF['site_name']}\n"
-           . "{$_CONF['site_url']}\n"
-           . "\n------------------------------\n"
-           . "\n$LANG08[34]\n"
-           . "\n------------------------------\n";
+    $lid_sql = DB_escapeString($lid);
+    $result = DB_query("SELECT u.username, u.email, d.title "
+                     . "FROM {$_TABLES['users']} u "
+                     . "INNER JOIN {$_TABLES['downloads']} d ON u.uid=d.owner_id "
+                     . "WHERE d.lid='$lid_sql'");
+    if (DB_numRows($result) != 1) {
+        DLM_errorLog("Downloads: approval notification skipped: download '$lid_sql' not found.");
+        return false;
+    }
+
+    $A = DB_fetchArray($result);
+    if (empty($A['email'])) {
+        return false;
+    }
+
+    $download_url = COM_buildURL(
+        $_CONF['site_url'] . '/downloads/index.php?id=' . rawurlencode($lid)
+    );
+    $message = DLM_renderEmailTemplates('download_approved', array(
+        'greeting' => sprintf($LANG_DLM['hello'], DLM_htmlspecialchars($A['username'])),
+        'approval_text' => $LANG_DLM['weapproved'],
+        'download_title' => DLM_htmlspecialchars($A['title']),
+        'download_url' => $download_url,
+        'thanks_text' => $LANG_DLM['thankssubmit'],
+        'site_name' => DLM_htmlspecialchars($_CONF['site_name']),
+        'site_url' => $_CONF['site_url']
+    ));
+
     $subject = $_CONF['site_name'] . ' ' . $LANG_DLM['approved'];
-    COM_mail($email, $subject, $body);
+    return COM_mail($A['email'], $subject, $message, '', true);
 }
 
 function DLM_hasAccess_history()
