@@ -1195,10 +1195,13 @@ function plugin_moderationdelete_downloads($id)
 */
 function plugin_moderationapprove_downloads($id)
 {
-    global $_CONF;
+    global $_CONF, $LANG_DLM;
 
     require_once $_CONF['path'] . 'plugins/downloads/include/functions.php';
-    DLM_approveNewDownload($id);
+
+    if (!DLM_approveNewDownload($id)) {
+        return COM_showMessageText($LANG_DLM['approval_failed_pending']);
+    }
 
     return '';
 }
