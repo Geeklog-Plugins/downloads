@@ -23,75 +23,121 @@ jobs:
           ref: downloads_1.3.0
           fetch-depth: 0
 
-      - name: Build clean installable archive
+      - name: Prepare installable plugin tree
         shell: bash
         run: |
           set -euo pipefail
 
-          archive="dist/downloads_1.3.0_2.1.2.zip"
-          rm -rf dist
-          mkdir -p dist
+          rm -rf package dist
+          mkdir -p package/downloads dist
 
-          mapfile -t files < <(
-            find . -type f               ! -path './.git/*'               ! -path './dist/*'               ! -path '*/.*'               -print             | sed 's#^\./##'             | LC_ALL=C sort
-          )
+          rsync -a ./ package/downloads/ \
+            --exclude='.*' \
+            --exclude='package/' \
+            --exclude='dist/'
 
-          if [ "${#files[@]}" -eq 0 ]; then
-            echo "No files selected for packaging."
+          find package/downloads -depth -name '.*' -print -delete
+
+      - name: Validate package structure
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          test -f package/downloads/autoinstall.php
+          test -f package/downloads/plugin.json
+          test -f package/downloads/functions.inc
+          test -f package/downloads/install_defaults.php
+          test -f package/downloads/include/functions.php
+          test -f package/downloads/include/download.class.php
+          test -f package/downloads/admin/index.php
+          test -f package/downloads/public_html/index.php
+          test -f package/downloads/sql/mysql_install.php
+
+          if find package/downloads -mindepth 1 -name '.*' -print -quit | grep -q .; then
+            echo 'Error: dotfile or dot-directory found in package tree.' >&2
+            find package/downloads -mindepth 1 -name '.*' -print >&2
             exit 1
           fi
 
-          printf '%s\n' "${files[@]}" | zip -X -q "$archive" -@
+      - name: Build ZIP
+        shell: bash
+        run: |
+          set -euo pipefail
 
-          echo "Archive entries:"
-          zipinfo -1 "$archive"
+          (
+            cd package
+            zip -r -9 ../dist/downloads_1.3.0_2.1.2.zip downloads
+          )
 
       - name: Verify distribution archive
         shell: bash
         run: |
           set -euo pipefail
-          archive="dist/downloads_1.3.0_2.1.2.zip"
 
+          archive='dist/downloads_1.3.0_2.1.2.zip'
           test -s "$archive"
+          unzip -t "$archive"
 
-          bad_entries="$(zipinfo -1 "$archive" | awk -F/ '
+          for required in \
+            downloads/autoinstall.php \
+            downloads/functions.inc \
+            downloads/install_defaults.php \
+            downloads/plugin.json \
+            downloads/include/functions.php \
+            downloads/include/download.class.php \
+            downloads/public_html/index.php
+          do
+            unzip -Z1 "$archive" | grep -qx "$required"
+          done
+
+          if unzip -Z1 "$archive" | awk -F/ '
             {
               for (i = 1; i <= NF; i++) {
                 if ($i ~ /^\./) {
-                  print $0
-                  break
+                  print
+                  found=1
                 }
               }
             }
-          ')"
-
-          if [ -n "$bad_entries" ]; then
-            echo "Archive contains forbidden dot-prefixed path components:"
-            printf '%s\n' "$bad_entries"
+            END { exit found ? 0 : 1 }
+          '; then
+            echo 'Error: archive contains a dot-prefixed path component.' >&2
             exit 1
           fi
 
-          if zipinfo -1 "$archive" | grep -q '^dist/'; then
-            echo "Archive must not contain dist/."
-            exit 1
-          fi
+          rm -rf verify
+          mkdir verify
+          unzip -q "$archive" -d verify
 
-          for required in autoinstall.php functions.inc install_defaults.php plugin.json public_html/index.php; do
-            if ! zipinfo -1 "$archive" | grep -Fxq "$required"; then
-              echo "Missing required installable file: $required"
-              exit 1
-            fi
-          done
+          cmp -s include/functions.php verify/downloads/include/functions.php
+          cmp -s include/download.class.php verify/downloads/include/download.class.php
+          cmp -s autoinstall.php verify/downloads/autoinstall.php
+
+          grep -q 'function DLM_ensureDirectory' verify/downloads/include/functions.php
+          grep -q 'if (!DLM_ensureDirectory($directory))' verify/downloads/include/functions.php
+
+      - name: Show distribution
+        shell: bash
+        run: |
+          ls -lh dist/
+          sha256sum dist/downloads_1.3.0_2.1.2.zip
 
       - name: Commit distribution archive
         shell: bash
         run: |
           set -euo pipefail
 
+          git fetch origin downloads_1.3.0
+          REMOTE_HEAD="$(git rev-parse origin/downloads_1.3.0)"
+          if [ "$REMOTE_HEAD" != "$GITHUB_SHA" ]; then
+            echo "Branch advanced from $GITHUB_SHA to $REMOTE_HEAD; skipping stale dist commit."
+            exit 0
+          fi
+
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          git add -f dist/downloads_1.3.0_2.1.2.zip
+          git add -A dist/
 
           if git diff --cached --quiet; then
             echo "Distribution archive is already up to date."
