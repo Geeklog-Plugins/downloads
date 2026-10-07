@@ -223,7 +223,8 @@ class DLCategory
         DLM_setDefaultTemplateVars($T);
         $lang = array('title', 'imgurlmain', 'parent', 'save', 'delete', 'cancel',
                       'confirm_delete', 'topic', 'catid', 'is_enabled', 'corder', 'upload',
-                      'meta_description', 'meta_keywords', 'required_field');
+                      'meta_description', 'meta_keywords', 'required_field',
+                      'section_general', 'section_content_seo', 'section_media');
         foreach ($lang as $v) $T->set_var('lang_' . $v, $LANG_DLM[$v]);
 
         $T->set_var('preview',         $this->_makeForm_category_image());
@@ -286,7 +287,14 @@ class DLCategory
             $imgpath = $_DLM_CONF['path_snapcat'] . $safename;
             $delform = true;
         }
-        list($width, $height) = getimagesize($imgpath);
+        $width = 0;
+        $height = 0;
+        $dimensions = @getimagesize($imgpath);
+        if ($dimensions !== false) {
+            $width = (int) $dimensions[0];
+            $height = (int) $dimensions[1];
+        }
+        $sizeattributes = '';
         if (!empty($width) and !empty($height)) {
             $newwidth  = $_DLM_CONF['download_shotwidth'];
             $newheight = intval($height * $_DLM_CONF['download_shotwidth'] / $width);
