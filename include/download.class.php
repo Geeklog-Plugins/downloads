@@ -497,8 +497,7 @@ class DLDownload
                     $this->_lid = $this->_createID();
                 }
             }
-        }
-        if (version_compare(VERSION, '2.1.0') >= 0) {
+        }        if (version_compare(VERSION, '2.1.0') >= 0) {
             require_once $_CONF['path_system'] . 'classes/gltext.class.php';
             $description      = GLText::getEditText($this->_description, $this->_postmode, 2);
             $detail           = GLText::getEditText($this->_detail,      $this->_postmode, 2);
@@ -997,8 +996,7 @@ class DLDownload
                 $safename = DLM_createSafeFileName($this->_old_url, $this->_secret_id);
                 $success = copy($_DLM_CONF['path_filestore'] . $old_safeurl,
                                 $_DLM_CONF['path_filestore'] . $safename);
-                if ($success) {
-                    $this->_url = $this->_old_url;
+                if ($success) {                    $this->_url = $this->_old_url;
                 }            }
         }
         if ($success) {
@@ -1194,7 +1192,7 @@ class DLDownload
         global $_CONF, $_TABLES, $_DLM_CONF;
 
         $this->_loadFromArgs($_POST);
-        $newfile_name = $_FILES['newfile']['name'];
+        $newfile_name = isset($_FILES['newfile']['name']) ? $_FILES['newfile']['name'] : '';
 
         // Validate the input values ----------------------->
         if (isset($_FILES['newfile']['error']) && is_int($_FILES['newfile']['error'])) {
@@ -1249,15 +1247,58 @@ class DLDownload
         $safename = DLM_createSafeFileName($old_filename, $old_secret_id);
         $old_filepath = $_DLM_CONF['path_filestore'] . $safename;
         if (!empty($newfile_name)) {
-            $this->_unlink($old_filepath);
-            $safename = DLM_createSafeFileName($newfile_name, $old_secret_id);
-            if (DLM_uploadNewFile($_FILES['newfile'], $_DLM_CONF['path_filestore'], $safename)) {
-                $this->_url = $newfile_name;
+            $new_safename = DLM_createSafeFileName($newfile_name, $old_secret_id);
+            $staged_safename = uniqid('replace_') . '_' . DLM_encodeFileName($newfile_name);
+            $staged_filepath = rtrim($_DLM_CONF['path_filestore'], "/\\")
+                             . DIRECTORY_SEPARATOR . $staged_safename;
+            $new_filepath = rtrim($_DLM_CONF['path_filestore'], "/\\")
+                          . DIRECTORY_SEPARATOR . $new_safename;
+
+            if (!DLM_uploadNewFile($_FILES['newfile'], $_DLM_CONF['path_filestore'], $staged_safename)) {
+                return PLG_afterSaveSwitch('admin', '', 'downloads', 108);
             }
+
+            $backup_filepath = '';
+            if (is_file($old_filepath)) {
+                $backup_filepath = $old_filepath . '.bak-' . uniqid();
+                if (!rename($old_filepath, $backup_filepath)) {
+                    $this->_unlink($staged_filepath);
+                    DLM_errorLog("Downloads: replacement error: Could not stage existing file for replacement.");
+                    return PLG_afterSaveSwitch('admin', '', 'downloads', 108);
+                }
+            }
+
+            if (is_file($new_filepath) && $new_filepath !== $old_filepath) {
+                if ($backup_filepath !== '' && is_file($backup_filepath)) {
+                    rename($backup_filepath, $old_filepath);
+                }
+                $this->_unlink($staged_filepath);
+                DLM_errorLog("Downloads: replacement error: Destination file already exists.");
+                return PLG_afterSaveSwitch('admin', '', 'downloads', 108);
+            }
+
+            if (!rename($staged_filepath, $new_filepath)) {
+                if ($backup_filepath !== '' && is_file($backup_filepath)) {
+                    rename($backup_filepath, $old_filepath);
+                }
+                DLM_errorLog("Downloads: replacement error: Could not activate uploaded replacement file.");
+                return PLG_afterSaveSwitch('admin', '', 'downloads', 108);
+            }
+
+            if ($backup_filepath !== '') {
+                $this->_unlink($backup_filepath);
+            }
+
+            @chmod($new_filepath, intval((string) $_DLM_CONF['filepermissions'], 8));
+            $safename = $new_safename;
+            $this->_url = $newfile_name;
         }
-        if (file_exists($_DLM_CONF['path_filestore'] . $safename)) {
-          $this->_size = filesize($_DLM_CONF['path_filestore'] . $safename);
-          $this->_md5  = md5_file($_DLM_CONF['path_filestore'] . $safename);
+
+        $active_filepath = rtrim($_DLM_CONF['path_filestore'], "/\\")
+                         . DIRECTORY_SEPARATOR . $safename;
+        if (file_exists($active_filepath)) {
+            $this->_size = filesize($active_filepath);
+            $this->_md5  = md5_file($active_filepath);
         }
 
         // The snapshot file
@@ -1497,8 +1538,7 @@ class DLDownload
                        . "New file does not exist after move of tmp file: '" . $newfile . "'");
             $this->_errno[] = '1002';
             return false;
-        }
-        return true;    }
+        }        return true;    }
 
     function _reedit($method, $args = array())
     {
