@@ -66,6 +66,7 @@ $LANG_DLM = array(
     'submission_state_pending' => '承認待ち',
     'submission_state_published' => '公開済み',
     'no_user_submissions' => '送信したダウンロードはまだありません。',
+    'approval_failed_pending' => 'ダウンロードを確定できなかったため、承認待ちキューに戻しました。',
     'admin_menu'        => 'ダウンロード',
     'no_new_files'      => '-',
     'no_comments'       => '-',
