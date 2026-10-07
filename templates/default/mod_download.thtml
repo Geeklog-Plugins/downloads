@@ -6,8 +6,8 @@
     <dl class="form_block">
 {mod_submitter}
 
-      <dt><label for="downloads-filetitle">{lang_filetitle}</label></dt>
-      <dd><input type="text" maxlength="200" name="title" value="{title}" id="downloads-filetitle" size="48" class="size5"{xhtml}></dd>
+      <dt><label for="downloads-filetitle">{lang_filetitle} <span class="required">*</span></label></dt>
+      <dd><input type="text" maxlength="200" name="title" value="{title}" id="downloads-filetitle" size="48" class="size5" required="required"{xhtml}></dd>
 
 {mod_file_id}
 {mod_dl_file_name}
@@ -16,8 +16,9 @@
       <dt>{lang_category}</dt>
       <dd>{categorylist}</dd>
 
-      <dt>{lang_tags}</dt>
-      <dd><input type="text" maxlength="150" name="tags" value="{tags}" id="downloads-tags" size="48" class="size5"{xhtml}></dd>
+      <dt><label for="downloads-tags">{lang_tags}</label></dt>
+      <dd><input type="text" maxlength="150" name="tags" value="{tags}" id="downloads-tags" size="48" class="size5" aria-describedby="downloads-tags-help"{xhtml}>
+          <br{xhtml}><small id="downloads-tags-help">{lang_tags_help}</small></dd>
 
       <dt><label for="downloads-homepage">{lang_homepage}</label></dt>
       <dd><input type="text" maxlength="250" name="homepage" value="{homepage}" id="downloads-homepage" size="48" class="size5"{xhtml}></dd>
@@ -27,11 +28,17 @@
 
 {mod_file_size}
 
-      <dt>{lang_description}</dt>
+      <dt>{lang_meta_description}</dt>
+      <dd><textarea name="meta_description" id="downloads-meta-description" maxlength="320" cols="50" rows="3" class="size5">{meta_description}</textarea></dd>
+
+      <dt>{lang_meta_keywords}</dt>
+      <dd><input type="text" maxlength="255" name="meta_keywords" value="{meta_keywords}" id="downloads-meta-keywords" size="48" class="size5"{xhtml}></dd>
+
+      <dt>{lang_description} <span class="required">*</span></dt>
       <dd><div id="text_editor" style="display:{show_texteditor}; width:95%">
             <img src="{layout_url}/images/expand.png" title="{lang_expandhelp}" alt="" onclick="changeTextAreaSize('text_description','larger');"{xhtml}>
             <img src="{layout_url}/images/collapse.png" title="{lang_reducehelp}" alt="" onclick="changeTextAreaSize('text_description','smaller');"{xhtml}>
-            <textarea id="text_description" name="text_description" style="width:100%; font-size:small;" cols="50" rows="10">{description}</textarea>
+            <textarea id="text_description" name="text_description" style="width:100%; font-size:small;" cols="50" rows="10" required="required">{description}</textarea>
           </div>
 
           <div id="html_editor" style="display:{show_htmleditor}; width:95%">
@@ -92,7 +99,14 @@
 {mod_date}
 
       <dt><label for="downloads-project">{lang_project}</label></dt>
-      <dd><input type="text" maxlength="150" name="project" value="{project}" id="downloads-project" size="48" class="size5"{xhtml}></dd>
+      <dd><input type="text" maxlength="150" name="project" value="{project}" id="downloads-project" size="48" class="size5" list="downloads-project-list" aria-describedby="downloads-project-help"{xhtml}>
+          <datalist id="downloads-project-list">
+{project_options}
+          </datalist>
+          <br{xhtml}><small id="downloads-project-help">{lang_project_help}</small></dd>
+
+      <dt></dt>
+      <dd><small>* {lang_required_field}</small></dd>
     </dl>
   </div>
 
