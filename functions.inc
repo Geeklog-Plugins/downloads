@@ -1321,6 +1321,76 @@ function plugin_savesubmission_downloads($A)
 }
 
 /**
+ * Collect public Downloads URLs for XMLSitemap.
+ *
+ * Includes the Downloads landing page, public categories and public files.
+ *
+ * @param int $uid User id used for permission checks
+ * @param int $limit Maximum number of items, 0 = unlimited
+ * @return array
+ */
+function plugin_collectSitemapItems_downloads($uid = 1, $limit = 0)
+{
+    global $_CONF, $_TABLES;
+
+    $uid = (int) $uid;
+    $limit = (int) $limit;
+    $items = array();
+
+    // Downloads landing page.
+    $items[] = array(
+        'url' => $_CONF['site_url'] . '/downloads/index.php',
+        'change-freq' => 'weekly',
+        'priority' => 0.6,
+    );
+
+    // Public categories.
+    $sql = "SELECT c.cid, c.title "
+         . "FROM {$_TABLES['downloadcategories']} c "
+         . "WHERE c.cid<>'' AND c.is_enabled=1 "
+         . COM_getPermSQL('AND', $uid, 2, 'c')
+         . " ORDER BY c.corder ASC, c.title ASC";
+    $result = DB_query($sql);
+    while ($A = DB_fetchArray($result)) {
+        $items[] = array(
+            'url' => $_CONF['site_url'] . '/downloads/index.php?cid='
+                   . rawurlencode($A['cid']),
+            'change-freq' => 'weekly',
+            'priority' => 0.6,
+        );
+    }
+
+    // Public downloads.
+    $now = time();
+    $sql = "SELECT d.lid, d.date "
+         . "FROM {$_TABLES['downloads']} d "
+         . "LEFT JOIN {$_TABLES['downloadcategories']} c ON d.cid=c.cid "
+         . "WHERE d.is_released=1 AND d.is_listing=1 "
+         . "AND d.date<=$now AND c.is_enabled=1 "
+         . COM_getPermSQL('AND', $uid, 2, 'c')
+         . DLM_helper_getLangSQL()
+         . " ORDER BY d.date DESC";
+    $result = DB_query($sql);
+    while ($A = DB_fetchArray($result)) {
+        $items[] = array(
+            'url' => COM_buildURL(
+                $_CONF['site_url'] . '/downloads/index.php?id='
+                . rawurlencode($A['lid'])
+            ),
+            'date-modified' => (int) $A['date'],
+            'change-freq' => 'monthly',
+            'priority' => 0.5,
+        );
+    }
+
+    if ($limit > 0 && count($items) > $limit) {
+        $items = array_slice($items, 0, $limit);
+    }
+
+    return $items;
+}
+
+/**
 * Return information for a download
 *
 * @param    string  $lid        file ID or '*'
