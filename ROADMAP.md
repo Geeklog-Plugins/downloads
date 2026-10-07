@@ -179,6 +179,36 @@ Audit all public Downloads pages against the Memorandum SEO guidance.
 
 ## P1 — Public usability and search
 
+### User submission history
+
+Add a user-facing `My Submissions` page reachable from the Geeklog user menu.
+
+Requirements:
+
+- visible only to authenticated users;
+- list only submissions owned by the current user;
+- administrative-style compact list ordered by newest submission date first;
+- show at least title, category, submitted date and current state;
+- distinguish pending, approved/published, rejected/deleted where the available data model allows it;
+- link approved items to their public download page;
+- provide an edit/view link for still-pending submissions when the current workflow permits it safely;
+- preserve permissions and never expose other users' submissions;
+- integrate with the standard Geeklog user menu without adding a parallel navigation system;
+- design the data model so status history can be extended later without breaking existing submissions.
+
+### Download image lightbox
+
+Improve public download thumbnails:
+
+- on `downloads/index.php` listings, clicking an available download image should open the full image in a lightbox;
+- on `downloads/index.php?id=...` detail pages, clicking the thumbnail should open the full image in the same lightbox;
+- keep normal behavior/fallback when no image exists;
+- use accessible links and keyboard-friendly behavior;
+- avoid hard dependency on a single theme;
+- prefer an existing Geeklog/lightbox facility when available before introducing a new JavaScript dependency.
+
+
+
 ### Downloads search on `downloads/index.php`
 
 Add a lightweight search capability directly to the Downloads public interface.
