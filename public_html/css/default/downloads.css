@@ -488,3 +488,8 @@ a.dlbtn-green:active {
 .dlm-admin-editor .dlm-admin-section .form_block {
     margin-bottom: 0;
 }
+
+
+.dlm-admin-editor .dlm-field-note {
+    margin: 0.45rem 0 0;
+}
