@@ -134,6 +134,7 @@ $LANG_DLM = array(
     'category_files'    => 'ファイル',
     'category_enabled'  => '有効',
     'category_disabled' => '無効',
+    'toggle_category'   => 'カテゴリ状態を切り替える',
     'catid'             => 'カテゴリID',
     'rating'            => '評価',
     'sortby'            => 'ソート',
