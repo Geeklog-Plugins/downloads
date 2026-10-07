@@ -64,6 +64,8 @@
 - Fixed Access Rights alignment by restructuring permission help inside the permissions field.
 - Moved the required-field note out of the Category Image block.
 - Improved category image upload/preview alignment and responsive admin form sizing.
+- Aligned form action buttons with the same field grid used by the editors.
+- Moved Access Rights inside the same administration layout container to remove horizontal drift.
 
 - Expanded Preview from Description/Detail only to a representative download card with title, category, file metadata, project, homepage, image and content.
 - Refined the administration form layout with responsive two-column field alignment and cleaner section spacing.
