@@ -53,13 +53,24 @@ if (COM_isAnonUser() && ($_CONF['loginrequired'] == 1 || $_DLM_CONF['loginrequir
 
 $uid = (isset($_USER['uid'])) ? $_USER['uid'] : 1;
 
-//if ($_POST['submit'] && SEC_checkToken()) {
 if (isset($_POST['submit'])) {
+    if (!SEC_checkToken()) {
+        $display = COM_showMessageText($MESSAGE[29], $MESSAGE[30]);
+        $display = COM_createHTMLDocument($display, array('pagetitle' => $MESSAGE[30]));
+        COM_output($display);
+        exit;
+    }
     //Make sure only 1 anonymous from an IP in a single day.
     $anonwaitdays = 1;
     $ip = Input::server('REMOTE_ADDR', '');
     $lid = Input::fPost('lid');
     $rating = (int) Input::fPost('rating', RATING_LOWEST - 1);
+
+    if (!DLM_canViewDownload($lid)) {
+        COM_handle404($_CONF['site_url'] . '/downloads/index.php');
+        exit;
+    }
+
     // Check if Rating is valid
     if (empty($rating) || ($rating < RATING_LOWEST) || ($rating > RATING_HIGHEST)) {
         echo DLM_showErrorMessage('norating');
@@ -111,6 +122,10 @@ if (isset($_POST['submit'])) {
 }
 
 $lid = Input::fGet('lid');
+if (!DLM_canViewDownload($lid)) {
+    COM_handle404($_CONF['site_url'] . '/downloads/index.php');
+    exit;
+}
 $result = DB_query("SELECT title FROM {$_TABLES['downloads']} WHERE lid='" . DB_escapeString($lid) . "'");
 list($title) = DB_fetchArray($result);
 $title = DLM_htmlspecialchars($title);
@@ -138,8 +153,8 @@ for ($i = RATING_HIGHEST; $i >= RATING_LOWEST; $i--) {
 $T->set_var('option_list',      $option_list);
 $T->set_var('lang_rateit',      $LANG_DLM['rateit']);
 $T->set_var('lang_cancel',      $LANG_DLM['cancel']);
-//    $T->set_var('gltoken_name',     CSRF_TOKEN);
-//    $T->set_var('gltoken',          SEC_createToken());
+$T->set_var('gltoken_name',     CSRF_TOKEN);
+$T->set_var('gltoken',          SEC_createToken());
 $T->parse('output', 't_vote');
 $display .= $T->finish($T->get_var('output'));
 $display .= COM_endBlock();
