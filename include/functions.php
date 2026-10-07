@@ -189,45 +189,6 @@ function DLM_reedit($function, $args = array())
     exit;
 }
 
-// Move file from tmp directory to the main file directory
-function DLM_moveNewFile($tmpfile, $newfile)
-{
-    global $_DLM_CONF;
-
-    if (!file_exists($tmpfile) || is_dir($tmpfile)) {
-        DLM_errorLog("Downloads: upload approve error: "
-                   . "Temporary file does not exist: '" . $tmpfile . "'");
-        DLM_showErrorMessage('1001');
-        return false;
-    }
-
-    $directory = dirname($newfile);
-    if (!DLM_ensureDirectory($directory)) {
-        DLM_errorLog("Downloads: upload approve error: "
-                   . "Destination directory is unavailable: '" . $directory . "'");
-        DLM_showErrorMessage('1004');
-        return false;
-    }
-
-    if (!rename($tmpfile, $newfile)) {
-        DLM_errorLog("Downloads: upload approve error: "
-                   . "Could not move temporary file to: '" . $newfile . "'");
-        DLM_showErrorMessage('1002');
-        return false;
-    }
-
-    @chmod($newfile, intval((string)$_DLM_CONF['filepermissions'], 8));
-
-    if (!is_file($newfile)) {
-        DLM_errorLog("Downloads: upload approve error: "
-                   . "New file does not exist after move of tmp file: '" . $newfile . "'");
-        DLM_showErrorMessage('1002');
-        return false;
-    }
-
-    return true;
-}
-
 /**
  * Finalize files belonging to a pending download submission.
  *
