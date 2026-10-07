@@ -51,6 +51,26 @@ require_once $_CONF['path'] . 'plugins/downloads/include/gltree.class.php';
 
 define('BCSEPALATOR', '&nbsp;:&nbsp;');
 
+function DLM_buildMetaHeader($description, $keywords)
+{
+    $header = '';
+    $description = trim(strip_tags((string) $description));
+    $keywords = trim(strip_tags((string) $keywords));
+
+    if ($description !== '') {
+        $header .= '<meta name="description" content="'
+                . htmlspecialchars($description, ENT_QUOTES, COM_getCharset())
+                . '">' . LB;
+    }
+    if ($keywords !== '') {
+        $header .= '<meta name="keywords" content="'
+                . htmlspecialchars($keywords, ENT_QUOTES, COM_getCharset())
+                . '">' . LB;
+    }
+
+    return $header;
+}
+
 //returns the total number of items in items table that are accociated with a given table $table id
 function getTotalItems($sel_id)
 {
@@ -347,8 +367,7 @@ function dlformat(&$T, &$A, $isListing=false, $cid=ROOTID)
     $T->set_var('lang_version',    $LANG_DLM['ver']);
     $T->set_var('lang_rating',     $LANG_DLM['ratingc']);
     $T->set_var('lang_submitdate', $LANG_DLM['submitdate']);
-    $T->set_var('lang_size',       $LANG_DLM['size']);
-    $T->set_var('datetime',        $A['datetime']);
+    $T->set_var('lang_size',       $LANG_DLM['size']);    $T->set_var('datetime',        $A['datetime']);
     $T->set_var('version',         $A['version']);
 
     // Check if restricted access has been enabled for download report to admin's only
@@ -564,7 +583,7 @@ if (empty($lid)) {  // Check if the script is being called from the commentbar
 if (!empty($lid)) {
     $permsql = $_DLM_CONF['has_edit_rights'] ? '' : COM_getPermSQL('AND', 0, 2, 'b');
     $sql = "SELECT a.lid, a.cid, a.title, url, homepage, version, size, md5, logourl, mg_autotag, tags, a.owner_id, date, "
-         . "hits, rating, votes, commentcode, project, description, detail, postmode, "
+         . "hits, rating, votes, commentcode, project, a.meta_description, a.meta_keywords, description, detail, postmode, "
          . "imgurl, b.title AS cat_title "
          . "FROM {$_TABLES['downloads']} a "
          . "LEFT JOIN {$_TABLES['downloadcategories']} b ON a.cid=b.cid "
@@ -603,11 +622,22 @@ if (!empty($lid)) {
         $display .= PLG_replaceTags($filedetail);
 
         $pagetitle .= ': ' . $A['title'];
-        $display = COM_createHTMLDocument($display, array('pagetitle' => $pagetitle));
+        $meta_description = $A['meta_description'];
+        if (trim($meta_description) === '') {
+            $meta_description = $A['description'];
+        }
+        $headercode = DLM_buildMetaHeader($meta_description, $A['meta_keywords']);
+        $display = COM_createHTMLDocument($display, array(
+            'pagetitle' => $pagetitle,
+            'headercode' => $headercode
+        ));
         COM_output($display);
 
         exit;
     }
+
+    COM_handle404($_CONF['site_url'] . '/downloads/index.php');
+    exit;
 }
 // ----------------------------------------------------------------------------------------------------------
 
@@ -618,6 +648,25 @@ $cid = Input::fGet('cid', Input::fPost('selbox_cat', ROOTID));
 $page = (int) Input::fGet('page', Input::fPost('selbox_page', 0));
 if ($page <= 0) {
     $page = 1;
+}
+
+$category_headercode = '';
+if ($cid != ROOTID) {
+    $cat_result = DB_query("SELECT title, meta_description, meta_keywords "
+                         . "FROM {$_TABLES['downloadcategories']} "
+                         . "WHERE cid='" . DB_escapeString($cid) . "' "
+                         . "AND is_enabled=1 " . COM_getPermSQL('AND'));
+    if (DB_numRows($cat_result) != 1) {
+        COM_handle404($_CONF['site_url'] . '/downloads/index.php');
+        exit;
+    }
+
+    $cat_meta = DB_fetchArray($cat_result);
+    $pagetitle .= ': ' . $cat_meta['title'];
+    $category_headercode = DLM_buildMetaHeader(
+        $cat_meta['meta_description'],
+        $cat_meta['meta_keywords']
+    );
 }
 
 $pathstring = "<a href=\"{$_CONF['site_url']}/downloads/index.php\">" . $LANG_DLM['main'] . "</a>" . BCSEPALATOR
@@ -698,6 +747,8 @@ if (DB_numRows($result) > 0) {
     $T->set_var('filelisting_records', '<div class="pluginAlert dlm_alert">' . $LANG_DLM['nofiles'] . '</div>');
 }
 $display .= PLG_replaceTags($T->finish($T->parse('output', 'page')));
-
-$display = COM_createHTMLDocument($display, array('pagetitle' => $pagetitle));
+$display = COM_createHTMLDocument($display, array(
+    'pagetitle' => $pagetitle,
+    'headercode' => $category_headercode
+));
 COM_output($display);
