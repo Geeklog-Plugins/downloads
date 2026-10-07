@@ -306,6 +306,8 @@ function DLM_upgrade()
                         DB_query($sql);
                     }
                 }
+                require_once $_CONF['path'] . 'plugins/downloads/install_defaults.php';
+                DLM_add130ConfigValues();
                 $current_version = '1.3.0';
                 $done = true;
                 break;
