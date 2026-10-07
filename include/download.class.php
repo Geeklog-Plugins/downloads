@@ -1498,6 +1498,7 @@ class DLDownload
 
         if ($success) {
             $this->_addToDatabase();
+            DLM_recordSubmissionStatus($this->_lid, 'published', $this->_lid);
             DB_delete($_TABLES['downloadsubmission'], "lid", DB_escapeString($this->_old_lid));
 
             // Send an email to submitter notifying them that file was approved
@@ -1672,6 +1673,10 @@ class DLDownload
 
         if ($success) {
             $this->_addToDatabase($mode);
+            if ($mode === 'submission') {
+                DLM_recordSubmissionStatus($this->_lid, 'pending');
+                DLM_sendSubmissionNotification($this->_lid);
+            }
             $msg = $_DLM_CONF['download_emailoption'] ? 109 : 115;
             echo PLG_afterSaveSwitch('home', '', 'downloads', $msg);
         } else {
