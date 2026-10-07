@@ -472,8 +472,8 @@ function DLM_getImgSizeAttr($imgpath)
     global $_DLM_CONF;
 
     if (!file_exists($imgpath)) return '';
-    $dimensions = getimagesize($imgpath);
-    if (empty($dimensions[0]) || empty($dimensions[1])) return '';
+    $dimensions = @getimagesize($imgpath);
+    if ($dimensions === false || empty($dimensions[0]) || empty($dimensions[1])) return '';
     $snapwidth  = $dimensions[0];
     $snapheight = $dimensions[1];
     if ($dimensions[0] > $_DLM_CONF['max_tnimage_width']) {
