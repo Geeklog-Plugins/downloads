@@ -386,7 +386,7 @@ function DLM_reorderCategories()
     global $_TABLES, $mytree;
 
     $corder = 0;
-    $A = $mytree->getChildTreeArray(ROOTID, 'corder');
+    $A = $mytree->getChildTreeArray(DLM_ROOTID, 'corder');
 
     foreach ($A as $B) {
         $corder += 10;
@@ -465,7 +465,7 @@ function DLM_getCatLevel($cid)
     global $_TABLES;
 
     $pid = DB_getItem($_TABLES['downloadcategories'], 'pid', "cid = '" . DB_escapeString($cid) . "'");
-    if ($pid != ROOTID) {
+    if ($pid != DLM_ROOTID) {
         return 1 + DLM_getCatLevel($pid);
     }
     return 0;
@@ -701,7 +701,7 @@ $listing_cid    = isset($_REQUEST['listing_cid'])   ? COM_applyFilter($_REQUEST[
 $display = '';
 
 require_once $_CONF['path'] . 'plugins/downloads/include/gltree.class.php';
-$mytree = new GLTree($_TABLES['downloadcategories'], 'cid', 'pid', 'title', '', ROOTID); // Not set $_DLM_CONF['lang_id']
+$mytree = new GLTree($_TABLES['downloadcategories'], 'cid', 'pid', 'title', '', DLM_ROOTID); // Not set $_DLM_CONF['lang_id']
 $mytree->setRoot($LANG_DLM['main']);
 
 $mode = (!empty($_REQUEST['mode'])) ? $_REQUEST['mode'] : '';
@@ -742,7 +742,7 @@ if (in_array($op, array('uploadFile', 'modify', 'clone', 'editsubmission', 'add'
                 break;
             case 'flist':
                 $url = "{$_CONF['site_url']}/downloads/index.php";
-                if (!empty($listing_cid) && $listing_cid != ROOTID) {
+                if (!empty($listing_cid) && $listing_cid != DLM_ROOTID) {
                     $url .= '?cid=' . $listing_cid;
                 }
                 echo PLG_afterSaveSwitch('item', $url, 'downloads');
