@@ -664,3 +664,31 @@ a.dlbtn-green:active {
 .dlm-file-missing {
     font-weight: 700;
 }
+
+
+.dlm-admin-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem 0.9rem;
+    align-items: end;
+    margin: 0 0 1rem;
+    padding: 0.75rem 1rem;
+    border: 1px solid rgba(128, 128, 128, 0.22);
+    border-radius: 0.35rem;
+}
+
+.dlm-admin-filters label {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    font-weight: 600;
+}
+
+.dlm-admin-filters select {
+    min-width: 10rem;
+}
+
+.dlm-filter-reset {
+    align-self: center;
+    white-space: nowrap;
+}
