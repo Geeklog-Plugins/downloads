@@ -353,67 +353,117 @@ function DLM_makeThumbnail($filename)
 {
     global $_DLM_CONF;
 
-    if (empty($filename)) return false;
+    if (empty($filename)) {
+        return false;
+    }
 
-    $src_path = $_DLM_CONF['path_snapstore'] . $filename;
-    if (!file_exists($src_path)) return false;
+    $src_path = rtrim($_DLM_CONF['path_snapstore'], "/\\")
+              . DIRECTORY_SEPARATOR . $filename;
+    if (!is_file($src_path)) {
+        return false;
+    }
+
+    if (!DLM_ensureDirectory($_DLM_CONF['path_tnstore'])) {
+        return false;
+    }
+
+    $dimensions = @getimagesize($src_path);
+    if ($dimensions === false || empty($dimensions[0]) || empty($dimensions[1])) {
+        DLM_errorLog("Downloads: thumbnail error: Invalid image source '" . $src_path . "'.");
+        return false;
+    }
+
     $src_parts = pathinfo($src_path);
-    $ext  = strtolower($src_parts['extension']);
+    $ext = isset($src_parts['extension']) ? strtolower($src_parts['extension']) : '';
     $name = $src_parts['filename'];
 
     switch ($_DLM_CONF['tnimage_format']) {
-        case 'jpg': $dst_path = $_DLM_CONF['path_tnstore'] . $name . '.jpg'; break;
-        case 'png': $dst_path = $_DLM_CONF['path_tnstore'] . $name . '.png'; break;
+    case 'jpg':
+        $dst_path = rtrim($_DLM_CONF['path_tnstore'], "/\\")
+                  . DIRECTORY_SEPARATOR . $name . '.jpg';
+        break;
+    case 'png':
+        $dst_path = rtrim($_DLM_CONF['path_tnstore'], "/\\")
+                  . DIRECTORY_SEPARATOR . $name . '.png';
+        break;
+    default:
+        DLM_errorLog("Downloads: thumbnail error: Unsupported thumbnail format.");
+        return false;
     }
 
-    // Get the size of an image
-    list($width, $height) = getimagesize($src_path);
-    $newwidth  = $_DLM_CONF['max_tnimage_width'];
-    $newheight = intval($height * $_DLM_CONF['max_tnimage_width'] / $width);
-
-    // Create a new image from file
     switch ($ext) {
-        case 'jepg': $source = imagecreatefromjpeg($src_path); break;
-        case 'jpg': $source = imagecreatefromjpeg($src_path); break;
-        case 'png': $source = imagecreatefrompng($src_path);  break;
-        case 'gif': $source = imagecreatefromgif($src_path);  break;
-        default: return false; break;
+    case 'jpeg':
+    case 'jpg':
+        $source = @imagecreatefromjpeg($src_path);
+        break;
+    case 'png':
+        $source = @imagecreatefrompng($src_path);
+        break;
+    case 'gif':
+        $source = @imagecreatefromgif($src_path);
+        break;
+    default:
+        return false;
     }
 
-	$thumb2 = '';
-    if (($width <= $_DLM_CONF['max_tnimage_width']) && ($height <= $_DLM_CONF['max_tnimage_height'])) {
-        // Create an image
-        $thumb = imagecreatetruecolor($width, $height);
-        // Copy
-        imagecopy($thumb, $source, 0, 0, 0, 0, $width, $height);
-    } else {
-        // Create an image
-        $thumb = imagecreatetruecolor($newwidth, $newheight);
-        // Resize
-        imagecopyresampled($thumb, $source, 0, 0, 0, 0, $newwidth, $newheight, $width, $height);
+    if ($source === false) {
+        DLM_errorLog("Downloads: thumbnail error: Could not decode source image.");
+        return false;
+    }
 
-        if ($newwidth < $newheight) {
-            // Create an image
-            $thumb2 = imagecreatetruecolor($newwidth, $newwidth);            // Trim
-            imagecopyresampled($thumb2, $thumb, 0, 0, 0, 0, $newwidth, $newwidth, $newwidth, $newwidth);
-            $thumb = $thumb2;
+    $width = (int) $dimensions[0];
+    $height = (int) $dimensions[1];
+    $max_width = max(1, (int) $_DLM_CONF['max_tnimage_width']);
+    $max_height = max(1, (int) $_DLM_CONF['max_tnimage_height']);
+
+    $scale = min(1, $max_width / $width, $max_height / $height);
+    $newwidth = max(1, (int) floor($width * $scale));
+    $newheight = max(1, (int) floor($height * $scale));
+
+    $thumb = imagecreatetruecolor($newwidth, $newheight);
+    if ($thumb === false) {
+        if (is_resource($source) || is_object($source)) {
+            imagedestroy($source);
         }
+        return false;
     }
 
-    // Output image to file
-    switch ($_DLM_CONF['tnimage_format']) {
-        case 'jpg': imagejpeg($thumb, $dst_path, 85); break;
-        case 'png': imagepng($thumb,  $dst_path);     break;
+    if (!imagecopyresampled(
+        $thumb,
+        $source,
+        0,
+        0,
+        0,
+        0,
+        $newwidth,
+        $newheight,
+        $width,
+        $height
+    )) {
+        imagedestroy($thumb);
+        if (is_resource($source) || is_object($source)) {
+            imagedestroy($source);
+        }
+        return false;
     }
 
-    // Frees any memory associated with image
+    if ($_DLM_CONF['tnimage_format'] === 'jpg') {
+        $success = imagejpeg($thumb, $dst_path, 85);
+    } else {
+        $success = imagepng($thumb, $dst_path);
+    }
+
     imagedestroy($thumb);
-    if (is_resource($source)) {
+    if (is_resource($source) || is_object($source)) {
         imagedestroy($source);
     }
-    if (is_resource($thumb2)) {
-        imagedestroy($thumb2);
+
+    if (!$success) {
+        DLM_errorLog("Downloads: thumbnail error: Could not write thumbnail.");
+        return false;
     }
+
+    @chmod($dst_path, intval((string) $_DLM_CONF['filepermissions'], 8));
     return true;
 }
 
