@@ -1571,13 +1571,10 @@ function plugin_collectSitemapItems_downloads($uid = 1, $limit = 0)
     $sql = "SELECT c.cid FROM {$_TABLES['downloadcategories']} c "
          . "WHERE c.cid<>'' AND c.is_enabled=1 "
          . COM_getPermSQL('AND', $uid, 2, 'c')
+         . DLM_helper_getLangSQL('c')
          . " ORDER BY c.corder ASC, c.title ASC";
     $query = DB_query($sql);
     while ($A = DB_fetchArray($query)) {
-        if (!matchLanguage($A['cid'])) {
-            continue;
-        }
-
         $url = $_CONF['site_url'] . '/downloads/index.php?cid=' . rawurlencode($A['cid']);
         if (!isset($seen[$url])) {
             $result[] = array(
