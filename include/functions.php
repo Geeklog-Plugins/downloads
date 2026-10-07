@@ -215,6 +215,48 @@ function DLM_reedit($function, $args = array())
 }
 
 /**
+ * Build the pending storage filename used for new 1.3.0 submissions.
+ *
+ * @param int    $date
+ * @param string $name
+ * @param string $secret_id
+ * @return string
+ */
+function DLM_createPendingFileName($date, $name, $secret_id)
+{
+    return 'tmp' . date('YmdHis', (int) $date)
+         . '_' . DLM_encodeFileName($secret_id)
+         . '_' . DLM_createSafeFileName($name);
+}
+
+/**
+ * Locate a pending file, accepting the pre-1.3.0 legacy naming scheme.
+ *
+ * @param string $directory
+ * @param int    $date
+ * @param string $name
+ * @param string $secret_id
+ * @return string
+ */
+function DLM_findPendingFile($directory, $date, $name, $secret_id)
+{
+    $directory = rtrim($directory, "/\\") . DIRECTORY_SEPARATOR;
+
+    $current = $directory . DLM_createPendingFileName($date, $name, $secret_id);
+    if (is_file($current)) {
+        return $current;
+    }
+
+    $legacy = $directory . 'tmp' . date('YmdHis', (int) $date)
+            . DLM_createSafeFileName($name);
+    if (is_file($legacy)) {
+        return $legacy;
+    }
+
+    return $current;
+}
+
+/**
  * Finalize files belonging to a pending download submission.
  *
  * Shared by both the Downloads administration editor and Geeklog moderation.
@@ -235,9 +277,12 @@ function DLM_finalizeSubmissionFiles($date, $url, $logourl, $secret_id)
         return false;
     }
 
-    $safeurl = DLM_createSafeFileName($url);
-    $tmpfile = rtrim($_DLM_CONF['path_filestore'], "/\\") . DIRECTORY_SEPARATOR
-             . 'tmp' . date('YmdHis', $date) . $safeurl;
+    $tmpfile = DLM_findPendingFile(
+        $_DLM_CONF['path_filestore'],
+        $date,
+        $url,
+        $secret_id
+    );
     $newfile = rtrim($_DLM_CONF['path_filestore'], "/\\") . DIRECTORY_SEPARATOR
              . DLM_createSafeFileName($url, $secret_id);
 
@@ -250,8 +295,12 @@ function DLM_finalizeSubmissionFiles($date, $url, $logourl, $secret_id)
 
     if (!empty($logourl)) {
         $safesnap = DLM_createSafeFileName($logourl);
-        $tmpsnap = rtrim($_DLM_CONF['path_snapstore'], "/\\") . DIRECTORY_SEPARATOR
-                 . 'tmp' . date('YmdHis', $date) . $safesnap;
+        $tmpsnap = DLM_findPendingFile(
+            $_DLM_CONF['path_snapstore'],
+            $date,
+            $logourl,
+            $secret_id
+        );
         $newsnap = rtrim($_DLM_CONF['path_snapstore'], "/\\") . DIRECTORY_SEPARATOR
                  . $safesnap;
 
@@ -324,13 +373,26 @@ function DLM_delNewDownload($id)
 
     DLM_recordSubmissionStatus($id, 'rejected');
 
-    $result = DB_query("SELECT url, logourl, date "
+    $result = DB_query("SELECT url, logourl, date, secret_id "
                      . "FROM {$_TABLES['downloadsubmission']} "
                      . "WHERE lid = '" . DB_escapeString($id) . "'");
-    list($url, $logourl, $date) = DB_fetchArray($result);
+    list($url, $logourl, $date, $secret_id) = DB_fetchArray($result);
     if (empty($url)) return;
-    $tmpfilename = $_DLM_CONF['path_filestore'] . 'tmp' . date('YmdHis', $date) . DLM_encodeFileName($url);
-    $tmpshotname = $_DLM_CONF['path_snapstore'] . 'tmp' . date('YmdHis', $date) . DLM_encodeFileName($logourl);
+    $tmpfilename = DLM_findPendingFile(
+        $_DLM_CONF['path_filestore'],
+        $date,
+        $url,
+        $secret_id
+    );
+    $tmpshotname = '';
+    if (!empty($logourl)) {
+        $tmpshotname = DLM_findPendingFile(
+            $_DLM_CONF['path_snapstore'],
+            $date,
+            $logourl,
+            $secret_id
+        );
+    }
     DLM_unlink($tmpfilename);
     DLM_unlink($tmpshotname);
     DB_delete($_TABLES['downloadsubmission'], 'lid', DB_escapeString($id));
@@ -635,8 +697,9 @@ function DLM_uploadNewFile($newfile, $directory, $name = '')
     }
 
     if (file_exists($newfilepath)) {
-        DLM_errorLog("Downloads: warning: Added new filelisting for a file that already exists " . $newfilepath);
-        return true;
+        DLM_errorLog("Downloads: upload error: Destination already exists: " . $newfilepath);
+        DLM_showErrorMessage('1004');
+        return false;
     }
 
     if (!move_uploaded_file($tmp, $newfilepath)) {
