@@ -51,6 +51,27 @@ $_UPDATES = array(
         "ALTER TABLE {$_TABLES['downloads']} ADD meta_keywords varchar(255) NOT NULL default '' AFTER meta_description",
         "ALTER TABLE {$_TABLES['downloadsubmission']} MODIFY project varchar(150) NOT NULL default ''",
         "ALTER TABLE {$_TABLES['downloadsubmission']} ADD meta_description varchar(320) NOT NULL default '' AFTER project",
-        "ALTER TABLE {$_TABLES['downloadsubmission']} ADD meta_keywords varchar(255) NOT NULL default '' AFTER meta_description"
+        "ALTER TABLE {$_TABLES['downloadsubmission']} ADD meta_keywords varchar(255) NOT NULL default '' AFTER meta_description",
+        "CREATE TABLE {$_TABLES['downloadsubmissionhistory']} (
+          history_id int(11) unsigned NOT NULL auto_increment,
+          lid varchar(40) NOT NULL default '',
+          owner_id mediumint(8) unsigned NOT NULL default '1',
+          cid varchar(40) NOT NULL default '',
+          title varchar(100) NOT NULL default '',
+          submitted_date int(10) NOT NULL default '0',
+          status varchar(20) NOT NULL default 'pending',
+          status_date int(10) NOT NULL default '0',
+          public_lid varchar(40) NOT NULL default '',
+          PRIMARY KEY (history_id),
+          KEY lid (lid),
+          KEY owner_id (owner_id),
+          KEY status (status),
+          KEY submitted_date (submitted_date)
+        ) ENGINE=MyISAM",
+        "INSERT INTO {$_TABLES['downloadsubmissionhistory']} (lid, owner_id, cid, title, submitted_date, status, status_date)
+         SELECT s.lid, s.owner_id, s.cid, s.title, s.date, 'pending', s.date
+         FROM {$_TABLES['downloadsubmission']} s
+         LEFT JOIN {$_TABLES['downloadsubmissionhistory']} h ON h.lid=s.lid
+         WHERE h.history_id IS NULL"
     )
 );
