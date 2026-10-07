@@ -589,3 +589,124 @@ a.dlbtn-green:active {
 .dlm-comments {
     margin-top: 1.5rem;
 }
+
+
+/* Rich download preview */
+.dlm-preview-card {
+    display: grid;
+    grid-template-columns: minmax(0, 220px) minmax(0, 1fr);
+    gap: 1.25rem;
+    align-items: start;
+}
+
+.dlm-preview-media {
+    padding: 0.5rem;
+    border: 1px solid rgba(128, 128, 128, 0.3);
+    border-radius: 0.4rem;
+}
+
+.dlm-preview-image {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    margin: 0 auto;
+}
+
+.dlm-preview-title {
+    margin-top: 0;
+}
+
+.dlm-preview-meta {
+    display: grid;
+    grid-template-columns: max-content minmax(0, 1fr);
+    gap: 0.3rem 0.75rem;
+    margin: 0 0 1rem;
+}
+
+.dlm-preview-meta dt {
+    font-weight: 700;
+}
+
+.dlm-preview-meta dd {
+    margin: 0;
+    overflow-wrap: anywhere;
+}
+
+.dlm-preview-section + .dlm-preview-section {
+    margin-top: 1rem;
+}
+
+.dlm-preview-section h3 {
+    margin-bottom: 0.45rem;
+}
+
+/* Modernized Downloads administration forms */
+.dlm-admin-editor .dlm-admin-section {
+    padding: 1rem 1.15rem 1.15rem;
+}
+
+.dlm-admin-editor .form_block {
+    display: grid;
+    grid-template-columns: minmax(9rem, 12rem) minmax(0, 1fr);
+    gap: 0.75rem 1rem;
+    align-items: start;
+}
+
+.dlm-admin-editor .form_block dt,
+.dlm-admin-editor .form_block dd {
+    margin: 0;
+}
+
+.dlm-admin-editor .form_block dt {
+    padding-top: 0.45rem;
+    font-weight: 600;
+}
+
+.dlm-admin-editor input[type="text"],
+.dlm-admin-editor input[type="url"],
+.dlm-admin-editor input[type="search"],
+.dlm-admin-editor input[type="file"],
+.dlm-admin-editor select,
+.dlm-admin-editor textarea {
+    box-sizing: border-box;
+    max-width: 100%;
+}
+
+.dlm-admin-editor input[type="text"],
+.dlm-admin-editor input[type="url"],
+.dlm-admin-editor select,
+.dlm-admin-editor textarea {
+    padding: 0.45rem 0.55rem;
+}
+
+.dlm-admin-editor textarea {
+    min-height: 5rem;
+    resize: vertical;
+}
+
+.dlm-admin-editor .submit {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.55rem;
+    align-items: center;
+    margin-top: 1rem;
+}
+
+@media (max-width: 720px) {
+    .dlm-preview-card {
+        grid-template-columns: 1fr;
+    }
+
+    .dlm-preview-media {
+        max-width: 22rem;
+    }
+
+    .dlm-admin-editor .form_block {
+        grid-template-columns: 1fr;
+        gap: 0.35rem;
+    }
+
+    .dlm-admin-editor .form_block dt {
+        padding-top: 0.6rem;
+    }
+}
