@@ -127,6 +127,52 @@ function listDownloads()
         );
     }
 
+    $stats = array(
+        'total' => 0,
+        'published' => 0,
+        'unreleased' => 0,
+        'hidden' => 0,
+        'missing' => 0,
+        'pending' => (int) $pending_count,
+    );
+
+    $stats_result = DB_query(
+        "SELECT lid, url, secret_id, is_released, is_listing "
+        . "FROM {$_TABLES['downloads']} a "
+        . "LEFT JOIN {$_TABLES['downloadcategories']} b ON a.cid=b.cid "
+        . "WHERE a.lid<>'' " . COM_getPermSQL('AND', 0, 2, 'b')
+    );
+    while ($stats_row = DB_fetchArray($stats_result)) {
+        $stats['total']++;
+        if ((int) $stats_row['is_released'] !== 1) {
+            $stats['unreleased']++;
+        } elseif ((int) $stats_row['is_listing'] !== 1) {
+            $stats['hidden']++;
+        } else {
+            $stats['published']++;
+        }
+
+        $stats_filename = DLM_createSafeFileName(
+            $stats_row['url'],
+            $stats_row['secret_id']
+        );
+        $stats_filepath = rtrim($_DLM_CONF['path_filestore'], "/\\")
+                        . DIRECTORY_SEPARATOR . $stats_filename;
+        if (!is_file($stats_filepath)) {
+            $stats['missing']++;
+        }
+    }
+
+    $retval .= '<div class="dlm-admin-summary">'
+             . '<span><strong>' . $stats['total'] . '</strong> ' . $LANG_DLM['summary_total'] . '</span>'
+             . '<span><strong>' . $stats['published'] . '</strong> ' . $LANG_DLM['summary_published'] . '</span>'
+             . '<span><strong>' . $stats['unreleased'] . '</strong> ' . $LANG_DLM['summary_unreleased'] . '</span>'
+             . '<span><strong>' . $stats['hidden'] . '</strong> ' . $LANG_DLM['summary_hidden'] . '</span>'
+             . '<span class="' . ($stats['missing'] > 0 ? 'dlm-summary-warning' : '') . '"><strong>'
+             . $stats['missing'] . '</strong> ' . $LANG_DLM['summary_missing'] . '</span>'
+             . '<span><strong>' . $stats['pending'] . '</strong> ' . $LANG_DLM['summary_pending'] . '</span>'
+             . '</div>';
+
     $text_arr  = array('has_extras'     => true,
                        'form_url'       => $admin_url);
 
@@ -167,7 +213,7 @@ function downloads_getListField_Files($fieldname, $fieldvalue, $A, $icon_arr)
         case "edit":
             $retval = $LANG_ACCESS['readonly'];
             if ($access == 3) {
-                $retval = "<div style=\"white-space:nowrap;\"><a href=\"{$_CONF['site_admin_url']}/plugins/downloads/index.php"
+                $retval = "<div class=\"dlm-admin-actions\"><a href=\"{$_CONF['site_admin_url']}/plugins/downloads/index.php"
                         . "?lid={$A['lid']}&amp;op=modify&amp;p=list\" title=\"{$LANG_ADMIN['edit']}\">{$icon_arr['edit']}</a>" . LB
 
                         . "<a href=\"{$_CONF['site_admin_url']}/plugins/downloads/index.php"
@@ -199,11 +245,14 @@ function downloads_getListField_Files($fieldname, $fieldvalue, $A, $icon_arr)
 
         case "status":
             if ((int) $A['is_released'] !== 1) {
-                $retval = $GLOBALS['LANG_DLM']['status_unreleased'];
+                $retval = '<span class="dlm-status dlm-status-unreleased">'
+                        . $LANG_DLM['status_unreleased'] . '</span>';
             } elseif ((int) $A['is_listing'] !== 1) {
-                $retval = $GLOBALS['LANG_DLM']['status_hidden'];
+                $retval = '<span class="dlm-status dlm-status-hidden">'
+                        . $LANG_DLM['status_hidden'] . '</span>';
             } else {
-                $retval = $GLOBALS['LANG_DLM']['status_published'];
+                $retval = '<span class="dlm-status dlm-status-published">'
+                        . $LANG_DLM['status_published'] . '</span>';
             }
             break;
 
@@ -212,9 +261,11 @@ function downloads_getListField_Files($fieldname, $fieldvalue, $A, $icon_arr)
             $filepath = rtrim($_DLM_CONF['path_filestore'], "/\\")
                       . DIRECTORY_SEPARATOR . $filename;
             if (is_file($filepath)) {
-                $retval = $LANG_DLM['file_health_ok'];
+                $retval = '<span class="dlm-status dlm-file-ok">'
+                        . $LANG_DLM['file_health_ok'] . '</span>';
             } else {
-                $retval = '<strong>' . $LANG_DLM['file_health_missing'] . '</strong>';
+                $retval = '<span class="dlm-status dlm-file-missing">'
+                        . $LANG_DLM['file_health_missing'] . '</span>';
             }
             break;
 
