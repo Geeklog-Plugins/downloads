@@ -692,3 +692,22 @@ a.dlbtn-green:active {
     align-self: center;
     white-space: nowrap;
 }
+
+
+.dlm-category-toggle {
+    display: inline-flex;
+    gap: 0.4rem;
+    align-items: center;
+}
+
+.dlm-category-toggle-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.35rem;
+    height: 1.35rem;
+    border: 1px solid rgba(128, 128, 128, 0.35);
+    border-radius: 0.2rem;
+    font-weight: 700;
+    line-height: 1;
+}
