@@ -741,11 +741,60 @@ class DLDownload
         $retval .= COM_endBlock(COM_getBlockTemplate('_admin_block', 'footer'));
 
         if (!empty($file_description) || !empty($file_detail)) {
-            // Display Preview Block
+            // Display a representative preview of the public download card.
             $T2 = COM_newTemplate(CTL_plugin_templatePath('downloads'));
             $T2->set_file('t_mod_preview', 'mod_preview.thtml');
-            $T2->set_var('file_description', $file_description);
-            $T2->set_var('file_detail',      $file_detail);
+
+            $preview_category = '';
+            if (!empty($this->_cid) && $this->_cid !== ROOTID) {
+                $preview_category = DB_getItem(
+                    $_TABLES['downloadcategories'],
+                    'title',
+                    "cid='" . DB_escapeString($this->_cid) . "'"
+                );
+            }
+            if ($preview_category === '') {
+                $preview_category = $LANG_DLM['main'];
+            }
+
+            $preview_image = '';
+            if ($mode === 'editsubmission' && !empty($tempsnapurl)) {
+                $preview_image = $tempsnapurl;
+            } elseif (!empty($this->_logourl)) {
+                $preview_image = rtrim($_DLM_CONF['snapstore_url'], '/')
+                               . '/' . DLM_createSafeFileName($this->_logourl);
+            }
+
+            $preview_homepage = '';
+            if (!empty($this->_homepage)) {
+                $preview_homepage = COM_createLink(
+                    DLM_htmlspecialchars($this->_homepage),
+                    $this->_homepage,
+                    array('rel' => 'noopener')
+                );
+            }
+
+            $T2->set_var('preview_title',       $this->_title);
+            $T2->set_var('preview_category',    DLM_htmlspecialchars($preview_category));
+            $T2->set_var('preview_filename',    DLM_htmlspecialchars($this->_url));
+            $T2->set_var('preview_version',     $this->_version);
+            $T2->set_var('preview_size',        $this->_size);
+            $T2->set_var('preview_project',     $this->_project);
+            $T2->set_var('preview_homepage',    $preview_homepage);
+            $T2->set_var('preview_image',       $preview_image);
+            $T2->set_var('preview_image_style', $preview_image === '' ? 'display:none;' : '');
+            $T2->set_var('file_description',    $file_description);
+            $T2->set_var('file_detail',         $file_detail);
+
+            $T2->set_var('lang_category',       $LANG_DLM['category']);
+            $T2->set_var('lang_dlfilename',     $LANG_DLM['dlfilename']);
+            $T2->set_var('lang_ver',            $LANG_DLM['ver']);
+            $T2->set_var('lang_filesize',       $LANG_DLM['filesize']);
+            $T2->set_var('lang_project',        $LANG_DLM['project']);
+            $T2->set_var('lang_homepage',       $LANG_DLM['homepage']);
+            $T2->set_var('lang_description',    $LANG_DLM['description']);
+            $T2->set_var('lang_detail',         $LANG_DLM['detail']);
+
             $T2->parse('output', 't_mod_preview');
             $blocktitle = $LANG_DLM['preview'];
             $retval .= COM_startBlock($blocktitle, '', COM_getBlockTemplate ('_admin_block', 'header'));
