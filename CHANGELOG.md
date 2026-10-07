@@ -61,6 +61,8 @@
 
 ### Administration
 
+- Final form alignment now uses the same grid for fields, Access Rights and action buttons.
+
 - Fixed Access Rights alignment by restructuring permission help inside the permissions field.
 - Moved the required-field note out of the Category Image block.
 - Improved category image upload/preview alignment and responsive admin form sizing.
