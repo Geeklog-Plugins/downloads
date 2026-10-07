@@ -55,6 +55,9 @@
 
 - Moved Meta Description and Meta Keywords directly below Detail in the download editor.
 - Organized the download and category editors into logical General / Content & SEO / Media / Publication sections.
+- Added an administration summary for total, published, unreleased, hidden, missing-file and pending-submission counts.
+- Added compact visual status indicators for publication and file health.
+- Added file counts and enabled/disabled status to the category administration list.
 - Hardened category-image preview against invalid image dimensions.
 - Versioned plugin-owned CSS and JavaScript URLs with the 1.3.0 release version to prevent stale browser caches.
 
