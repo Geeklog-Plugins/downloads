@@ -1408,15 +1408,14 @@ function plugin_idtourl_downloads($id)
 {
     global $_CONF;
 
-    $info = plugin_getiteminfo_downloads($id, 'url');
-    if (is_string($info)) {
-        return $info;
-    }
-    if (is_array($info) && isset($info[0])) {
-        return $info[0];
+    $id = COM_sanitizeID($id, false);
+    if ($id === '') {
+        return '';
     }
 
-    return '';
+    return COM_buildURL(
+        $_CONF['site_url'] . '/downloads/index.php?id=' . rawurlencode($id)
+    );
 }
 
 /**
