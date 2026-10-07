@@ -72,6 +72,8 @@
 
 ### Security and stabilization
 
+- Multisite-safe storage migration remains deferred until functional stabilization is validated; intermediate 1.3.0 builds do not move existing storage.
+
 - Qualified joined SEO columns in the download editor query to avoid MySQL ambiguous-column errors after adding category SEO metadata.
 
 - Restored CSRF protection to public download rating.
