@@ -1631,7 +1631,8 @@ function plugin_getiteminfo_downloads($id, $what, $uid = 0, $options = array())
 
     if ($subtype === 'download' || $subtype === 'all') {
         $now = time();
-        $where = "d.is_released=1 AND d.date<=$now AND c.is_enabled=1 ";
+        $where = "d.is_released=1 AND d.is_listing=1 "
+               . "AND d.date<=$now AND c.is_enabled=1 ";
         if (isset($options['since']) && is_numeric($options['since'])) {
             $where .= "AND d.date>=" . (int) $options['since'] . " ";
         }
