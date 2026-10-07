@@ -1,0 +1,8 @@
+{notification_intro}{LB}
+{LB}
+{lang_title}: {submission_title}{LB}
+{lang_submitter}: {submission_submitter}{LB}
+{LB}
+{email_divider}{LB}
+{LB}
+{lang_moderate}: {moderation_url}{LB}
