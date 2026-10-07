@@ -97,7 +97,8 @@ function plugin_autoinstall_downloads($pi_name)
         'downloads',
         'downloadvotes',
         'downloadhistories',
-        'downloadsubmission'
+        'downloadsubmission',
+        'downloadsubmissionhistory'
     );
 
     $inst_parms = array(
@@ -220,7 +221,8 @@ function DLM_autouninstall()
     return array (
         // give the name of the tables, without $_TABLES[]
         'tables' => array('downloadcategories', 'downloads',
-                          'downloadvotes', 'downloadhistories', 'downloadsubmission'),
+                          'downloadvotes', 'downloadhistories', 'downloadsubmission',
+                          'downloadsubmissionhistory'),
         // give the full name of the group, as in the db
         'groups' => array('Downloads Admin'),
         // give the full name of the feature, as in the db
