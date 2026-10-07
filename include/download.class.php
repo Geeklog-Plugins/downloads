@@ -57,6 +57,8 @@ class DLDownload
     private $_date;
     private $_commentcode;
     private $_project;
+    private $_meta_description;
+    private $_meta_keywords;
     private $_description;
     private $_detail;
     private $_text_version;
@@ -77,6 +79,12 @@ class DLDownload
     private $_old_date;
 
     private $_cat_tree;
+    private $_cat_owner_id;
+    private $_group_id;
+    private $_perm_owner;
+    private $_perm_group;
+    private $_perm_members;
+    private $_perm_anon;
 
     private $_editor_mode;
     private $_retry;
@@ -155,7 +163,11 @@ class DLDownload
         $this->_lid          = COM_applyFilter(trim($array['lid']));
         $this->_old_lid      = COM_applyFilter(trim($array['old_lid']));
         $this->_title        = COM_checkHTML(COM_checkWords(trim($array['title'])));
-        $this->_project      = COM_checkHTML(COM_checkWords(trim($array['project'])));
+        $this->_project      = COM_checkHTML(COM_checkWords(trim(isset($array['project']) ? $array['project'] : '')));
+        $this->_meta_description = isset($array['meta_description'])
+            ? trim(strip_tags($array['meta_description'])) : '';
+        $this->_meta_keywords = isset($array['meta_keywords'])
+            ? trim(strip_tags($array['meta_keywords'])) : '';
         $this->_homepage     = strip_tags($array['homepage']);
         $this->_size         = isset($array['size']) ? intval(COM_applyFilter($array['size'], true)) : 0;
         $this->_md5          = isset($array['md5']) ? COM_applyFilter($array['md5']) : '';
@@ -202,7 +214,7 @@ class DLDownload
         global $_TABLES;
 
         $sql  = "SELECT lid, a.cid, a.title, url, homepage, version, size, md5, "
-              . "project, description, detail, postmode, logourl, mg_autotag, tags, date, hits, rating, votes, "
+              . "project, meta_description, meta_keywords, description, detail, postmode, logourl, mg_autotag, tags, date, hits, rating, votes, "
               . "commentcode, is_released, is_listing, createddate, a.owner_id, b.owner_id AS cat_owner_id, "
               . "text_version, "
               . "group_id, perm_owner, perm_group, perm_members, perm_anon "
@@ -257,10 +269,34 @@ class DLDownload
         $this->_description = '';
         $this->_detail      = '';
         $this->_project     = '';
+        $this->_meta_description = '';
+        $this->_meta_keywords = '';
         $this->_date        = floor(time()/60)*60;
         $this->_owner_id    = $_USER['uid'];
         $this->_commentcode = $_CONF['comment_code'];
         $this->_text_version = 2; // GLTEXT_LATEST_VERSION
+    }
+
+    function _loadCategoryPermissions($cid)
+    {
+        global $_TABLES;
+
+        $cid = DB_escapeString($cid);
+        $result = DB_query("SELECT owner_id AS cat_owner_id, group_id, perm_owner, perm_group, perm_members, perm_anon "
+                         . "FROM {$_TABLES['downloadcategories']} WHERE cid = '$cid'");
+        if (DB_numRows($result) != 1) {
+            return false;
+        }
+
+        $A = DB_fetchArray($result);
+        $this->_cat_owner_id = $A['cat_owner_id'];
+        $this->_group_id = $A['group_id'];
+        $this->_perm_owner = $A['perm_owner'];
+        $this->_perm_group = $A['perm_group'];
+        $this->_perm_members = $A['perm_members'];
+        $this->_perm_anon = $A['perm_anon'];
+
+        return true;
     }
 
     function _checkHasAccess()
@@ -334,10 +370,6 @@ class DLDownload
             }
         }
 
-        if ($mode != 'create' && $mode != 'submit') {
-            $this->_checkHasAccess();
-        }
-
         if ($mode == 'editsubmission') {
             if ($this->_retry == true) {
                 $this->_loadFromArgs($_POST);
@@ -345,6 +377,12 @@ class DLDownload
                 $this->_lid = COM_applyFilter($_GET['id']);
                 $this->_loadSubmission($this->_lid);
             }
+            if (!$this->_loadCategoryPermissions($this->_cid)) {
+                return PLG_afterSaveSwitch('admin', '', 'downloads', 110);
+            }
+            $this->_checkHasAccess();
+        } elseif ($mode != 'create' && $mode != 'submit') {
+            $this->_checkHasAccess();
         }
 
         $ja = ($_CONF['language'] == 'japanese_utf-8');
@@ -383,7 +421,9 @@ class DLDownload
                       'submit', 'delete', 'cancel', 'confirm_delete', 'submitter',
                       'release_date', 'postmode', 'comment_mode', 'project',
                       'toolbar', 'toolbar1', 'toolbar2', 'toolbar3', 'toolbar5',
-                      'md5', 'mg_autotag', 'mg_autotag_info', 'upload', 'tags', 'preview');
+                      'md5', 'mg_autotag', 'mg_autotag_info', 'upload', 'tags', 'preview',
+                      'meta_description', 'meta_keywords', 'tags_help', 'project_help',
+                      'required_field');
         foreach ($lang as $v) $T->set_var('lang_' . $v, $LANG_DLM[$v]);
 
         $action = 'index.php';
@@ -397,8 +437,7 @@ class DLDownload
             $T->set_var('lang_submit', $LANG_DLM['add']);
             $T->set_var('lang_replfilename', $LANG_DLM['addfilename']);
             $T->set_var('lang_replshotimage', $LANG_DLM['addshotimage']);
-            $op = 'add';
-            break;
+            $op = 'add';            break;
 
         case 'clone':
             $T->set_var('lang_submit', $LANG_DLM['add']);
@@ -427,6 +466,8 @@ class DLDownload
             }
             $this->_title       = DLM_htmlspecialchars(stripslashes($this->_title));
             $this->_project     = DLM_htmlspecialchars(stripslashes($this->_project));
+            $this->_meta_description = DLM_htmlspecialchars($this->_meta_description);
+            $this->_meta_keywords = DLM_htmlspecialchars($this->_meta_keywords);
             $pathstring         = $this->_cat_tree->getNicePathFromId($this->_cid, "title", "{$_CONF['site_url']}/downloads/index.php?op=");
             $this->_url         = DLM_htmlspecialchars(stripslashes($this->_url));
             $this->_logourl     = DLM_htmlspecialchars(stripslashes($this->_logourl));
@@ -557,6 +598,15 @@ class DLDownload
             $hidden_values .= $this->_makeForm_hidden('listing_cid', $this->_listing_cid);
         }
 
+        $_SCRIPTS->setJavaScriptFile('downloads_editor', '/downloads/editor.js');
+
+        $project_options = '';
+        $project_result = DB_query("SELECT DISTINCT project FROM {$_TABLES['downloads']} "
+                                 . "WHERE project <> '' ORDER BY project ASC");
+        while (list($project_name) = DB_fetchArray($project_result)) {
+            $project_options .= '<option value="' . DLM_htmlspecialchars($project_name) . '"></option>' . LB;
+        }
+
         $T->set_var('show_texteditor',      $show_texteditor);
         $T->set_var('show_htmleditor',      $show_htmleditor);
         $T->set_var('post_options',         $post_options);
@@ -577,6 +627,9 @@ class DLDownload
         $T->set_var('description',          $description);
         $T->set_var('detail',               $detail);
         $T->set_var('project',              $this->_project);
+        $T->set_var('project_options',       $project_options);
+        $T->set_var('meta_description',      $this->_meta_description);
+        $T->set_var('meta_keywords',         $this->_meta_keywords);
         $T->set_var('snapstore_url',         $_DLM_CONF['snapstore_url']);
         $T->set_var('categorylist',         $categorylist);
         $T->set_var('val_is_released_1',    ($this->_is_released) ? UC_SELECTED : '');
@@ -797,8 +850,7 @@ class DLDownload
         );
         $data_arr = array();
         $text_arr = array('has_menu' => false,
-                          'title'    => sprintf($LANG_DLM['reguservotes'], $votes),
-        );
+                          'title'    => sprintf($LANG_DLM['reguservotes'], $votes),        );
 
         while ($A = DB_fetchArray($result)) {
 
@@ -1021,6 +1073,8 @@ class DLDownload
         $date        = (int) $this->_date;
         $commentcode = (int) $this->_commentcode;
         $project     = DB_escapeString($this->_project);
+        $meta_description = DB_escapeString($this->_meta_description);
+        $meta_keywords = DB_escapeString($this->_meta_keywords);
         $description = DB_escapeString($description);
         $detail      = DB_escapeString($detail);
         $owner_id    = (int) $this->_owner_id;
@@ -1033,12 +1087,12 @@ class DLDownload
         DB_query("INSERT INTO $table "
 
                . "(lid, cid, title, url, homepage, version, size, secret_id, md5, logourl, mg_autotag, tags, "
-               . "date, hits, rating, votes, commentcode, project, description, detail, owner_id, "
+               . "date, hits, rating, votes, commentcode, project, meta_description, meta_keywords, description, detail, owner_id, "
                . $sql_var_additions
                . "postmode, is_released, is_listing, createddate) "
 
                . "VALUES ('$lid', '$cid', '$title', '$url', '$homepage', '$version', $size, '$secret_id', '$md5', '$logourl', '$mg_autotag', '$tags', "
-               . "$date, 0, 0, 0, $commentcode, '$project', '$description', '$detail', $owner_id, "
+               . "$date, 0, 0, 0, $commentcode, '$project', '$meta_description', '$meta_keywords', '$description', '$detail', $owner_id, "
                . $sql_val_additions
                . "'$postmode', $is_released, $is_listing, '$createddate')");
 
@@ -1092,6 +1146,8 @@ class DLDownload
         $date        = (int) $this->_date;
         $commentcode = (int) $this->_commentcode;
         $project     = DB_escapeString($this->_project);
+        $meta_description = DB_escapeString($this->_meta_description);
+        $meta_keywords = DB_escapeString($this->_meta_keywords);
         $description = DB_escapeString($description);
         $detail      = DB_escapeString($detail);
         $owner_id    = (int) $this->_owner_id;
@@ -1103,7 +1159,8 @@ class DLDownload
         $table = empty($mode) ? $_TABLES['downloads'] : $_TABLES['downloadsubmission'];
         DB_query("UPDATE $table "
                . "SET lid='$lid', cid='$cid', title='$title', url='$url', mg_autotag='$mg_autotag', tags='$tags', "
-               . "homepage='$homepage', project='$project', description='$description', detail='$detail', "
+               . "homepage='$homepage', project='$project', meta_description='$meta_description', "
+               . "meta_keywords='$meta_keywords', description='$description', detail='$detail', "
                . "version='$version', size=$size, md5='$md5', commentcode=$commentcode, owner_id=$owner_id, "
                . "postmode='$postmode', logourl='$logourl', is_released=$is_released, is_listing=$is_listing, "
                . $sql_additions
@@ -1197,7 +1254,6 @@ class DLDownload
                 $this->_url = $newfile_name;
             }
         }
-
         if (file_exists($_DLM_CONF['path_filestore'] . $safename)) {
           $this->_size = filesize($_DLM_CONF['path_filestore'] . $safename);
           $this->_md5  = md5_file($_DLM_CONF['path_filestore'] . $safename);
@@ -1248,8 +1304,13 @@ class DLDownload
     {
         global $_TABLES, $_DLM_CONF;
 
-        $newimage_name = COM_applyFilter($_FILES['newfileshot']['name']);
+        $newimage_name = isset($_FILES['newfileshot']['name'])
+            ? COM_applyFilter($_FILES['newfileshot']['name']) : '';
         if (!empty($newimage_name)) {
+            if (!DLM_isUploadedImage($_FILES['newfileshot'])) {
+                $this->_errno[] = '1405';
+                return false;
+            }
             $name = $this->_createFilename($newimage_name, $_TABLES['downloads'], 'logourl');
             if (DLM_uploadNewFile($_FILES['newfileshot'], $_DLM_CONF['path_snapstore'], $name)) {
                 $this->_logourl = $name;
@@ -1540,6 +1601,11 @@ class DLDownload
 
             // Upload New file snapshot image
             if ($success && !empty($_FILES['newfileshot']['name'])) {
+                if (!DLM_isUploadedImage($_FILES['newfileshot'])) {
+                    $this->_errno[] = '1405';
+                    $this->_retry = true;
+                    $this->_reedit('showEditor', array($this->_editor_mode));
+                }
                 $this->_logourl = $_FILES['newfileshot']['name'];
                 $tmpshotname = 'tmp' . date('YmdHis', $this->_date) . DLM_createSafeFileName($this->_logourl);
                 $success = DLM_uploadNewFile($_FILES['newfileshot'], $_DLM_CONF['path_snapstore'], $tmpshotname);
