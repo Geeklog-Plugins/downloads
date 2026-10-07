@@ -1,11 +1,6 @@
 name: Build Downloads distribution
 
 on:
-  push:
-    branches:
-      - downloads_1.3.0
-    paths-ignore:
-      - 'dist/**'
   workflow_dispatch:
 
 permissions:
