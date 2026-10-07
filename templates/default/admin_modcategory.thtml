@@ -50,19 +50,22 @@
         </dd>
       </dl>
     </fieldset>
-  </div>
 
 {admin_access}
 
-  <div class="submit">
-    <input type="submit" value="{lang_save}" name="mode" class="submit"{xhtml}>
-    <input type="submit" value="{lang_cancel}" name="mode" class="submit"{xhtml}>
+    <div class="dlm-action-grid">
+      <div></div>
+      <div class="dlm-action-buttons">
+        <input type="submit" value="{lang_save}" name="mode" class="submit"{xhtml}>
+        <input type="submit" value="{lang_cancel}" name="mode" class="submit"{xhtml}>
 {admin_submit_delete}
-    <input type="hidden" name="imgurlold" value="{imgurlold}"{xhtml}>
-    <input type="hidden" name="op" value="{op}"{xhtml}>
-    <input type="hidden" name="old_cid" value="{old_cid}"{xhtml}>
-    <input type="hidden" name="{gltoken_name}" value="{gltoken}"{xhtml}>
+      </div>
+      <input type="hidden" name="imgurlold" value="{imgurlold}"{xhtml}>
+      <input type="hidden" name="op" value="{op}"{xhtml}>
+      <input type="hidden" name="old_cid" value="{old_cid}"{xhtml}>
+      <input type="hidden" name="{gltoken_name}" value="{gltoken}"{xhtml}>
 {hidden_values}
+    </div>
   </div>
 </form>
 <!-- end admin_modcategory.thtml -->
