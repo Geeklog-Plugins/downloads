@@ -838,3 +838,89 @@ a.dlbtn-green:active {
         padding-top: 0.6rem;
     }
 }
+
+
+/* Refined administration form presentation */
+.dlm-admin-editor .dlm-admin-section {
+    background: rgba(248, 249, 252, 0.72);
+}
+
+.dlm-admin-editor .dlm-admin-section legend {
+    font-size: 1.05rem;
+}
+
+.dlm-admin-editor .form_block > dd {
+    min-width: 0;
+}
+
+.dlm-admin-editor .form_block input[type="text"],
+.dlm-admin-editor .form_block input[type="url"],
+.dlm-admin-editor .form_block textarea,
+.dlm-admin-editor .form_block select {
+    width: min(100%, 42rem);
+}
+
+.dlm-admin-editor .form_block input[type="file"] {
+    max-width: 100%;
+}
+
+.dlm-required-note {
+    color: inherit;
+    opacity: 0.78;
+}
+
+.dlm-upload-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem 0.65rem;
+    align-items: center;
+    margin-top: 0.65rem;
+}
+
+.dlm-image-preview {
+    margin-top: 0.75rem;
+}
+
+.dlm-image-preview img {
+    display: block;
+    max-width: min(100%, 18rem);
+    height: auto;
+}
+
+.dlm-access-section {
+    margin-top: 1rem;
+}
+
+.dlm-access-permissions {
+    max-width: 100%;
+    overflow-x: auto;
+}
+
+.dlm-access-permissions table {
+    width: auto;
+    max-width: 100%;
+}
+
+.dlm-access-help {
+    max-width: 50rem;
+    margin-top: 0.75rem;
+    opacity: 0.78;
+    line-height: 1.45;
+}
+
+.dlm-access-help p {
+    margin: 0.2rem 0;
+}
+
+@media (max-width: 720px) {
+    .dlm-admin-editor .form_block input[type="text"],
+    .dlm-admin-editor .form_block input[type="url"],
+    .dlm-admin-editor .form_block textarea,
+    .dlm-admin-editor .form_block select {
+        width: 100%;
+    }
+
+    .dlm-access-permissions {
+        margin-right: -0.25rem;
+    }
+}
