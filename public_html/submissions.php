@@ -19,26 +19,30 @@ require_once $_CONF['path_system'] . 'lib-admin.php';
 $uid = (int) $_USER['uid'];
 $rows = array();
 
-$sql = "SELECT lid, cid, title, date, 'pending' AS state "
-     . "FROM {$_TABLES['downloadsubmission']} "
-     . "WHERE owner_id = $uid "
-     . "UNION ALL "
-     . "SELECT lid, cid, title, date, 'published' AS state "
-     . "FROM {$_TABLES['downloads']} "
-     . "WHERE owner_id = $uid "
-     . "ORDER BY date DESC";
+$sql = "SELECT h.lid, h.cid, h.title, h.submitted_date, h.status, h.status_date, h.public_lid "
+     . "FROM {$_TABLES['downloadsubmissionhistory']} h "
+     . "INNER JOIN ("
+     . "SELECT lid, MAX(history_id) AS latest_id "
+     . "FROM {$_TABLES['downloadsubmissionhistory']} "
+     . "WHERE owner_id=$uid GROUP BY lid"
+     . ") latest ON latest.latest_id=h.history_id "
+     . "WHERE h.owner_id=$uid "
+     . "ORDER BY h.submitted_date DESC, h.status_date DESC";
 $result = DB_query($sql);
 
 while ($A = DB_fetchArray($result)) {
-    $state = $A['state'];
+    $status = $A['status'];
     $title = DLM_htmlspecialchars($A['title']);
 
-    if ($state === 'published') {
+    if ($status === 'published') {
+        $public_lid = ($A['public_lid'] !== '') ? $A['public_lid'] : $A['lid'];
         $title = COM_createLink(
             $title,
-            COM_buildURL($_CONF['site_url'] . '/downloads/index.php?id=' . rawurlencode($A['lid']))
+            COM_buildURL($_CONF['site_url'] . '/downloads/index.php?id=' . rawurlencode($public_lid))
         );
         $state_label = $LANG_DLM['submission_state_published'];
+    } elseif ($status === 'rejected') {
+        $state_label = $LANG_DLM['submission_state_rejected'];
     } else {
         $state_label = $LANG_DLM['submission_state_pending'];
     }
@@ -52,7 +56,7 @@ while ($A = DB_fetchArray($result)) {
     $rows[] = array(
         'title' => $title,
         'category' => DLM_htmlspecialchars($category),
-        'date' => strftime($_DLM_CONF['date_format'], (int) $A['date']),
+        'date' => strftime($_DLM_CONF['date_format'], (int) $A['submitted_date']),
         'state' => $state_label
     );
 }
