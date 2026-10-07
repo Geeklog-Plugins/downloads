@@ -85,3 +85,25 @@ The remaining sections below are the acceptance roadmap for the release.
 - Default download image enhancement.
 - Legacy File Manager conversion cleanup unless a reproducible 1.3.0 regression is found.
 
+
+
+### Interoperability alignment
+
+Downloads 1.3.0 now targets the Memorandum content interoperability contract:
+
+- [x] Item Info for legacy download IDs
+- [x] Stable root identity: `root`
+- [x] Stable category identities: `category:<cid>`
+- [x] Normalized subtype / is-container / parent-id fields
+- [x] Normalized hits / image / category metadata for downloads
+- [x] Collection filtering by subtype, including `all`
+- [x] Native `plugin_collectSitemapItems_downloads()`
+- [x] Correct Geeklog 2.2.2 `plugin_idToURL_downloads($sub_type, $item_id)` signature
+- [x] Sitemap URL de-duplication
+- [x] Category lifecycle events
+- [x] Download lifecycle events on category cascade delete
+- [x] `PLG_itemDisplay()` extension points on full download/root/category views
+- [x] Metadata cooperation through `PLG_getMetaTags()`
+- [x] Language-aware category collections
+
+A full XMLSitemap regeneration is required after installing this build to remove duplicate rows created by the previous incorrect `idToURL` signature.
