@@ -52,15 +52,21 @@ $rawLid = COM_getArgument('id');
 $lid = COM_sanitizeID($rawLid , false); // use same character filter as when a file id is saved
 $escapedLid = DB_escapeString($lid);
 
+$now = time();
 $sql = "SELECT COUNT(*) FROM {$_TABLES['downloads']} a "
      . "LEFT JOIN {$_TABLES['downloadcategories']} b ON a.cid=b.cid "
-     . "WHERE a.lid='{$escapedLid}' " . COM_getPermSQL('AND', 0, 2, 'b');
+     . "WHERE a.lid='{$escapedLid}' "
+     . "AND a.is_released=1 "
+     . "AND a.date<=$now "
+     . "AND b.is_enabled=1 "
+     . COM_getPermSQL('AND', 0, 2, 'b');
 
 list($count) = DB_fetchArray(DB_query($sql));
 if ($count == 0 || DB_count($_TABLES['downloads'], "lid", $escapedLid) == 0) {
     DLM_errorLog("Downloads: invalid attempt to download a file. "
                . "User:{$_USER['username']}, User ID:{$uid}, IP:{$_SERVER['REMOTE_ADDR']}, File ID:{$lid}, File ID(raw):{$rawLid}");
-    COM_redirect($_CONF['site_url'] . '/downloads/index.php');
+    COM_handle404($_CONF['site_url'] . '/downloads/index.php');
+    exit;
 }
 
 $result = DB_query("SELECT url, secret_id, owner_id FROM {$_TABLES['downloads']} WHERE lid='$lid'");
@@ -76,7 +82,7 @@ if ($uid !== $owner_id || ($uid == $owner_id && $_DLM_CONF['cut_own_download'] =
 
 $filename = $secret_id . '_' . DLM_encodeFileName($url);
 $filepath = $_DLM_CONF['path_filestore'] . $filename;
-if (file_exists($filepath)) {
+if (is_file($filepath)) {
     header('Content-Disposition: attachment; filename="' . $url . '"');
     header('Content-Type: application/octet-stream');
     header('Content-Description: File Transfer');
@@ -87,5 +93,10 @@ if (file_exists($filepath)) {
     header('Content-Length: ' . filesize($filepath));
     ob_clean();
     flush();
-    @readfile($filepath);
+    readfile($filepath);
+    exit;
 }
+
+DLM_errorLog("Downloads: published file is missing from storage. File ID:{$lid}, Path:{$filepath}");
+COM_handle404(COM_buildURL($_CONF['site_url'] . '/downloads/index.php?id=' . rawurlencode($lid)));
+exit;
