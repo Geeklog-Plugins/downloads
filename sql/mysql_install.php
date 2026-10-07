@@ -136,3 +136,21 @@ $_SQL[] = "CREATE TABLE {$_TABLES['downloadhistories']} (
   KEY lid (lid),
   KEY uid (uid)
 ) ENGINE=MyISAM";
+
+
+$_SQL[] = "CREATE TABLE {$_TABLES['downloadsubmissionhistory']} (
+  history_id int(11) unsigned NOT NULL auto_increment,
+  lid varchar(40) NOT NULL default '',
+  owner_id mediumint(8) unsigned NOT NULL default '1',
+  cid varchar(40) NOT NULL default '',
+  title varchar(100) NOT NULL default '',
+  submitted_date int(10) NOT NULL default '0',
+  status varchar(20) NOT NULL default 'pending',
+  status_date int(10) NOT NULL default '0',
+  public_lid varchar(40) NOT NULL default '',
+  PRIMARY KEY (history_id),
+  KEY lid (lid),
+  KEY owner_id (owner_id),
+  KEY status (status),
+  KEY submitted_date (submitted_date)
+) ENGINE=MyISAM";
