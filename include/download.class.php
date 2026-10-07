@@ -600,8 +600,10 @@ class DLDownload
 
         $_SCRIPTS->setJavaScriptFile(
             'downloads_editor',
-            rtrim($_CONF['site_url'], '/') . '/downloads/editor.js?v='
-            . rawurlencode(DOWNLOADS_VERSION)
+            DLM_getVersionedAssetUrl(
+                '/downloads/editor.js',
+                $_CONF['path_html'] . 'downloads/editor.js'
+            )
         );
 
         $project_options = '';
