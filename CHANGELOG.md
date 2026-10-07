@@ -58,6 +58,9 @@
 - Added an administration summary for total, published, unreleased, hidden, missing-file and pending-submission counts.
 - Added compact visual status indicators for publication and file health.
 - Added file counts and enabled/disabled status to the category administration list.
+- Added category, publication-status and file-health filters to the download administration list.
+- Replaced the legacy bulk category enable/disable POST behavior with a targeted per-category toggle.
+- Added CSRF/Root enforcement to category moves/toggles and CSRF checks to submission approval/rejection and category creation.
 - Hardened category-image preview against invalid image dimensions.
 - Versioned plugin-owned CSS and JavaScript URLs with the 1.3.0 release version to prevent stale browser caches.
 
