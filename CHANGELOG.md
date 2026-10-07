@@ -54,6 +54,8 @@
 ### Administration
 
 - Moved Meta Description and Meta Keywords directly below Detail in the download editor.
+- Organized the download and category editors into logical General / Content & SEO / Media / Publication sections.
+- Hardened category-image preview against invalid image dimensions.
 - Versioned plugin-owned CSS and JavaScript URLs with the 1.3.0 release version to prevent stale browser caches.
 
 - Search now covers title, ID, project and version.
