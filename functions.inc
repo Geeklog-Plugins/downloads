@@ -39,7 +39,7 @@ if (!defined ('UC_CHECKED'))  define('UC_CHECKED',  (XHTML == '') ? 'checked'  :
 if (!defined ('UC_READONLY')) define('UC_READONLY', (XHTML == '') ? 'readonly' : 'readonly="readonly"');
 if (!defined ('UC_DISABLED')) define('UC_DISABLED', (XHTML == '') ? 'disabled' : 'disabled="disabled"');
 
-define('ROOTID', 'root');
+define('DLM_ROOTID', 'root');
 define('DOWNLOADS_VERSION', '1.3.0');
 
 /**
@@ -47,14 +47,15 @@ define('DOWNLOADS_VERSION', '1.3.0');
 */
 global $LANG24, $LANG32, $LANG_postmodes;
 
-$plugin_path = $_CONF['path'] . 'plugins/downloads/';
-$langfile = $plugin_path . 'language/' . $_CONF['language'] . '.php';
+$dlm_plugin_path = $_CONF['path'] . 'plugins/downloads/';
+$dlm_langfile = $dlm_plugin_path . 'language/' . $_CONF['language'] . '.php';
 
-if (file_exists($langfile)) {
-    require_once $langfile;
+if (file_exists($dlm_langfile)) {
+    require_once $dlm_langfile;
 } else {
-    require_once $plugin_path . 'language/english.php';
+    require_once $dlm_plugin_path . 'language/english.php';
 }
+unset($dlm_plugin_path, $dlm_langfile);
 
 global $_DB_table_prefix, $_TABLES; // Needed when enabling plugin
 
@@ -71,11 +72,25 @@ $_TABLES['downloadsubmissionhistory'] = $_DB_table_prefix . 'downloadsubmissionh
 */
 $_DLM_CONF = array();
 require_once $_CONF['path_system'] . 'classes/config.class.php';
-$plg_config = config::get_instance();
-$temp = $plg_config->get_config('downloads');
-if (is_array($temp)) {
-    $_DLM_CONF = array_merge($_DLM_CONF, $temp);
+
+/**
+ * Load Downloads runtime configuration without leaking temporary globals.
+ *
+ * @return void
+ */
+function DLM_loadRuntimeConfiguration()
+{
+    global $_DLM_CONF;
+
+    $dlm_config_instance = config::get_instance();
+    $dlm_loaded_config = $dlm_config_instance->get_config('downloads');
+
+    if (is_array($dlm_loaded_config)) {
+        $_DLM_CONF = array_merge($_DLM_CONF, $dlm_loaded_config);
+    }
 }
+
+DLM_loadRuntimeConfiguration();
 
 $_DLM_CONF['lang_id'] = COM_getLanguageId();
 
@@ -970,11 +985,11 @@ function plugin_getfeednames_downloads()
     $num = DB_numRows($result);
 
     if ($num > 0) {
-        $feeds[] = array('id' => ROOTID, 'name' => $LANG_DLM['main']);
+        $feeds[] = array('id' => DLM_ROOTID, 'name' => $LANG_DLM['main']);
 
         if (isset($_CONF['languages'])) {
             foreach ($_CONF['languages'] as $langid => $lang) {
-                $feeds[] = array('id'   => ROOTID . '_' . $langid ,
+                $feeds[] = array('id'   => DLM_ROOTID . '_' . $langid ,
                                  'name' => $LANG_DLM['main'] . ' (' . $lang . ')');            }
         }
 
@@ -1002,13 +1017,13 @@ function DLM_helper_buildSQL($cid, $limits)
     global $_CONF, $_TABLES, $LANG_DLM;
 
     require_once $_CONF['path'] . 'plugins/downloads/include/gltree.class.php';
-    $mytree = new GLTree($_TABLES['downloadcategories'], 'cid', 'pid', 'title', '', ROOTID);
+    $mytree = new GLTree($_TABLES['downloadcategories'], 'cid', 'pid', 'title', '', DLM_ROOTID);
 
     $lang_id = '';
     if (isset($_CONF['languages'])) {
         foreach ($_CONF['languages'] as $langid => $lang) {
-            if ($cid == ROOTID . '_' . $langid) {
-                $cid = ROOTID;
+            if ($cid == DLM_ROOTID . '_' . $langid) {
+                $cid = DLM_ROOTID;
                 $lang_id = $langid;
                 break;
             }
@@ -1016,13 +1031,13 @@ function DLM_helper_buildSQL($cid, $limits)
     }
 
     $where = '';
-    if ($cid != ROOTID) {
+    if ($cid != DLM_ROOTID) {
         $carr = $mytree->getAllChildId($cid);
         $carr = array_merge(array($cid), $carr);
         $where = " cid IN ('" . implode("','", $carr) . "')";
     } else if (!empty($lang_id)) {
         $mytree->setLangid($lang_id);
-        $carr = $mytree->getAllChildId(ROOTID);
+        $carr = $mytree->getAllChildId(DLM_ROOTID);
         $where = " cid IN ('" . implode("','", $carr) . "')";
     }
 
@@ -1430,7 +1445,7 @@ function DLM_getInteropItem($id, $properties, $uid = 0)
         }
 
         $A = DB_fetchArray($result);
-        $parent_id = ($A['pid'] === '' || $A['pid'] === ROOTID)
+        $parent_id = ($A['pid'] === '' || $A['pid'] === DLM_ROOTID)
             ? 'root' : 'category:' . $A['pid'];
 
         $image = '';
