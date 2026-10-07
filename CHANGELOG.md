@@ -91,6 +91,10 @@
 
 ### Security and stabilization
 
+- Made the multilingual SQL helper alias-aware so interoperability queries using category alias `c` no longer generate invalid `b.cid` references during XMLSitemap-triggered plugin configuration saves.
+- Removed generic global `ROOTID` usage in favor of `DLM_ROOTID`.
+- Encapsulated Downloads runtime configuration loading to avoid leaking generic temporary variables into the global scope.
+
 - Multisite-safe storage migration remains deferred until functional stabilization is validated; intermediate 1.3.0 builds do not move existing storage.
 
 - Qualified joined SEO columns in the download editor query to avoid MySQL ambiguous-column errors after adding category SEO metadata.
