@@ -1613,6 +1613,8 @@ class DLDownload
         if (empty($this->_cid)) $this->_cid = ROOTID;
 
         $success = false;
+        $tmpfilename = '';
+        $tmpshotname = '';
         if (!SEC_hasRights('downloads.submit')) {
 
             // Upload New file
@@ -1632,6 +1634,12 @@ class DLDownload
             // Upload New file snapshot image
             if ($success && !empty($_FILES['newfileshot']['name'])) {
                 if (!DLM_isUploadedImage($_FILES['newfileshot'])) {
+                    if ($tmpfilename !== '') {
+                        DLM_unlink(
+                            rtrim($_DLM_CONF['path_filestore'], "/\\")
+                            . DIRECTORY_SEPARATOR . $tmpfilename
+                        );
+                    }
                     $this->_errno[] = '1405';
                     $this->_retry = true;
                     $this->_reedit('showEditor', array($this->_editor_mode));
@@ -1643,6 +1651,12 @@ class DLDownload
                     $this->_secret_id
                 );
                 $success = DLM_uploadNewFile($_FILES['newfileshot'], $_DLM_CONF['path_snapstore'], $tmpshotname);
+                if (!$success && $tmpfilename !== '') {
+                    DLM_unlink(
+                        rtrim($_DLM_CONF['path_filestore'], "/\\")
+                        . DIRECTORY_SEPARATOR . $tmpfilename
+                    );
+                }
             }
 
             $mode = 'submission';
