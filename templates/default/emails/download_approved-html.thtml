@@ -1,0 +1,13 @@
+<p>{greeting}</p>
+
+<p>{approval_text}</p>
+
+<p><strong>{download_title}</strong><br{XHTML}>
+<a href="{download_url}">{download_url}</a></p>
+
+<p>{thanks_text}</p>
+
+{email_divider_html}
+
+<p>{site_name}<br{XHTML}>
+<a href="{site_url}">{site_url}</a></p>
