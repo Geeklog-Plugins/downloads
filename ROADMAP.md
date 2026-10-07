@@ -134,6 +134,20 @@ Do not suppress warnings as a substitute for fixing their cause.
 
 ## P1 — Public SEO
 
+### Editorial metadata and form guidance
+
+- Add editable `meta_description` and `meta_keywords` fields to categories.
+- Add editable `meta_description` and `meta_keywords` fields to downloads and pending submissions.
+- Use the explicit meta description on public pages, with a safe content-derived fallback for downloads when it is empty.
+- Keep meta keywords available for metadata/interoperability even though major search engines may not use them as a ranking signal.
+- Mark required fields clearly in category, download and submission forms.
+- Limit image file choosers to image types and validate actual uploaded image content server-side.
+- For `Project Name`, suggest distinct project names already visible to the current user.
+- For a new project, derive the initial Project Name from the Title while keeping it fully editable.
+- Explain the expected Tags syntax directly below the field.
+
+
+
 Audit all public Downloads pages against the Memorandum SEO guidance.
 
 ### Download detail pages
