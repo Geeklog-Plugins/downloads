@@ -146,6 +146,31 @@ function DLM_showMessageArray($e_code_array)
 /**
 * Escape a string for displaying in HTML
 */
+/**
+ * Check whether a download is publicly readable by a user.
+ *
+ * @param string $lid
+ * @param int    $uid 0 = current user
+ * @return bool
+ */
+function DLM_canViewDownload($lid, $uid = 0)
+{
+    global $_TABLES;
+
+    $lid = DB_escapeString($lid);
+    $now = time();
+    $sql = "SELECT COUNT(*) FROM {$_TABLES['downloads']} a "
+         . "LEFT JOIN {$_TABLES['downloadcategories']} b ON a.cid=b.cid "
+         . "WHERE a.lid='$lid' "
+         . "AND a.is_released=1 "
+         . "AND a.date<=$now "
+         . "AND b.is_enabled=1 "
+         . COM_getPermSQL('AND', $uid, 2, 'b');
+    list($count) = DB_fetchArray(DB_query($sql));
+
+    return ((int) $count === 1);
+}
+
 function DLM_htmlspecialchars($text)
 {
     $text = str_replace( // Unescape a string
