@@ -57,6 +57,7 @@ function DLM_updaterating($sel_id)
                           ."WHERE lid = '$sel_id'");
     $votesDB = DB_numRows($voteresult);
     $totalrating = 0;
+    $finalrating = 0;
     if ($votesDB > 0) {
         while (list($rating) = DB_fetchArray($voteresult)){
             $totalrating += $rating;
@@ -193,24 +194,38 @@ function DLM_moveNewFile($tmpfile, $newfile)
 {
     global $_DLM_CONF;
 
-    if (file_exists($tmpfile) && !is_dir($tmpfile)) {
-        $rename = @rename($tmpfile, $newfile);
-        $chown = @chmod($newfile, intval((string)$_DLM_CONF['filepermissions'], 8));
-        $success = true;
-        if (!file_exists($newfile)) {
-            DLM_errorLog("Downloads: upload approve error: "
-                       . "New file does not exist after move of tmp file: '" . $newfile . "'");
-            DLM_showErrorMessage('1002');
-            $success = false;
-        }
-    } else {
+    if (!file_exists($tmpfile) || is_dir($tmpfile)) {
         DLM_errorLog("Downloads: upload approve error: "
                    . "Temporary file does not exist: '" . $tmpfile . "'");
         DLM_showErrorMessage('1001');
-        $success = false;
+        return false;
     }
 
-    return $success;
+    $directory = dirname($newfile);
+    if (!DLM_ensureDirectory($directory)) {
+        DLM_errorLog("Downloads: upload approve error: "
+                   . "Destination directory is unavailable: '" . $directory . "'");
+        DLM_showErrorMessage('1004');
+        return false;
+    }
+
+    if (!rename($tmpfile, $newfile)) {
+        DLM_errorLog("Downloads: upload approve error: "
+                   . "Could not move temporary file to: '" . $newfile . "'");
+        DLM_showErrorMessage('1002');
+        return false;
+    }
+
+    @chmod($newfile, intval((string)$_DLM_CONF['filepermissions'], 8));
+
+    if (!is_file($newfile)) {
+        DLM_errorLog("Downloads: upload approve error: "
+                   . "New file does not exist after move of tmp file: '" . $newfile . "'");
+        DLM_showErrorMessage('1002');
+        return false;
+    }
+
+    return true;
 }
 
 // Approve the uploaded file (process after the approval)
@@ -247,8 +262,7 @@ function DLM_approveNewDownload($id)
         // Send a email to submitter notifying them that file was approved
         if ($_DLM_CONF['download_emailoption']) {
             DLM_sendNotification($id);
-        }
-    }
+        }    }
 }
 
 function DLM_unlink($path)
@@ -445,16 +459,77 @@ function DLM_setDefaultTemplateVars(&$T)
 }
 
 
+/**
+ * Ensure a configured Downloads storage directory exists and is writable.
+ *
+ * @param  string $directory
+ * @return bool
+ */
+function DLM_ensureDirectory($directory)
+{
+    $directory = rtrim((string) $directory, "/\\") . DIRECTORY_SEPARATOR;
+
+    if (is_dir($directory)) {
+        return is_writable($directory);
+    }
+
+    if (!@mkdir($directory, 0755, true) && !is_dir($directory)) {
+        DLM_errorLog("Downloads: storage error: Could not create directory: '" . $directory . "'");
+        return false;
+    }
+
+    if (!is_writable($directory)) {
+        DLM_errorLog("Downloads: storage error: Directory is not writable: '" . $directory . "'");
+        return false;
+    }
+
+    return true;
+}
+
+/**
+ * Validate an uploaded image using the actual file content.
+ *
+ * @param  array $file
+ * @return bool
+ */
+function DLM_isUploadedImage($file)
+{
+    if (!is_array($file) || empty($file['tmp_name']) || !is_uploaded_file($file['tmp_name'])) {
+        return false;
+    }
+
+    $info = @getimagesize($file['tmp_name']);
+    if ($info === false || empty($info[2])) {
+        return false;
+    }
+
+    return in_array($info[2], array(IMAGETYPE_GIF, IMAGETYPE_JPEG, IMAGETYPE_PNG), true);
+}
+
 // Moves an uploaded file in temporary directory to data directory
 function DLM_uploadNewFile($newfile, $directory, $name = '')
 {
     global $_DLM_CONF;
 
+    if (!is_array($newfile) || empty($newfile['tmp_name'])) {
+        DLM_errorLog("Downloads: upload error: Invalid upload data.");
+        return false;
+    }
+
+    if (!DLM_ensureDirectory($directory)) {
+        DLM_showErrorMessage('1004');
+        return false;
+    }
+
     $tmp = $newfile['tmp_name'];
     if (empty($name)) {
-        $name = COM_applyFilter($newfile['name']);
-        if (empty($name)) return false;
+        $name = isset($newfile['name']) ? COM_applyFilter($newfile['name']) : '';
+        if (empty($name)) {
+            return false;
+        }
     }
+
+    $directory = rtrim($directory, "/\\") . DIRECTORY_SEPARATOR;
     $newfilepath = $directory . DLM_encodeFileName($name);
 
     if (!is_uploaded_file($tmp)) {
@@ -465,11 +540,11 @@ function DLM_uploadNewFile($newfile, $directory, $name = '')
 
     if (file_exists($newfilepath)) {
         DLM_errorLog("Downloads: warning: Added new filelisting for a file that already exists " . $newfilepath);
-        return true; // not uploaded. this OK? or upload and overwrite force.
+        return true;
     }
 
     if (!move_uploaded_file($tmp, $newfilepath)) {
-        DLM_errorLog("Downloads: upload error: Could not move an uploaded file: " . $tmp . " to " . $name);
+        DLM_errorLog("Downloads: upload error: Could not move uploaded file to: '" . $newfilepath . "'");
         DLM_showErrorMessage('1004');
         return false;
     }
@@ -518,5 +593,3 @@ function DLM_hasAccess_history()
     default:
         return false;
         break;
-    }
-}
