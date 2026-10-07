@@ -228,3 +228,29 @@ function DLM_update_ConfValues_addTabs()
 
     return true;
 }
+
+
+/**
+ * Add Downloads 1.3.0 configuration values to an existing installation.
+ *
+ * @return void
+ */
+function DLM_add130ConfigValues()
+{
+    global $_CONF, $_TABLES;
+
+    $c = config::get_instance();
+    $n = 'downloads';
+
+    if (DB_count($_TABLES['conf_values'], array('name', 'group_name'),
+                 array('notify_on_submission', $n)) == 0) {
+        $c->add('notify_on_submission', 1, 'select', 0, 0, 0, 8, true, $n);
+    }
+
+    if (DB_count($_TABLES['conf_values'], array('name', 'group_name'),
+                 array('submission_notify_email', $n)) == 0) {
+        $c->add('submission_notify_email', $_CONF['site_mail'], 'text', 0, 0, 0, 9, true, $n);
+    }
+
+    DLM_updateSortOrder();
+}
