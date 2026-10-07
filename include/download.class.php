@@ -1442,21 +1442,31 @@ class DLDownload
     {
         global $_CONF, $_TABLES, $_DLM_CONF;
 
-        $this->_checkHasAccess();
-
         if (!empty($id)) {
-            $lid = DB_escapeString(COM_applyFilter($id));
-            $name = DB_getItem($_TABLES['downloads'], 'url', "lid = '$lid'");
+            $raw_lid = COM_applyFilter($id);
         } else {
-            $lid = DB_escapeString(COM_applyFilter($_POST['old_lid']));
-            $name = COM_applyFilter($_POST['url']);
+            $raw_lid = isset($_POST['old_lid']) ? COM_applyFilter($_POST['old_lid']) : '';
         }
 
-        $secret_id = DB_getItem($_TABLES['downloads'], 'secret_id', "lid = '$lid'");
-        $safename = DLM_createSafeFileName($name, $secret_id);
-        $tmpfile = $_DLM_CONF['path_filestore'] . $safename;
+        $lid = DB_escapeString($raw_lid);
+        if ($lid === '' || DB_count($_TABLES['downloads'], 'lid', $lid) != 1) {
+            if ($switch) {
+                return PLG_afterSaveSwitch('admin', '', 'downloads', 110);
+            }
+            return;
+        }
 
-        $tmpsnapfile = DB_getItem($_TABLES['downloads'], 'logourl', "lid = '$lid'");
+        // Load the authoritative item/category permissions before checking ACLs.
+        $this->_loadFromDatabase($raw_lid);
+        $this->_checkHasAccess();
+
+        $name = $this->_url;
+        $secret_id = $this->_secret_id;
+        $safename = DLM_createSafeFileName($name, $secret_id);
+        $tmpfile = rtrim($_DLM_CONF['path_filestore'], "/\\")
+                 . DIRECTORY_SEPARATOR . $safename;
+
+        $tmpsnapfile = $this->_logourl;
 
         DB_query("DELETE FROM {$_TABLES['downloads']}     WHERE lid = '$lid'");
         DB_query("DELETE FROM {$_TABLES['downloadvotes']} WHERE lid = '$lid'");
