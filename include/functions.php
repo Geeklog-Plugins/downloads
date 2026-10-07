@@ -347,8 +347,7 @@ function DLM_makeThumbnail($filename)
 
         if ($newwidth < $newheight) {
             // Create an image
-            $thumb2 = imagecreatetruecolor($newwidth, $newwidth);
-            // Trim
+            $thumb2 = imagecreatetruecolor($newwidth, $newwidth);            // Trim
             imagecopyresampled($thumb2, $thumb, 0, 0, 0, 0, $newwidth, $newwidth, $newwidth, $newwidth);
             $thumb = $thumb2;
         }
@@ -593,3 +592,5 @@ function DLM_hasAccess_history()
     default:
         return false;
         break;
+    }
+}
