@@ -447,8 +447,7 @@ function plugin_dopluginsearch_downloads($query, $datestart, $dateend, $topic, $
 			$datestart = "0000-00-00";
 		} else {
 			$datestart = date('Y-m-d', strtotime($datestart));
-		}
-		if (empty($dateend) || (strtotime($dateend) == false)) {
+		}		if (empty($dateend) || (strtotime($dateend) == false)) {
 			$dateend = date('Y-m-d');
 		} else {
 			$dateend = date('Y-m-d', strtotime($dateend));
@@ -897,8 +896,7 @@ function plugin_getfeednames_downloads()
         if (isset($_CONF['languages'])) {
             foreach ($_CONF['languages'] as $langid => $lang) {
                 $feeds[] = array('id'   => ROOTID . '_' . $langid ,
-                                 'name' => $LANG_DLM['main'] . ' (' . $lang . ')');
-            }
+                                 'name' => $LANG_DLM['main'] . ' (' . $lang . ')');            }
         }
 
         for ($i = 0; $i < $num; $i++) {
@@ -1047,7 +1045,7 @@ function plugin_feedupdatecheck_downloads($feed, $topic, $update_data, $limit,
 
     $sql = "SELECT lid "
          . "FROM {$_TABLES['downloads']}"
-         . DLM_helper_buildSQL($topic, $limits);
+         . DLM_helper_buildSQL($topic, $limit);
     $result = DB_query($sql);
     $num = DB_numRows($result);
 
@@ -1150,7 +1148,7 @@ function plugin_moderationvalues_downloads()
         'lid',
         $_TABLES['downloads'],
         'lid, cid, title, url, homepage, version, size, secret_id, md5, project, '
-        . 'description, detail, postmode, logourl, mg_autotag, tags, date, hits, rating, '
+        . 'meta_description, meta_keywords, description, detail, postmode, logourl, mg_autotag, tags, date, hits, rating, '
         . 'votes, commentcode, is_released, is_listing, createddate, owner_id',
         $_TABLES['downloadsubmission']);
 }
@@ -1347,8 +1345,7 @@ function plugin_getiteminfo_downloads($lid, $what, $uid = 0, $options = array())
             $retval[] = $mapped;
         } else {
             $retval = $mapped;
-            break;
-        }
+            break;        }
     }
 
     if ($fsingle && (count($retval) == 1)) {
