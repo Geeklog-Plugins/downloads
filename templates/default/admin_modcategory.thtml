@@ -1,37 +1,50 @@
-
 <!-- start admin_modcategory.thtml -->
-<form enctype="multipart/form-data" action="index.php" method="post" class="compact">
+<form enctype="multipart/form-data" action="index.php" method="post" class="compact dlm-admin-editor">
   <div class="admin_basic">
-    <dl class="form_block">
-      <dt><label for="downloads-cid">{lang_catid} <span class="required">*</span></label></dt>
-      <dd><input type="text" maxlength="40" name="cid" value="{cid}" id="downloads-cid" size="48" class="size5" required="required"{xhtml}></dd>
+    <fieldset class="dlm-admin-section">
+      <legend>{lang_section_general}</legend>
+      <dl class="form_block">
+        <dt><label for="downloads-cid">{lang_catid} <span class="required">*</span></label></dt>
+        <dd><input type="text" maxlength="40" name="cid" value="{cid}" id="downloads-cid" size="48" class="size5" required="required"{xhtml}></dd>
 
-      <dt><label for="downloads-title">{lang_title} <span class="required">*</span></label></dt>
-      <dd><input type="text" maxlength="50" name="title" value="{title}" id="downloads-title" size="48" class="size5" required="required"{xhtml}></dd>
+        <dt><label for="downloads-title">{lang_title} <span class="required">*</span></label></dt>
+        <dd><input type="text" maxlength="50" name="title" value="{title}" id="downloads-title" size="48" class="size5" required="required"{xhtml}></dd>
 
-      <dt><label for="downloads-meta-description">{lang_meta_description}</label></dt>
-      <dd><textarea name="meta_description" id="downloads-meta-description" maxlength="320" cols="50" rows="3" class="size5">{meta_description}</textarea></dd>
+        <dt><label for="select_pid">{lang_parent}</label></dt>
+        <dd>{selparents}</dd>
 
-      <dt><label for="downloads-meta-keywords">{lang_meta_keywords}</label></dt>
-      <dd><input type="text" maxlength="255" name="meta_keywords" value="{meta_keywords}" id="downloads-meta-keywords" size="48" class="size5"{xhtml}></dd>
+        <dt><label for="downloads-corder">{lang_corder}</label></dt>
+        <dd><input type="text" name="corder" value="{corder}" id="downloads-corder" size="4" class="size1"{xhtml}>
+            <span>0 - 9999</span></dd>
 
-      <dt><label for="downloads-imgurl">{lang_imgurlmain}</label></dt>
-      <dd><input type="text" maxlength="250" name="imgurl" value="{imgurl}" id="downloads-imgurl" size="48" class="size5"{xhtml}>
-          <p style="margin:5px 0;">{lang_upload}: <input type="file" name="imgurl" size="48" accept="image/jpeg,image/png,image/gif"{xhtml}></p>
-          <p style="margin:5px 0;">{preview}</p></dd>
+        <dt><label for="downloads-is_enabled">{lang_is_enabled}</label></dt>
+        <dd><input type="checkbox" name="is_enabled" {val_is_enabled} id="downloads-is_enabled"{xhtml}></dd>
+      </dl>
+    </fieldset>
 
-      <dt><label for="select_pid">{lang_parent}</label></dt>
-      <dd>{selparents}</dd>
+    <fieldset class="dlm-admin-section">
+      <legend>{lang_section_content_seo}</legend>
+      <dl class="form_block">
+        <dt><label for="downloads-meta-description">{lang_meta_description}</label></dt>
+        <dd><textarea name="meta_description" id="downloads-meta-description" maxlength="320" cols="50" rows="3" class="size5">{meta_description}</textarea></dd>
 
-      <dt><label for="downloads-corder">{lang_corder}</label></dt>
-      <dd><input type="text" name="corder" value="{corder}" id="downloads-corder" size="4" class="size1"{xhtml}>
-          <span> 0 - 9999</span></dd>
+        <dt><label for="downloads-meta-keywords">{lang_meta_keywords}</label></dt>
+        <dd><input type="text" maxlength="255" name="meta_keywords" value="{meta_keywords}" id="downloads-meta-keywords" size="48" class="size5"{xhtml}></dd>
+      </dl>
+    </fieldset>
 
-      <dt><label for="downloads-is_enabled">{lang_is_enabled}</label></dt>
-      <dd><input type="checkbox" name="is_enabled" {val_is_enabled} id="downloads-is_enabled"{xhtml}></dd>
-      <dt></dt>
-      <dd><small>* {lang_required_field}</small></dd>
-    </dl>
+    <fieldset class="dlm-admin-section">
+      <legend>{lang_section_media}</legend>
+      <dl class="form_block">
+        <dt><label for="downloads-imgurl">{lang_imgurlmain}</label></dt>
+        <dd><input type="text" maxlength="250" name="imgurl" value="{imgurl}" id="downloads-imgurl" size="48" class="size5"{xhtml}>
+            <p class="dlm-field-note">{lang_upload}: <input type="file" name="imgurl" size="48" accept="image/jpeg,image/png,image/gif"{xhtml}></p>
+            <p class="dlm-field-note">{preview}</p></dd>
+
+        <dt></dt>
+        <dd><small>* {lang_required_field}</small></dd>
+      </dl>
+    </fieldset>
   </div>
 
 {admin_access}
