@@ -26,7 +26,10 @@ Implemented in the development branch:
 - download history visibility checks;
 - missing-file 404 handling in the delivery endpoint;
 - configuration tooltips and refreshed README/INSTALL/changelog;
-- PHP 8.1 lint workflow and clean distribution checks.
+- HTML/plaintext notification templates;
+- collision-safe pending upload names with legacy compatibility;
+- filesystem rollback when database persistence fails;
+- PHP 5.6 / 8.1 / 8.3 lint matrix and clean distribution checks.
 
 The remaining sections below are the acceptance roadmap for the release.
 
