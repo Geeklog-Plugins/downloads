@@ -61,6 +61,8 @@
 
 ### Security and stabilization
 
+- Qualified joined SEO columns in the download editor query to avoid MySQL ambiguous-column errors after adding category SEO metadata.
+
 - Restored CSRF protection to public download rating.
 - Ratings and download-history pages now enforce public item visibility.
 - Fixed zero-vote rating initialization.
