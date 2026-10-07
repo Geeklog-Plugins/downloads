@@ -693,6 +693,12 @@ if (!empty($lid)) {
         $T->set_var('cssid', 1);
         $T->set_var('project_filelist', makeProjectFileList($lid));
 
+        $item_extensions = PLG_itemDisplay($lid, 'downloads');
+        $T->set_var(
+            'item_extensions',
+            is_array($item_extensions) ? implode('', $item_extensions) : ''
+        );
+
         require_once $_CONF['path_system'] . 'lib-comment.php';
         $A['title'] = str_replace('&#039;', "'", $A['title']);
         $A['title'] = str_replace('&amp;',  '&', $A['title']);
@@ -782,6 +788,16 @@ $search_sql = DLM_buildSearchSQL($search_query, 'd');
 // Child category objects. During a search, only categories containing
 // matching files are shown and their counters reflect the search result.
 $T->set_var('category_part', makeCategoryPart($cid, $search_query));
+
+$container_extensions = '';
+if ($search_query === '' && $page === 1) {
+    $container_id = ($cid === ROOTID) ? 'root' : 'category:' . $cid;
+    $extensions = PLG_itemDisplay($container_id, 'downloads');
+    if (is_array($extensions)) {
+        $container_extensions = implode('', $extensions);
+    }
+}
+$T->set_var('item_extensions', $container_extensions);
 
 $carr = $mytree->getAllChildId($cid);
 $carr = array_merge(array($cid), $carr);
