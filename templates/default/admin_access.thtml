@@ -1,19 +1,22 @@
-
 <!-- start admin_access.thtml -->
-  <fieldset>
-    <legend>{lang_accessrights}</legend>
+<fieldset class="dlm-admin-section dlm-access-section">
+  <legend>{lang_accessrights}</legend>
 
-    <dl class="form_block">
-      <dt>{lang_owner}</dt>
-      <dd>{owner_name}<input type="hidden" name="owner_id" value="{ownerid}"{xhtml}></dd>
+  <dl class="form_block dlm-access-grid">
+    <dt>{lang_owner}</dt>
+    <dd>{owner_name}<input type="hidden" name="owner_id" value="{ownerid}"{xhtml}></dd>
 
-      <dt><label for="group_id">{lang_group}</label></dt>
-      <dd>{group_dropdown}</dd>
+    <dt><label for="group_id">{lang_group}</label></dt>
+    <dd>{group_dropdown}</dd>
 
-      <dt><label for="admin-permissions">{lang_permissions}</label></dt>
-      <dd>{permissions_editor}</dd>
-      <dd class="description">{lang_permissionskey}</dd>
-      <dd class="description">{lang_permmsg}</dd>
-    </dl>
-  </fieldset>
+    <dt><label for="admin-permissions">{lang_permissions}</label></dt>
+    <dd>
+      <div class="dlm-access-permissions">{permissions_editor}</div>
+      <div class="dlm-access-help">
+        <p>{lang_permissionskey}</p>
+        <p>{lang_permmsg}</p>
+      </div>
+    </dd>
+  </dl>
+</fieldset>
 <!-- end admin_access.thtml -->
