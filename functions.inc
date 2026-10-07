@@ -879,17 +879,20 @@ function plugin_user_delete_downloads($uid)
 */
 function plugin_getheadercode_downloads()
 {
-    global $_SCRIPTS;
+    global $_CONF;
 
     $retval = '';
 
-    // use the CSS only if we are on the plugin's pages
+    // Use the CSS only if we are on the plugin's pages.
     if (substr_count($_SERVER['PHP_SELF'], '/downloads/') > 0) {
-        $_SCRIPTS->setCSSFile(
-            'downloads',
-            CTL_plugin_themeFindFile('downloads', 'css', 'downloads.css')
-            . '?v=' . rawurlencode(DOWNLOADS_VERSION)
-        );
+        $css = CTL_plugin_themeFindFile('downloads', 'css', 'downloads.css');
+        if (!empty($css)) {
+            $href = rtrim($_CONF['site_url'], '/') . $css
+                  . '?v=' . rawurlencode(DOWNLOADS_VERSION);
+            $retval = '<link rel="stylesheet" href="'
+                    . htmlspecialchars($href, ENT_QUOTES, 'UTF-8')
+                    . '" type="text/css"' . XHTML . '>' . LB;
+        }
     }
 
     return $retval;
