@@ -42,6 +42,8 @@ class DLCategory
     private $_cid;
     private $_pid;
     private $_title;
+    private $_meta_description;
+    private $_meta_keywords;
     private $_imgurl;
     private $_corder;
     private $_is_enabled;
@@ -92,6 +94,10 @@ class DLCategory
         $this->_imgurl     = COM_applyFilter($array['imgurl']);
         $this->_imgurlold  = COM_applyFilter($array['imgurlold']);
         $this->_title      = COM_checkHTML(COM_checkWords(trim($array['title'])));
+        $this->_meta_description = isset($array['meta_description'])
+            ? trim(strip_tags($array['meta_description'])) : '';
+        $this->_meta_keywords = isset($array['meta_keywords'])
+            ? trim(strip_tags($array['meta_keywords'])) : '';
         $this->_is_enabled = isset($array['is_enabled']) && ($array['is_enabled'] === 'on') ? 1 : 0;
         $this->_deleteimg  = isset($array['deleteimg']) && ($array['deleteimg'] === 'on') ? 1 : 0;
 
@@ -113,6 +119,8 @@ class DLCategory
             $this->{'_' . $key} = $val;
         }
         $this->_title  = DLM_htmlspecialchars($this->_title);
+        $this->_meta_description = DLM_htmlspecialchars($this->_meta_description);
+        $this->_meta_keywords = DLM_htmlspecialchars($this->_meta_keywords);
         $this->_imgurl = DLM_htmlspecialchars($this->_imgurl);
         $this->_old_cid = $this->_cid;
         $this->_imgurlold = $this->_imgurl;
@@ -127,6 +135,8 @@ class DLCategory
         $this->_pid        = $mytree->getRootid();
         $this->_is_enabled = 1;
         $this->_title      = '';
+        $this->_meta_description = '';
+        $this->_meta_keywords = '';
         $this->_imgurl     = '';
         $this->_corder     = 0;
         $this->_owner_id   = $_USER['uid'];
@@ -212,7 +222,8 @@ class DLCategory
         ));
         DLM_setDefaultTemplateVars($T);
         $lang = array('title', 'imgurlmain', 'parent', 'save', 'delete', 'cancel',
-                      'confirm_delete', 'topic', 'catid', 'is_enabled', 'corder', 'upload');
+                      'confirm_delete', 'topic', 'catid', 'is_enabled', 'corder', 'upload',
+                      'meta_description', 'meta_keywords', 'required_field');
         foreach ($lang as $v) $T->set_var('lang_' . $v, $LANG_DLM[$v]);
 
         $T->set_var('preview',         $this->_makeForm_category_image());
@@ -222,6 +233,8 @@ class DLCategory
         $T->set_var('old_cid',         $this->_old_cid);
         $T->set_var('corder',          $this->_corder);
         $T->set_var('title',           $this->_title);
+        $T->set_var('meta_description', $this->_meta_description);
+        $T->set_var('meta_keywords',    $this->_meta_keywords);
         $T->set_var('op',              ($mode == 'edit') ? 'saveCategory' : 'addCategory');
         $T->set_var('delete_disabled', ($mode == 'edit') ? ''             : UC_DISABLED);
         $T->set_var('val_is_enabled',  ($this->_is_enabled == 1) ? UC_CHECKED : '');
@@ -277,8 +290,7 @@ class DLCategory
         if (!empty($width) and !empty($height)) {
             $newwidth  = $_DLM_CONF['download_shotwidth'];
             $newheight = intval($height * $_DLM_CONF['download_shotwidth'] / $width);
-            $sizeattributes = 'width="' . $newwidth . '" height="' . $newheight . '"';
-        }
+            $sizeattributes = 'width="' . $newwidth . '" height="' . $newheight . '"';        }
         $preview = '<img src="' . $imgurl . '" alt="category image" ' . $sizeattributes . XHTML . '>';
         if ($delform) $preview .= LB . '<input type="checkbox" name="deleteimg"' . XHTML . '>&nbsp;' . $LANG_DLM['delete'];
 
@@ -341,8 +353,14 @@ class DLCategory
     {
         global $_TABLES, $_DLM_CONF;
 
-        $newimage_name = COM_applyFilter($_FILES['imgurl']['name']);
+        $newimage_name = isset($_FILES['imgurl']['name'])
+            ? COM_applyFilter($_FILES['imgurl']['name']) : '';
         if (!empty($newimage_name)) {
+            if (!DLM_isUploadedImage($_FILES['imgurl'])) {
+                $this->_errno[] = '1405';
+                $this->_retry = true;
+                $this->_reedit('showEditor', array($this->_cid, $this->_editor_mode));
+            }
             $name = $this->_createFilename($newimage_name);
             if (DLM_uploadNewFile($_FILES['imgurl'], $_DLM_CONF['path_snapcat'], $name)) {
                 $this->_imgurl = $name;
@@ -364,6 +382,8 @@ class DLCategory
         $old_cid      = DB_escapeString($this->_old_cid);
         $pid          = DB_escapeString($this->_pid);
         $title        = DB_escapeString($this->_title);
+        $meta_description = DB_escapeString($this->_meta_description);
+        $meta_keywords = DB_escapeString($this->_meta_keywords);
         $imgurl       = DB_escapeString($this->_imgurl);
         $corder       = (int) $this->_corder;
         $is_enabled   = (int) $this->_is_enabled;
@@ -376,10 +396,10 @@ class DLCategory
 
         DB_query("INSERT INTO {$_TABLES['downloadcategories']} "
 
-               . "(cid, pid, title, imgurl, corder, is_enabled, owner_id, group_id, "
+               . "(cid, pid, title, meta_description, meta_keywords, imgurl, corder, is_enabled, owner_id, group_id, "
                . "perm_owner, perm_group, perm_members, perm_anon) "
 
-               . "VALUES ('$cid', '$pid', '$title', '$imgurl', $corder, $is_enabled, $owner_id, $group_id, "
+               . "VALUES ('$cid', '$pid', '$title', '$meta_description', '$meta_keywords', '$imgurl', $corder, $is_enabled, $owner_id, $group_id, "
                . "$perm_owner, $perm_group, $perm_members, $perm_anon)");
 
         return PLG_afterSaveSwitch('item',
@@ -399,6 +419,8 @@ class DLCategory
         $old_cid      = DB_escapeString($this->_old_cid);
         $pid          = DB_escapeString($this->_pid);
         $title        = DB_escapeString($this->_title);
+        $meta_description = DB_escapeString($this->_meta_description);
+        $meta_keywords = DB_escapeString($this->_meta_keywords);
         $imgurl       = DB_escapeString($this->_imgurl);
         $corder       = (int) $this->_corder;
         $is_enabled   = (int) $this->_is_enabled;
@@ -411,6 +433,7 @@ class DLCategory
 
         DB_query("UPDATE {$_TABLES['downloadcategories']} "
                . "SET cid='$cid', pid='$pid', title='$title', "
+               . "meta_description='$meta_description', meta_keywords='$meta_keywords', "
                . "imgurl='$imgurl', corder=$corder, is_enabled=$is_enabled, "
                . "owner_id=$owner_id, group_id=$group_id, perm_owner=$perm_owner, "
                . "perm_group=$perm_group, perm_members=$perm_members, perm_anon=$perm_anon "
