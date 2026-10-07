@@ -27,13 +27,6 @@
       <dd><input type="text" maxlength="10" name="version" value="{version}" id="downloads-ver" size="10" class="size2"{xhtml}></dd>
 
 {mod_file_size}
-
-      <dt>{lang_meta_description}</dt>
-      <dd><textarea name="meta_description" id="downloads-meta-description" maxlength="320" cols="50" rows="3" class="size5">{meta_description}</textarea></dd>
-
-      <dt>{lang_meta_keywords}</dt>
-      <dd><input type="text" maxlength="255" name="meta_keywords" value="{meta_keywords}" id="downloads-meta-keywords" size="48" class="size5"{xhtml}></dd>
-
       <dt>{lang_description} <span class="required">*</span></dt>
       <dd><div id="text_editor" style="display:{show_texteditor}; width:95%">
             <img src="{layout_url}/images/expand.png" title="{lang_expandhelp}" alt="" onclick="changeTextAreaSize('text_description','larger');"{xhtml}>
@@ -67,6 +60,12 @@
             <img src="{layout_url}/images/collapse.png" title="{lang_reducehelp}" alt="" onclick="changeHTMLTextAreaSize('html_detail','smaller');"{xhtml}>
             <textarea id="html_detail" name="html_detail" style="width:100%" cols="50" rows="10">{detail}</textarea>
           </div></dd>
+
+      <dt>{lang_meta_description}</dt>
+      <dd><textarea name="meta_description" id="downloads-meta-description" maxlength="320" cols="50" rows="3" class="size5">{meta_description}</textarea></dd>
+
+      <dt>{lang_meta_keywords}</dt>
+      <dd><input type="text" maxlength="255" name="meta_keywords" value="{meta_keywords}" id="downloads-meta-keywords" size="48" class="size5"{xhtml}></dd>
 
       <dt><label for="sel_editmode">{lang_postmode}</label></dt>
       <dd><select id="sel_editmode" name="postmode" onchange="change_editmode(this);">
