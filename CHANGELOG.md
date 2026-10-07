@@ -47,6 +47,12 @@
 
 ### Interoperability
 
+- Corrected the Geeklog 2.2.2 `plugin_idToURL_downloads($sub_type, $item_id)` signature; the previous one-argument signature could prevent XMLSitemap incremental updates from removing old entries and cause duplicate URLs.
+- Added stable root/category identities and normalized multi-resource Item Info metadata.
+- Added sitemap URL de-duplication and language-aware category discovery.
+- Added category lifecycle events and public `PLG_itemDisplay()` extension points.
+- Routed page metadata through Geeklog's `PLG_getMetaTags()` cooperation layer when enabled.
+
 - Hardened `plugin_getiteminfo_downloads()` to expose only public/released items.
 - Added collection options for `since`, `limit` and `order`.
 - Added deterministic `plugin_idtourl_downloads()` fallback.
@@ -54,6 +60,10 @@
 - Improved XMLSitemap / IndexNow compatibility.
 
 ### Administration
+
+- Fixed Access Rights alignment by restructuring permission help inside the permissions field.
+- Moved the required-field note out of the Category Image block.
+- Improved category image upload/preview alignment and responsive admin form sizing.
 
 - Expanded Preview from Description/Detail only to a representative download card with title, category, file metadata, project, homepage, image and content.
 - Refined the administration form layout with responsive two-column field alignment and cleaner section spacing.
