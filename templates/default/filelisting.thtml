@@ -18,6 +18,8 @@
 
 <div style="padding:10px;">{page_navigation}</div>
 
+{item_extensions}
+
 {comment_records}
 
 {block_footer}
