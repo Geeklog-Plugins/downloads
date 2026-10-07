@@ -26,6 +26,8 @@ Implemented in the development branch:
 - download history visibility checks;
 - missing-file 404 handling in the delivery endpoint;
 - configuration tooltips and refreshed README/INSTALL/changelog;
+- versioned CSS/JavaScript asset URLs using the 1.3.0 release version;
+- SEO fields positioned below Detail in the download editor;
 - HTML/plaintext notification templates;
 - collision-safe pending upload names with legacy compatibility;
 - filesystem rollback when database persistence fails;
