@@ -405,3 +405,40 @@ a.dlbtn-green:active {
   -webkit-box-shadow: 0 1px 2px 0 #CCCCCC inset;
   box-shadow: 0 1px 2px 0 #CCCCCC inset;
 }
+
+
+/* Downloads image lightbox */
+.dlm-lightbox-dialog {
+    max-width: min(92vw, 1200px);
+    max-height: 92vh;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    overflow: visible;
+}
+
+.dlm-lightbox-dialog::backdrop {
+    background: rgba(0, 0, 0, 0.82);
+}
+
+.dlm-lightbox-image {
+    display: block;
+    max-width: 90vw;
+    max-height: 88vh;
+    width: auto;
+    height: auto;
+    background: #fff;
+    box-shadow: 0 0 24px rgba(0, 0, 0, 0.45);
+}
+
+.dlm-lightbox-close {
+    position: absolute;
+    top: -2.2rem;
+    right: 0;
+    min-width: 2rem;
+    min-height: 2rem;
+    border: 0;
+    cursor: pointer;
+    font-size: 1.8rem;
+    line-height: 1;
+}
