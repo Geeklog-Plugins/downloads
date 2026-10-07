@@ -213,11 +213,12 @@ class DLDownload
     {
         global $_TABLES;
 
-        $sql  = "SELECT lid, a.cid, a.title, url, homepage, version, size, md5, "
-              . "project, meta_description, meta_keywords, description, detail, postmode, logourl, mg_autotag, tags, date, hits, rating, votes, "
-              . "commentcode, is_released, is_listing, createddate, a.owner_id, b.owner_id AS cat_owner_id, "
-              . "text_version, "
-              . "group_id, perm_owner, perm_group, perm_members, perm_anon "
+        $sql  = "SELECT a.lid, a.cid, a.title, a.url, a.homepage, a.version, a.size, a.md5, "
+              . "a.project, a.meta_description, a.meta_keywords, a.description, a.detail, a.postmode, "
+              . "a.logourl, a.mg_autotag, a.tags, a.date, a.hits, a.rating, a.votes, "
+              . "a.commentcode, a.is_released, a.is_listing, a.createddate, "
+              . "a.owner_id, b.owner_id AS cat_owner_id, a.text_version, "
+              . "b.group_id, b.perm_owner, b.perm_group, b.perm_members, b.perm_anon "
               . "FROM {$_TABLES['downloads']} a "
               . "LEFT JOIN {$_TABLES['downloadcategories']} b ON a.cid=b.cid "
               . "WHERE lid='" . DB_escapeString($lid) . "'";
