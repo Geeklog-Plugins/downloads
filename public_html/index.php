@@ -442,7 +442,71 @@ function dlformat(&$T, &$A, $isListing=false, $cid=ROOTID)
 }
 
 
-function makeCategoryPart($cid)
+/**
+ * Build the SQL condition used by public Downloads search.
+ *
+ * @param string $query
+ * @param string $alias
+ * @return string
+ */
+function DLM_buildSearchSQL($query, $alias = 'd')
+{
+    $query = trim((string) $query);
+    if ($query === '') {
+        return '';
+    }
+
+    $term = DB_escapeString($query);
+    $term = str_replace(array('%', '_'), array('\\%', '\\_'), $term);
+    $like = "'%" . $term . "%'";
+    $prefix = ($alias !== '') ? $alias . '.' : '';
+
+    return "AND (" . $prefix . "title LIKE $like ESCAPE '\\\\' "
+         . "OR " . $prefix . "description LIKE $like ESCAPE '\\\\' "
+         . "OR " . $prefix . "detail LIKE $like ESCAPE '\\\\' "
+         . "OR " . $prefix . "project LIKE $like ESCAPE '\\\\' "
+         . "OR " . $prefix . "version LIKE $like ESCAPE '\\\\' "
+         . "OR " . $prefix . "tags LIKE $like ESCAPE '\\\\') ";
+}
+
+/**
+ * Count matching public downloads in a category and its descendants.
+ *
+ * @param string $cid
+ * @param string $query
+ * @return int
+ */
+function DLM_getSearchTotalItems($cid, $query)
+{
+    global $_TABLES, $_DLM_CONF, $mytree;
+
+    $ids = $mytree->getAllChildId($cid);
+    $ids = array_merge(array($cid), $ids);
+    $escaped = array();
+    foreach ($ids as $id) {
+        $escaped[] = "'" . DB_escapeString($id) . "'";
+    }
+
+    if (empty($escaped)) {
+        return 0;
+    }
+
+    $now = time();
+    $sql = "SELECT COUNT(*) FROM {$_TABLES['downloads']} d "
+         . "LEFT JOIN {$_TABLES['downloadcategories']} c ON d.cid=c.cid "
+         . "WHERE d.cid IN (" . implode(',', $escaped) . ") "
+         . "AND d.is_released=1 "
+         . "AND d.is_listing=1 "
+         . "AND d.date<=$now "
+         . "AND c.is_enabled=1 "
+         . DLM_buildSearchSQL($query, 'd')
+         . ($_DLM_CONF['has_edit_rights'] ? '' : COM_getPermSQL('AND', 0, 2, 'c'));
+
+    list($count) = DB_fetchArray(DB_query($sql));
+    return (int) $count;
+}
+
+function makeCategoryPart($cid, $search_query = '')
 {
     global $_CONF, $_DLM_CONF, $LANG_DLM, $mytree;
 
@@ -466,10 +530,18 @@ function makeCategoryPart($cid)
 
     $count = 0;
     foreach ($arr as $ele) { // Each category
+        $category_total = ($search_query === '')
+            ? getTotalItems($ele['cid'])
+            : DLM_getSearchTotalItems($ele['cid'], $search_query);
+
+        if ($search_query !== '' && $category_total < 1) {
+            continue;
+        }
+
         $chtitle = DLM_htmlspecialchars($ele['title']);
         $T->set_var('cid',           $ele['cid']);
         $T->set_var('chtitle',       $chtitle);
-        $T->set_var('totaldownload', getTotalItems($ele['cid']));
+        $T->set_var('totaldownload', $category_total);
         $category_image_link = '&nbsp;';
         if ($_DLM_CONF['download_useshots']) {
             if ($ele['imgurl'] && $ele['imgurl'] != "http://") {
@@ -479,8 +551,12 @@ function makeCategoryPart($cid)
             }
             $category_image_link = COM_createImage($imgurl, $chtitle,
                                                    array('width' => $_DLM_CONF['download_shotwidth']));
-            $category_image_link = COM_createLink($category_image_link,
-                                                  $_CONF['site_url'] . '/downloads/index.php?cid=' . $ele['cid']);
+            $category_url = $_CONF['site_url'] . '/downloads/index.php?cid='
+                          . rawurlencode($ele['cid']);
+            if ($search_query !== '') {
+                $category_url .= '&amp;q=' . rawurlencode($search_query);
+            }
+            $category_image_link = COM_createLink($category_image_link, $category_url);
         }
         $T->set_var('category_link', $category_image_link);
         $T->parse('category_row', 'categoryitem', true);
@@ -699,21 +775,11 @@ $T->set_var('search_cid', DLM_htmlspecialchars($cid));
 $T->set_var('search_reset_url', $_CONF['site_url'] . '/downloads/index.php?cid=' . rawurlencode($cid));
 $T->parse('search_form', 'searchform');
 
-$search_sql = '';
-if ($search_query !== '') {
-    $search_term = DB_escapeString($search_query);
-    $search_term = str_replace(array('%', '_'), array('\\%', '\\_'), $search_term);
-    $like = "'%" . $search_term . "%'";
-    $search_sql = "AND (d.title LIKE $like ESCAPE '\\\\' "
-                . "OR d.description LIKE $like ESCAPE '\\\\' "
-                . "OR d.detail LIKE $like ESCAPE '\\\\' "
-                . "OR d.project LIKE $like ESCAPE '\\\\' "
-                . "OR d.version LIKE $like ESCAPE '\\\\' "
-                . "OR d.tags LIKE $like ESCAPE '\\\\') ";
-}
+$search_sql = DLM_buildSearchSQL($search_query, 'd');
 
-// child category objects
-$T->set_var('category_part', makeCategoryPart($cid));
+// Child category objects. During a search, only categories containing
+// matching files are shown and their counters reflect the search result.
+$T->set_var('category_part', makeCategoryPart($cid, $search_query));
 
 $carr = $mytree->getAllChildId($cid);
 $carr = array_merge(array($cid), $carr);
