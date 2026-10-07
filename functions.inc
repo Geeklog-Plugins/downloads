@@ -1416,7 +1416,7 @@ function DLM_getInteropItem($id, $properties, $uid = 0)
     if ($identity['subtype'] === 'root') {
         $record = array(
             'id' => 'root',
-            'title' => $LANG_DLM['downloads'],
+            'title' => (is_array($LANG_DLM) && isset($LANG_DLM['downloads'])) ? $LANG_DLM['downloads'] : 'Downloads',
             'url' => $_CONF['site_url'] . '/downloads/index.php',
             'description' => '',
             'excerpt' => '',
