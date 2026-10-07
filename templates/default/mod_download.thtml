@@ -1,9 +1,10 @@
-
 <!-- start mod_download.thtml -->
 {js_script}
-<form enctype="multipart/form-data" action="{action}" method="post" onsubmit="set_postcontent();" class="compact">
+<form enctype="multipart/form-data" action="{action}" method="post" onsubmit="set_postcontent();" class="compact dlm-admin-editor">
   <div class="admin_basic">
-    <dl class="form_block">
+    <fieldset class="dlm-admin-section">
+      <legend>{lang_section_general}</legend>
+      <dl class="form_block">
 {mod_submitter}
 
       <dt><label for="downloads-filetitle">{lang_filetitle} <span class="required">*</span></label></dt>
@@ -27,6 +28,12 @@
       <dd><input type="text" maxlength="10" name="version" value="{version}" id="downloads-ver" size="10" class="size2"{xhtml}></dd>
 
 {mod_file_size}
+      </dl>
+    </fieldset>
+
+    <fieldset class="dlm-admin-section">
+      <legend>{lang_section_content_seo}</legend>
+      <dl class="form_block">
       <dt>{lang_description} <span class="required">*</span></dt>
       <dd><div id="text_editor" style="display:{show_texteditor}; width:95%">
             <img src="{layout_url}/images/expand.png" title="{lang_expandhelp}" alt="" onclick="changeTextAreaSize('text_description','larger');"{xhtml}>
@@ -74,10 +81,22 @@
           <br{xhtml}>
           {lang_allowed_html}</dd>
 
+      </dl>
+    </fieldset>
+
+    <fieldset class="dlm-admin-section">
+      <legend>{lang_section_media}</legend>
+      <dl class="form_block">
 {mod_logourl}
 {mod_newfileshot}
 {mod_mg_autotag}
 
+      </dl>
+    </fieldset>
+
+    <fieldset class="dlm-admin-section">
+      <legend>{lang_section_publication}</legend>
+      <dl class="form_block">
       <dt>{lang_comment_mode}</dt>
       <dd><select name="commentcode">
 {comment_options}
@@ -106,7 +125,8 @@
 
       <dt></dt>
       <dd><small>* {lang_required_field}</small></dd>
-    </dl>
+      </dl>
+    </fieldset>
   </div>
 
   <div class="submit">
