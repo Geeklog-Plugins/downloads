@@ -38,7 +38,7 @@
       <dd><div id="text_editor" style="display:{show_texteditor}; width:95%">
             <img src="{layout_url}/images/expand.png" title="{lang_expandhelp}" alt="" onclick="changeTextAreaSize('text_description','larger');"{xhtml}>
             <img src="{layout_url}/images/collapse.png" title="{lang_reducehelp}" alt="" onclick="changeTextAreaSize('text_description','smaller');"{xhtml}>
-            <textarea id="text_description" name="text_description" style="width:100%; font-size:small;" cols="50" rows="10" required="required">{description}</textarea>
+            <textarea id="text_description" name="text_description" style="width:100%; font-size:small;" cols="50" rows="10">{description}</textarea>
           </div>
 
           <div id="html_editor" style="display:{show_htmleditor}; width:95%">
