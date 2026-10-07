@@ -317,6 +317,52 @@ function DLM_finalizeSubmissionFiles($date, $url, $logourl, $secret_id)
     return is_file($newfile);
 }
 
+/**
+ * Restore finalized submission files back to the pending naming scheme.
+ *
+ * @param int    $date
+ * @param string $url
+ * @param string $logourl
+ * @param string $secret_id
+ * @return bool
+ */
+function DLM_restoreFinalizedSubmissionFiles($date, $url, $logourl, $secret_id)
+{
+    global $_DLM_CONF;
+
+    $pending_file = rtrim($_DLM_CONF['path_filestore'], "/\\") . DIRECTORY_SEPARATOR
+                  . DLM_createPendingFileName($date, $url, $secret_id);
+    $final_file = rtrim($_DLM_CONF['path_filestore'], "/\\") . DIRECTORY_SEPARATOR
+                . DLM_createSafeFileName($url, $secret_id);
+
+    if (is_file($final_file) && !is_file($pending_file)) {
+        if (!rename($final_file, $pending_file)) {
+            DLM_errorLog("Downloads: rollback error: Could not restore finalized download to pending state.");
+            return false;
+        }
+    }
+
+    if (!empty($logourl)) {
+        $safe_snap = DLM_createSafeFileName($logourl);
+        $pending_snap = rtrim($_DLM_CONF['path_snapstore'], "/\\") . DIRECTORY_SEPARATOR
+                      . DLM_createPendingFileName($date, $logourl, $secret_id);
+        $final_snap = rtrim($_DLM_CONF['path_snapstore'], "/\\") . DIRECTORY_SEPARATOR
+                    . $safe_snap;
+
+        if (is_file($final_snap) && !is_file($pending_snap)) {
+            if (!rename($final_snap, $pending_snap)) {
+                DLM_errorLog("Downloads: rollback warning: Could not restore finalized snapshot to pending state.");
+            }
+        }
+
+        $thumb = rtrim($_DLM_CONF['path_tnstore'], "/\\") . DIRECTORY_SEPARATOR
+               . DLM_changeFileExt($safe_snap, $_DLM_CONF['tnimage_format']);
+        DLM_unlink($thumb);
+    }
+
+    return is_file($pending_file);
+}
+
 // Approve the uploaded file (process after the approval)
 function DLM_approveNewDownload($id)
 {
