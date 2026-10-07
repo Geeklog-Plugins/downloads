@@ -19,6 +19,13 @@ Implemented in the development branch:
 - image lightbox on listings and detail pages;
 - permission-aware public search with category scope;
 - improved admin search, status visibility and pending-submission navigation;
+- admin file-health and storage diagnostics;
+- hardened Item Info for released/public content;
+- deterministic ID-to-URL fallback for IndexNow/XMLSitemap lifecycle consumers;
+- public rating CSRF protection and visibility checks;
+- download history visibility checks;
+- missing-file 404 handling in the delivery endpoint;
+- configuration tooltips and refreshed README/INSTALL/changelog;
 - PHP 8.1 lint workflow and clean distribution checks.
 
 The remaining sections below are the acceptance roadmap for the release.
