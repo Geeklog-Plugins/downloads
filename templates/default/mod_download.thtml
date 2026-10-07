@@ -129,11 +129,14 @@
     </fieldset>
   </div>
 
-  <div class="submit">
-    <input type="submit" value="{lang_submit}" name="mode" class="submit"{xhtml}>
+  <div class="dlm-action-grid">
+    <div></div>
+    <div class="dlm-action-buttons">
+      <input type="submit" value="{lang_submit}" name="mode" class="submit"{xhtml}>
 {mod_submit_preview}
 {mod_submit_cancel}
 {mod_submit_delete}
+    </div>
     <input type="hidden" name="op" value="{op}"{xhtml}>
     <input type="hidden" name="old_lid" value="{old_lid}"{xhtml}>
     <input type="hidden" name="old_date" value="{old_date}"{xhtml}>
