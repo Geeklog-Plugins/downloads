@@ -34,7 +34,7 @@ if (strpos(strtolower($_SERVER['PHP_SELF']), 'gltree.class.php') !== false) {
     die('This file can not be used on its own.');
 }
 
-if (!defined('ROOTID')) define('ROOTID', 'root');
+if (!defined('DLM_ROOTID')) define('DLM_ROOTID', 'root');
 if (!defined('XHTML')) define('XHTML', '');
 if (!defined ('UC_SELECTED')) {
     define('UC_SELECTED', (XHTML == '') ? 'selected' : 'selected="selected"');
@@ -247,7 +247,7 @@ class GLTree {
     // makes a nicely ordered selection box
     // $preset_id is used to specify a preselected item
     // set $none to 1 to add a option with value 0
-    function makeSelBox($title, $order='', $preset_id=ROOTID, $none=0, $sel_name='', $onchange='', $current_id='')
+    function makeSelBox($title, $order='', $preset_id=DLM_ROOTID, $none=0, $sel_name='', $onchange='', $current_id='')
     {
         if ($sel_name == '') {
             $sel_name = $this->_id;
