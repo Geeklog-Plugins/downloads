@@ -173,8 +173,67 @@ function listDownloads()
              . '<span><strong>' . $stats['pending'] . '</strong> ' . $LANG_DLM['summary_pending'] . '</span>'
              . '</div>';
 
+    $filter_category = Input::fGet('dlm_category', '');
+    $filter_status = Input::fGet('dlm_status', '');
+    $filter_health = Input::fGet('dlm_health', '');
+
+    $category_options = '<option value="">' . $LANG_DLM['filter_all_categories'] . '</option>';
+    $category_result = DB_query(
+        "SELECT cid, title FROM {$_TABLES['downloadcategories']} c "
+        . "WHERE cid<>'' " . COM_getPermSQL('AND', 0, 2, 'c')
+        . " ORDER BY title ASC"
+    );
+    while ($category_row = DB_fetchArray($category_result)) {
+        $selected = ($filter_category === $category_row['cid']) ? ' selected="selected"' : '';
+        $category_options .= '<option value="'
+                          . DLM_htmlspecialchars($category_row['cid']) . '"'
+                          . $selected . '>'
+                          . DLM_htmlspecialchars($category_row['title'])
+                          . '</option>';
+    }
+
+    $retval .= '<form method="get" action="' . $admin_url . '" class="dlm-admin-filters">'
+             . '<label>' . $LANG_DLM['filter_category']
+             . '<select name="dlm_category">' . $category_options . '</select></label>'
+             . '<label>' . $LANG_DLM['filter_status']
+             . '<select name="dlm_status">'
+             . '<option value="">' . $LANG_DLM['filter_all_statuses'] . '</option>'
+             . '<option value="published"' . ($filter_status === 'published' ? ' selected="selected"' : '') . '>'
+             . $LANG_DLM['status_published'] . '</option>'
+             . '<option value="unreleased"' . ($filter_status === 'unreleased' ? ' selected="selected"' : '') . '>'
+             . $LANG_DLM['status_unreleased'] . '</option>'
+             . '<option value="hidden"' . ($filter_status === 'hidden' ? ' selected="selected"' : '') . '>'
+             . $LANG_DLM['status_hidden'] . '</option>'
+             . '</select></label>'
+             . '<label>' . $LANG_DLM['filter_file_health']
+             . '<select name="dlm_health">'
+             . '<option value="">' . $LANG_DLM['filter_all_files'] . '</option>'
+             . '<option value="ok"' . ($filter_health === 'ok' ? ' selected="selected"' : '') . '>'
+             . $LANG_DLM['file_health_ok'] . '</option>'
+             . '<option value="missing"' . ($filter_health === 'missing' ? ' selected="selected"' : '') . '>'
+             . $LANG_DLM['file_health_missing'] . '</option>'
+             . '</select></label>'
+             . '<button type="submit">' . $LANG_DLM['filter_apply'] . '</button>'
+             . '<a href="' . $admin_url . '" class="dlm-filter-reset">' . $LANG_DLM['clear'] . '</a>'
+             . '</form>';
+
+    $form_url = $admin_url;
+    $filter_query = array();
+    if ($filter_category !== '') {
+        $filter_query[] = 'dlm_category=' . rawurlencode($filter_category);
+    }
+    if ($filter_status !== '') {
+        $filter_query[] = 'dlm_status=' . rawurlencode($filter_status);
+    }
+    if ($filter_health !== '') {
+        $filter_query[] = 'dlm_health=' . rawurlencode($filter_health);
+    }
+    if (!empty($filter_query)) {
+        $form_url .= '?' . implode('&', $filter_query);
+    }
+
     $text_arr  = array('has_extras'     => true,
-                       'form_url'       => $admin_url);
+                       'form_url'       => $form_url);
 
     $sql  = "SELECT lid, url, secret_id, a.title, a.cid, date, version, size, project, "
           . "is_released, is_listing, "
@@ -183,6 +242,48 @@ function listDownloads()
           . "LEFT JOIN {$_TABLES['downloadcategories']} b ON a.cid=b.cid "
           . "WHERE lid != '' "
           . COM_getPermSQL('AND', 0, 2, 'b');
+
+    if ($filter_category !== '') {
+        $sql .= " AND a.cid='" . DB_escapeString($filter_category) . "'";
+    }
+
+    if ($filter_status === 'published') {
+        $sql .= " AND a.is_released=1 AND a.is_listing=1";
+    } elseif ($filter_status === 'unreleased') {
+        $sql .= " AND a.is_released<>1";
+    } elseif ($filter_status === 'hidden') {
+        $sql .= " AND a.is_released=1 AND a.is_listing<>1";
+    }
+
+    if ($filter_health === 'ok' || $filter_health === 'missing') {
+        $health_ids = array();
+        $health_result = DB_query(
+            "SELECT a.lid, a.url, a.secret_id "
+            . "FROM {$_TABLES['downloads']} a "
+            . "LEFT JOIN {$_TABLES['downloadcategories']} b ON a.cid=b.cid "
+            . "WHERE a.lid<>'' " . COM_getPermSQL('AND', 0, 2, 'b')
+        );
+        while ($health_row = DB_fetchArray($health_result)) {
+            $health_filename = DLM_createSafeFileName(
+                $health_row['url'],
+                $health_row['secret_id']
+            );
+            $health_path = rtrim($_DLM_CONF['path_filestore'], "/\\")
+                         . DIRECTORY_SEPARATOR . $health_filename;
+            $exists = is_file($health_path);
+            if (($filter_health === 'ok' && $exists)
+                || ($filter_health === 'missing' && !$exists)
+            ) {
+                $health_ids[] = "'" . DB_escapeString($health_row['lid']) . "'";
+            }
+        }
+
+        if (empty($health_ids)) {
+            $sql .= " AND 1=0";
+        } else {
+            $sql .= " AND a.lid IN (" . implode(',', $health_ids) . ")";
+        }
+    }
 
     $query_arr = array('table'          => 'downloads',
                        'sql'            => $sql,
