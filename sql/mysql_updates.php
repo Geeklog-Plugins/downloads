@@ -41,5 +41,16 @@ $_UPDATES = array(
     '1.1.0' => array(
         "ALTER TABLE {$_TABLES['downloads']} ADD text_version tinyint(2) unsigned NOT NULL default '1' AFTER detail",
         "ALTER TABLE {$_TABLES['downloadsubmission']} ADD text_version tinyint(2) unsigned NOT NULL default '1' AFTER detail"
+    ),
+
+    '1.2.3.1' => array(
+        "ALTER TABLE {$_TABLES['downloadcategories']} ADD meta_description varchar(320) NOT NULL default '' AFTER title",
+        "ALTER TABLE {$_TABLES['downloadcategories']} ADD meta_keywords varchar(255) NOT NULL default '' AFTER meta_description",
+        "ALTER TABLE {$_TABLES['downloads']} MODIFY project varchar(150) NOT NULL default ''",
+        "ALTER TABLE {$_TABLES['downloads']} ADD meta_description varchar(320) NOT NULL default '' AFTER project",
+        "ALTER TABLE {$_TABLES['downloads']} ADD meta_keywords varchar(255) NOT NULL default '' AFTER meta_description",
+        "ALTER TABLE {$_TABLES['downloadsubmission']} MODIFY project varchar(150) NOT NULL default ''",
+        "ALTER TABLE {$_TABLES['downloadsubmission']} ADD meta_description varchar(320) NOT NULL default '' AFTER project",
+        "ALTER TABLE {$_TABLES['downloadsubmission']} ADD meta_keywords varchar(255) NOT NULL default '' AFTER meta_description"
     )
 );
