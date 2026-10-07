@@ -29,6 +29,8 @@ Implemented in the development branch:
 - versioned CSS/JavaScript asset URLs using the 1.3.0 release version;
 - SEO fields positioned below Detail in the download editor;
 - download/category editors organized into logical sections;
+- admin summary and compact status indicators;
+- category file counts and enabled/disabled state in administration;
 - HTML/plaintext notification templates;
 - collision-safe pending upload names with legacy compatibility;
 - filesystem rollback when database persistence fails;
