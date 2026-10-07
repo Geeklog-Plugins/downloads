@@ -145,13 +145,21 @@ function plugin_whatsnewsupported_downloads()
     return false;
 }
 
-function DLM_helper_getLangSQL()
+function DLM_helper_getLangSQL($category_alias = 'b')
 {
     global $_DLM_CONF;
 
-    if (empty($_DLM_CONF['lang_id'])) return '';
+    if (empty($_DLM_CONF['lang_id'])) {
+        return '';
+    }
+
+    // Alias is always supplied internally; keep it restricted to an SQL identifier.
+    if (!preg_match('/^[A-Za-z_][A-Za-z0-9_]*$/', $category_alias)) {
+        $category_alias = 'b';
+    }
+
     $len = strlen($_DLM_CONF['lang_id']) + 1;
-    return "AND RIGHT(b.cid, $len)='_{$_DLM_CONF['lang_id']}' ";
+    return "AND RIGHT(" . $category_alias . ".cid, $len)='_{$_DLM_CONF['lang_id']}' ";
 }
 
 /**
@@ -1485,7 +1493,7 @@ function DLM_getInteropItem($id, $properties, $uid = 0)
          . "WHERE d.lid='$lid' AND d.is_released=1 AND d.date<=$now "
          . "AND c.is_enabled=1 "
          . COM_getPermSQL('AND', $uid, 2, 'c')
-         . DLM_helper_getLangSQL()
+         . DLM_helper_getLangSQL('c')
          . " LIMIT 1";
     $result = DB_query($sql);
     if (DB_numRows($result) !== 1) {
@@ -1659,7 +1667,7 @@ function plugin_getiteminfo_downloads($id, $what, $uid = 0, $options = array())
              . "LEFT JOIN {$_TABLES['downloadcategories']} c ON d.cid=c.cid "
              . "WHERE $where"
              . COM_getPermSQL('AND', $uid, 2, 'c')
-             . DLM_helper_getLangSQL();
+             . DLM_helper_getLangSQL('c');
 
         $order = 'd.date DESC';
         if (isset($options['order'])) {
