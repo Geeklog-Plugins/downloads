@@ -73,24 +73,19 @@ $_TABLES['downloadsubmissionhistory'] = $_DB_table_prefix . 'downloadsubmissionh
 $_DLM_CONF = array();
 require_once $_CONF['path_system'] . 'classes/config.class.php';
 
-/**
- * Load Downloads runtime configuration without leaking temporary globals.
+/*
+ * Load Downloads runtime configuration.
  *
- * @return void
+ * Keep temporary variables plugin-prefixed and remove them immediately after
+ * use. This preserves the long-standing activation-safe bootstrap behaviour
+ * while avoiding leakage into Geeklog's global namespace.
  */
-function DLM_loadRuntimeConfiguration()
-{
-    global $_DLM_CONF;
-
-    $dlm_config_instance = config::get_instance();
-    $dlm_loaded_config = $dlm_config_instance->get_config('downloads');
-
-    if (is_array($dlm_loaded_config)) {
-        $_DLM_CONF = array_merge($_DLM_CONF, $dlm_loaded_config);
-    }
+$dlm_config_instance = config::get_instance();
+$dlm_loaded_config = $dlm_config_instance->get_config('downloads');
+if (is_array($dlm_loaded_config)) {
+    $_DLM_CONF = array_merge($_DLM_CONF, $dlm_loaded_config);
 }
-
-DLM_loadRuntimeConfiguration();
+unset($dlm_config_instance, $dlm_loaded_config);
 
 $_DLM_CONF['lang_id'] = COM_getLanguageId();
 
