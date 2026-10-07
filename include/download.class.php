@@ -569,10 +569,7 @@ class DLDownload
         if ($enabled_adv_editor) {
             // Add JavaScript
             $_SCRIPTS->setJavaScriptFile('postmode_control', '/javascript/postmode_control.js');
-            COM_setupAdvancedEditor(
-                '/downloads/adveditor.js?v=' . rawurlencode(DOWNLOADS_VERSION),
-                'story.edit'
-            );
+            COM_setupAdvancedEditor('/downloads/adveditor.js', 'story.edit');
         }
 
         if (empty($this->_postmode)) {
@@ -603,7 +600,8 @@ class DLDownload
 
         $_SCRIPTS->setJavaScriptFile(
             'downloads_editor',
-            '/downloads/editor.js?v=' . rawurlencode(DOWNLOADS_VERSION)
+            rtrim($_CONF['site_url'], '/') . '/downloads/editor.js?v='
+            . rawurlencode(DOWNLOADS_VERSION)
         );
 
         $project_options = '';
