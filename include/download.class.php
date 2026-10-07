@@ -1471,33 +1471,29 @@ class DLDownload
         if (empty($this->_lid)) $this->_lid = $this->_old_lid;
         if (empty($this->_cid)) $this->_cid = $this->_cat_tree->getRootid();
 
-        // Move file from tmp directory under the document filestore to the main file directory
-        $result = DB_query("SELECT url, logourl, secret_id FROM {$_TABLES['downloadsubmission']} "
+        // Finalize pending files through the shared approval workflow.
+        $result = DB_query("SELECT url, logourl, secret_id, date FROM {$_TABLES['downloadsubmission']} "
                          . "WHERE lid = '" . DB_escapeString($this->_old_lid) . "'");
-        list($url, $logourl, $secret_id) = DB_fetchArray($result);
-        $this->_secret_id = $secret_id;
-
-        $success = false;
-        if (!empty($url)) {
-            $tmpfile = $_DLM_CONF['path_filestore'] . 'tmp' . date('YmdHis', $this->_old_date) . DLM_createSafeFileName($url);
-            $newfile = $_DLM_CONF['path_filestore'] . DLM_createSafeFileName($url, $secret_id);
-            $success = $this->_moveNewFile($tmpfile, $newfile);
-            if (!$success) {
-                $this->_retry = true;
-                $this->_reedit('showEditor', array($this->_editor_mode));
-            }
+        if (DB_numRows($result) != 1) {
+            $this->_errno[] = '1001';
+            $this->_retry = true;
+            $this->_reedit('showEditor', array($this->_editor_mode));
         }
 
-        if ($success && !empty($logourl)) {
-            $safename = DLM_createSafeFileName($logourl);
-            $tmpfile = $_DLM_CONF['path_snapstore'] . 'tmp' . date('YmdHis', $this->_old_date) . $safename;
-            $newfile = $_DLM_CONF['path_snapstore'] . $safename;
-            $success = $this->_moveNewFile($tmpfile, $newfile);
-            if (!$success) {
-                $this->_retry = true;
-                $this->_reedit('showEditor', array($this->_editor_mode));
-            }
-            DLM_makeThumbnail($safename);
+        list($url, $logourl, $secret_id, $submission_date) = DB_fetchArray($result);
+        $this->_secret_id = $secret_id;
+
+        $success = DLM_finalizeSubmissionFiles(
+            (int) $submission_date,
+            $url,
+            $logourl,
+            $secret_id
+        );
+
+        if (!$success) {
+            $this->_errno[] = '1002';
+            $this->_retry = true;
+            $this->_reedit('showEditor', array($this->_editor_mode));
         }
 
         if ($success) {
