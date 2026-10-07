@@ -59,20 +59,37 @@ require_once $_CONF['path'] . 'plugins/downloads/include/gltree.class.php';
 
 define('BCSEPALATOR', '&nbsp;:&nbsp;');
 
-function DLM_buildMetaHeader($description, $keywords)
+function DLM_buildMetaHeader($description, $keywords, $id = '')
 {
-    $header = '';
+    global $_CONF;
+
     $description = trim(strip_tags((string) $description));
     $keywords = trim(strip_tags((string) $keywords));
 
+    $tags = array();
     if ($description !== '') {
-        $header .= '<meta name="description" content="'
-                . htmlspecialchars($description, ENT_QUOTES, COM_getCharset())
-                . '">' . LB;
+        $tags[] = array(
+            'name' => 'description',
+            'content' => $description,
+        );
     }
     if ($keywords !== '') {
-        $header .= '<meta name="keywords" content="'
-                . htmlspecialchars($keywords, ENT_QUOTES, COM_getCharset())
+        $tags[] = array(
+            'name' => 'keywords',
+            'content' => $keywords,
+        );
+    }
+
+    if (!empty($_CONF['meta_tags']) && function_exists('PLG_getMetaTags')) {
+        return LB . PLG_getMetaTags('downloads', $id, $tags);
+    }
+
+    $header = '';
+    foreach ($tags as $tag) {
+        $header .= '<meta name="'
+                . htmlspecialchars($tag['name'], ENT_QUOTES, COM_getCharset())
+                . '" content="'
+                . htmlspecialchars($tag['content'], ENT_QUOTES, COM_getCharset())
                 . '">' . LB;
     }
 
@@ -723,7 +740,11 @@ if (!empty($lid)) {
         if (trim($meta_description) === '') {
             $meta_description = $A['description'];
         }
-        $headercode = DLM_buildMetaHeader($meta_description, $A['meta_keywords']);
+        $headercode = DLM_buildMetaHeader(
+            $meta_description,
+            $A['meta_keywords'],
+            $A['lid']
+        );
         $display = COM_createHTMLDocument($display, array(
             'pagetitle' => $pagetitle,
             'headercode' => $headercode
@@ -766,7 +787,8 @@ if ($cid != ROOTID) {
     $pagetitle .= ': ' . $cat_meta['title'];
     $category_headercode = DLM_buildMetaHeader(
         $cat_meta['meta_description'],
-        $cat_meta['meta_keywords']
+        $cat_meta['meta_keywords'],
+        'category:' . $cid
     );
 }
 
