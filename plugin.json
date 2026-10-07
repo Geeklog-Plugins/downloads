@@ -4,6 +4,7 @@
   "name": "Downloads",
   "icon": "public_html/images/arrow-dn.png",
   "requires": {
-    "geeklog": "2.1.2"
+    "geeklog": "2.1.2",
+    "php": "5.6.0"
   }
 }
