@@ -219,7 +219,7 @@ function getTagList($tags)
 }
 
 
-function dlformat(&$T, &$A, $isListing=false, $cid=ROOTID)
+function dlformat(&$T, &$A, $isListing=false, $cid=DLM_ROOTID)
 {
     global $_CONF, $_TABLES, $LANG01, $_DLM_CONF, $LANG_DLM, $mytree;
 
@@ -644,7 +644,7 @@ $_DLM_CONF['has_edit_rights'] = SEC_hasRights('downloads.edit');
 $permsql = $_DLM_CONF['has_edit_rights'] ? '' : COM_getPermSQL('AND');
 
 $mytree = new GLTree($_TABLES['downloadcategories'], 'cid', 'pid', 'title',
-                     $permsql . 'AND is_enabled=1 ', ROOTID, $_DLM_CONF['lang_id']);
+                     $permsql . 'AND is_enabled=1 ', DLM_ROOTID, $_DLM_CONF['lang_id']);
 $mytree->setSepalator(BCSEPALATOR);
 $mytree->setRoot($LANG_DLM['main']);
 
@@ -761,7 +761,7 @@ if (!empty($lid)) {
 
 $T->set_var('tablewidth', $_DLM_CONF['download_shotwidth'] + 10); // probably no longer necessary
 
-$cid = Input::fGet('cid', Input::fPost('selbox_cat', ROOTID));
+$cid = Input::fGet('cid', Input::fPost('selbox_cat', DLM_ROOTID));
 $search_query = trim((string) Input::fGet('q', ''));
 if (strlen($search_query) > 120) {
     $search_query = substr($search_query, 0, 120);
@@ -773,7 +773,7 @@ if ($page <= 0) {
 }
 
 $category_headercode = '';
-if ($cid != ROOTID) {
+if ($cid != DLM_ROOTID) {
     $cat_result = DB_query("SELECT title, meta_description, meta_keywords "
                          . "FROM {$_TABLES['downloadcategories']} "
                          . "WHERE cid='" . DB_escapeString($cid) . "' "
@@ -813,7 +813,7 @@ $T->set_var('category_part', makeCategoryPart($cid, $search_query));
 
 $container_extensions = '';
 if ($search_query === '' && $page === 1) {
-    $container_id = ($cid === ROOTID) ? 'root' : 'category:' . $cid;
+    $container_id = ($cid === DLM_ROOTID) ? 'root' : 'category:' . $cid;
     $extensions = PLG_itemDisplay($container_id, 'downloads');
     if (is_array($extensions)) {
         $container_extensions = implode('', $extensions);
