@@ -52,10 +52,10 @@ The remaining sections below are the acceptance roadmap for the release.
 
 ### Functional validation still required before PR
 
-- [ ] Add / edit / replace / delete a download
-- [ ] Add / edit / enable / disable a category
-- [ ] Public search with matches and with no results
-- [ ] Download image and lightbox
+- [x] Add / edit / replace / delete a download
+- [x] Add / edit / enable / disable a category
+- [x] Public search with matches and with no results
+- [x] Download image and lightbox
 - [ ] Comments and rating
 - [ ] User submission creates Pending state
 - [ ] Approval through Geeklog moderation creates Published state
