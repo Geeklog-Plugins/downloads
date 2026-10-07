@@ -124,11 +124,13 @@ jobs:
           # Asset cache versioning is part of the release contract.
           grep -q "define('DOWNLOADS_VERSION', '1.3.0')" verify/downloads/functions.inc
           grep -q "DOWNLOADS_VERSION" verify/downloads/functions.inc
+          grep -q "function DLM_getAssetVersion" verify/downloads/functions.inc
+          grep -q "function DLM_getVersionedAssetUrl" verify/downloads/functions.inc
           grep -q "plugin_getheadercode_downloads" verify/downloads/functions.inc
-          grep -q "lightbox.js?v=" verify/downloads/public_html/index.php
-          grep -q "DOWNLOADS_VERSION" verify/downloads/public_html/index.php
-          grep -q "editor.js?v=" verify/downloads/include/download.class.php
-          grep -q "DOWNLOADS_VERSION" verify/downloads/include/download.class.php
+          grep -q "lightbox.js" verify/downloads/public_html/index.php
+          grep -q "DLM_getVersionedAssetUrl" verify/downloads/public_html/index.php
+          grep -q "editor.js" verify/downloads/include/download.class.php
+          grep -q "DLM_getVersionedAssetUrl" verify/downloads/include/download.class.php
           grep -q "COM_setupAdvancedEditor('/downloads/adveditor.js'" verify/downloads/include/download.class.php
 
       - name: Show distribution
