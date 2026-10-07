@@ -58,6 +58,8 @@
     </div>
 </div>
 {project_filelist}
+<div class="dlm-comments">
 {comment_records}
+</div>
 {block_footer}
 <!-- end filedetail.thtml -->
