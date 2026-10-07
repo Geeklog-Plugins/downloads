@@ -56,6 +56,7 @@
     </div>
 </div>
 {project_filelist}
+{item_extensions}
 {comment_records}
 {block_footer}
 <!-- end filedetail_no_tn.thtml -->
