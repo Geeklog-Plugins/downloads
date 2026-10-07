@@ -31,6 +31,9 @@ Implemented in the development branch:
 - download/category editors organized into logical sections;
 - admin summary and compact status indicators;
 - category file counts and enabled/disabled state in administration;
+- category/status/file-health admin filters;
+- targeted category status toggles with CSRF and Root checks;
+- CSRF hardening for submission approval/rejection and category mutations;
 - HTML/plaintext notification templates;
 - collision-safe pending upload names with legacy compatibility;
 - filesystem rollback when database persistence fails;
