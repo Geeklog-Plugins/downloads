@@ -1547,36 +1547,82 @@ function DLM_getInteropItem($id, $properties, $uid = 0)
  */
 function plugin_collectSitemapItems_downloads($uid = 1, $limit = 0)
 {
+    global $_CONF, $_TABLES;
+
     $uid = (int) $uid;
     $limit = (int) $limit;
-    $options = array('subtype' => 'all');
-    $items = plugin_getiteminfo_downloads(
-        '*',
-        'id,url,date-modified,subtype,is-container',
-        $uid,
-        $options
-    );
-
     $result = array();
     $seen = array();
 
-    foreach ($items as $item) {
-        if (empty($item['url']) || isset($seen[$item['url']])) {
+    // Plugin landing page.
+    $url = $_CONF['site_url'] . '/downloads/index.php';
+    $result[] = array(
+        'url' => $url,
+        'change-freq' => 'weekly',
+        'priority' => 0.6,
+    );
+    $seen[$url] = true;
+
+    if ($limit > 0 && count($result) >= $limit) {
+        return $result;
+    }
+
+    // Public categories.
+    $sql = "SELECT c.cid FROM {$_TABLES['downloadcategories']} c "
+         . "WHERE c.cid<>'' AND c.is_enabled=1 "
+         . COM_getPermSQL('AND', $uid, 2, 'c')
+         . " ORDER BY c.corder ASC, c.title ASC";
+    $query = DB_query($sql);
+    while ($A = DB_fetchArray($query)) {
+        if (!matchLanguage($A['cid'])) {
             continue;
         }
 
-        $seen[$item['url']] = true;
-        $entry = array(
-            'url' => $item['url'],
-            'change-freq' => ($item['subtype'] === 'download') ? 'monthly' : 'weekly',
-            'priority' => ($item['subtype'] === 'download') ? 0.5 : 0.6,
+        $url = $_CONF['site_url'] . '/downloads/index.php?cid=' . rawurlencode($A['cid']);
+        if (!isset($seen[$url])) {
+            $result[] = array(
+                'url' => $url,
+                'change-freq' => 'weekly',
+                'priority' => 0.6,
+            );
+            $seen[$url] = true;
+        }
+
+        if ($limit > 0 && count($result) >= $limit) {
+            return $result;
+        }
+    }
+
+    // Public downloads.
+    $now = time();
+    $sql = "SELECT d.lid, d.date FROM {$_TABLES['downloads']} d "
+         . "LEFT JOIN {$_TABLES['downloadcategories']} c ON d.cid=c.cid "
+         . "WHERE d.lid<>'' AND d.is_released=1 AND d.is_listing=1 "
+         . "AND d.date<=$now AND c.is_enabled=1 "
+         . COM_getPermSQL('AND', $uid, 2, 'c')
+         . DLM_helper_getLangSQL('c')
+         . " ORDER BY d.date DESC";
+    $query = DB_query($sql);
+    while ($A = DB_fetchArray($query)) {
+        $url = COM_buildURL(
+            $_CONF['site_url'] . '/downloads/index.php?id=' . rawurlencode($A['lid'])
         );
 
-        if (!empty($item['date-modified'])) {
-            $entry['date-modified'] = (int) $item['date-modified'];
+        if (isset($seen[$url])) {
+            continue;
+        }
+
+        $entry = array(
+            'url' => $url,
+            'change-freq' => 'monthly',
+            'priority' => 0.5,
+        );
+        if (!empty($A['date'])) {
+            $entry['date-modified'] = (int) $A['date'];
         }
 
         $result[] = $entry;
+        $seen[$url] = true;
 
         if ($limit > 0 && count($result) >= $limit) {
             break;
