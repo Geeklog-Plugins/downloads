@@ -570,3 +570,31 @@ a.dlbtn-green:active {
     font-size: 1.8rem;
     line-height: 1;
 }
+
+
+/* Public Downloads search */
+.dlm-search-form {
+    margin: 1rem 0;
+}
+
+.dlm-search-form label {
+    display: block;
+    margin-bottom: 0.35rem;
+    font-weight: 600;
+}
+
+.dlm-search-controls {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.dlm-search-controls input[type="search"] {
+    flex: 1 1 18rem;
+    min-width: 12rem;
+}
+
+.dlm-search-reset {
+    white-space: nowrap;
+}
