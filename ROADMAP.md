@@ -107,3 +107,11 @@ Downloads 1.3.0 now targets the Memorandum content interoperability contract:
 - [x] Language-aware category collections
 
 A full XMLSitemap regeneration is required after installing this build to remove duplicate rows created by the previous incorrect `idToURL` signature.
+
+
+### XMLSitemap interoperability note
+
+- XMLSitemap duplicate output was traced to duplicated `types` entries in XMLSitemap configuration, not to duplicate URLs returned by Downloads.
+- Downloads itself de-duplicates its collection output.
+- A separate core XMLSitemap fix is maintained in `hostellerie/geeklog-2.2.2:xmlsitemap-deduplicate-types`.
+- After deploying that core fix, run a full sitemap regeneration once to remove previously persisted duplicate rows.
