@@ -121,6 +121,8 @@ function makeProjectFileList($lid) {
                      . "WHERE a.project='" . DB_escapeString($project) . "' "
                      . "AND a.project<>'' "
                      . "AND a.is_released=1 "
+                     . "AND a.date<=" . time() . " "
+                     . "AND b.is_enabled=1 "
                      . $permsql
                      . " ORDER BY a.date DESC LIMIT 10");
 
