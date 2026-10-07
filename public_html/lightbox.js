@@ -1,12 +1,6 @@
 (function () {
     'use strict';
 
-    function closeLightbox(dialog) {
-        if (dialog && dialog.open) {
-            dialog.close();
-        }
-    }
-
     function init() {
         if (!('HTMLDialogElement' in window)) {
             return;
@@ -21,27 +15,16 @@
         dialog.className = 'dlm-lightbox-dialog';
         dialog.setAttribute('aria-label', 'Image preview');
 
-        var button = document.createElement('button');
-        button.type = 'button';
-        button.className = 'dlm-lightbox-close';
-        button.setAttribute('aria-label', 'Close image preview');
-        button.textContent = '\u00d7';
-
         var image = document.createElement('img');
         image.className = 'dlm-lightbox-image';
         image.alt = '';
 
-        dialog.appendChild(button);
         dialog.appendChild(image);
         document.body.appendChild(dialog);
 
-        button.addEventListener('click', function () {
-            closeLightbox(dialog);
-        });
-
-        dialog.addEventListener('click', function (event) {
-            if (event.target === dialog) {
-                closeLightbox(dialog);
+        dialog.addEventListener('click', function () {
+            if (dialog.open) {
+                dialog.close();
             }
         });
 
