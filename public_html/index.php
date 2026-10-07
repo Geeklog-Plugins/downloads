@@ -558,6 +558,7 @@ function makeCategoryPart($cid, $search_query = '')
             }
             $category_image_link = COM_createLink($category_image_link, $category_url);
         }
+        $T->set_var('category_url', $category_url);
         $T->set_var('category_link', $category_image_link);
         $T->parse('category_row', 'categoryitem', true);
         $count++;
