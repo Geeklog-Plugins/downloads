@@ -58,6 +58,7 @@
     </div>
 </div>
 {project_filelist}
+{item_extensions}
 <div class="dlm-comments">
 {comment_records}
 </div>
