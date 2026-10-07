@@ -6,7 +6,7 @@
 
 - Minimum Geeklog version is 2.1.2.
 - Maintained PHP baseline is PHP 5.6 through PHP 8.1.
-- Added PHP 8.1 linting in GitHub Actions.
+- Added CI linting on PHP 5.6, PHP 8.1 and PHP 8.3.
 
 ### Submission and approval
 
@@ -18,11 +18,15 @@
 - Added a user-menu “My Downloads” submission-history page.
 - Added configurable new-submission notification email.
 - Kept submitter approval notification as a separate option.
+- Added matching HTML/plaintext Geeklog email templates for submission and approval notifications.
 
 ### Uploads and file integrity
 
 - Create/validate configured storage directories before upload.
-- Made published-file replacement failure-safe.
+- Use collision-safe pending filenames while retaining legacy pending-file compatibility.
+- Treat an existing upload destination as an error instead of a false success.
+- Roll back uploaded/finalized files when database persistence fails.
+- Made published-file replacement failure-safe and keep the old file until the UPDATE succeeds.
 - Added admin diagnostics for missing published files.
 - Added missing/unwritable storage warning.
 - Validate uploaded snapshot/category images as actual JPEG/PNG/GIF content.
@@ -62,3 +66,6 @@
 - Fixed zero-vote rating initialization.
 - Fixed feed update `$limit` variable handling.
 - Removed obsolete duplicated approval file-move helpers.
+- Hardened thumbnail generation for PHP 8/GdImage and invalid image sources.
+- Fixed missing globals and empty-result handling in Geeklog callbacks.
+- Load authoritative download/category ACLs before deletion.
