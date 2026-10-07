@@ -134,6 +134,7 @@ $LANG_DLM = array(
     'category_files'    => 'Files',
     'category_enabled'  => 'Enabled',
     'category_disabled' => 'Disabled',
+    'toggle_category'   => 'Toggle category status',
     'catid'             => 'Category ID',
     'rating'            => 'Rating',
     'sortby'            => 'Sort by',
