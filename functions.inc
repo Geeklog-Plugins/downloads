@@ -1618,6 +1618,9 @@ function plugin_getiteminfo_downloads($id, $what, $uid = 0, $options = array())
              . " ORDER BY c.corder ASC, c.title ASC";
         $result = DB_query($sql);
         while ($A = DB_fetchArray($result)) {
+            if (!matchLanguage($A['cid'])) {
+                continue;
+            }
             $row = DLM_getInteropItem('category:' . $A['cid'], $properties, $uid);
             if (!empty($row)) {
                 $records[] = DLM_buildItemInfoResult(
