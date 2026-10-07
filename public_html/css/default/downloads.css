@@ -796,3 +796,51 @@ a.dlbtn-green:active {
         margin-right: -0.25rem;
     }
 }
+
+
+/* Shared alignment for Access Rights and form actions */
+.dlm-admin-editor > .admin_basic,
+.dlm-admin-editor .admin_basic {
+    width: 100%;
+}
+
+.dlm-admin-editor .dlm-access-section {
+    box-sizing: border-box;
+    width: 100%;
+}
+
+.dlm-admin-editor .dlm-action-grid {
+    display: grid;
+    grid-template-columns: minmax(9rem, 12rem) minmax(0, 1fr);
+    gap: 0.75rem 1rem;
+    align-items: center;
+    margin: 1rem 0 0;
+    padding: 0 1.15rem;
+}
+
+.dlm-admin-editor .dlm-action-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.55rem;
+    align-items: center;
+}
+
+.dlm-admin-editor .dlm-action-buttons input,
+.dlm-admin-editor .dlm-action-buttons button {
+    margin: 0;
+}
+
+@media (max-width: 720px) {
+    .dlm-admin-editor .dlm-action-grid {
+        grid-template-columns: 1fr;
+        padding: 0;
+    }
+
+    .dlm-admin-editor .dlm-action-grid > div:first-child {
+        display: none;
+    }
+
+    .dlm-admin-editor .dlm-action-buttons {
+        grid-column: 1;
+    }
+}
