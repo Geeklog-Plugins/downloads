@@ -498,7 +498,6 @@ class DLDownload
                 }
             }
         }
-
         if (version_compare(VERSION, '2.1.0') >= 0) {
             require_once $_CONF['path_system'] . 'classes/gltext.class.php';
             $description      = GLText::getEditText($this->_description, $this->_postmode, 2);
@@ -601,8 +600,11 @@ class DLDownload
         $_SCRIPTS->setJavaScriptFile('downloads_editor', '/downloads/editor.js');
 
         $project_options = '';
-        $project_result = DB_query("SELECT DISTINCT project FROM {$_TABLES['downloads']} "
-                                 . "WHERE project <> '' ORDER BY project ASC");
+        $project_result = DB_query("SELECT DISTINCT a.project FROM {$_TABLES['downloads']} a "
+                                 . "LEFT JOIN {$_TABLES['downloadcategories']} b ON a.cid=b.cid "
+                                 . "WHERE a.project <> '' "
+                                 . COM_getPermSQL('AND', 0, 2, 'b')
+                                 . " ORDER BY a.project ASC");
         while (list($project_name) = DB_fetchArray($project_result)) {
             $project_options .= '<option value="' . DLM_htmlspecialchars($project_name) . '"></option>' . LB;
         }
@@ -997,8 +999,7 @@ class DLDownload
                                 $_DLM_CONF['path_filestore'] . $safename);
                 if ($success) {
                     $this->_url = $this->_old_url;
-                }
-            }
+                }            }
         }
         if ($success) {
             $this->_size = filesize($_DLM_CONF['path_filestore'] . $safename);
@@ -1497,8 +1498,7 @@ class DLDownload
             $this->_errno[] = '1002';
             return false;
         }
-        return true;
-    }
+        return true;    }
 
     function _reedit($method, $args = array())
     {
