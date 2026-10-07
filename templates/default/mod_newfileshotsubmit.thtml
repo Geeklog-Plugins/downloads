@@ -1,5 +1,5 @@
 
 <!-- start mod_newfileshotsubmit.thtml -->
       <dt>{lang_shotimage}</dt>
-      <dd><input type="file" name="newfileshot" size="48"{xhtml}></dd>
+      <dd><input type="file" name="newfileshot" size="48" accept="image/jpeg,image/png,image/gif"{xhtml}></dd>
 <!-- end mod_newfileshotsubmit.thtml -->
