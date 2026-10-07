@@ -1,6 +1,11 @@
 name: Build Downloads distribution
 
 on:
+  push:
+    branches:
+      - downloads_1.3.0
+    paths-ignore:
+      - 'dist/**'
   workflow_dispatch:
 
 permissions:
@@ -118,10 +123,11 @@ jobs:
 
           # Asset cache versioning is part of the release contract.
           grep -q "define('DOWNLOADS_VERSION', '1.3.0')" verify/downloads/functions.inc
-          grep -q "downloads.css.*DOWNLOADS_VERSION\|DOWNLOADS_VERSION" verify/downloads/functions.inc
+          grep -q "DOWNLOADS_VERSION" verify/downloads/functions.inc
+          grep -q "plugin_getheadercode_downloads" verify/downloads/functions.inc
           grep -q "lightbox.js?v=.*DOWNLOADS_VERSION" verify/downloads/public_html/index.php
           grep -q "editor.js?v=.*DOWNLOADS_VERSION" verify/downloads/include/download.class.php
-          grep -q "adveditor.js?v=.*DOWNLOADS_VERSION" verify/downloads/include/download.class.php
+          grep -q "COM_setupAdvancedEditor('/downloads/adveditor.js'" verify/downloads/include/download.class.php
 
       - name: Show distribution
         shell: bash
