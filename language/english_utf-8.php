@@ -200,6 +200,11 @@ $LANG_DLM = array(
     'upload'            => 'Upload',
     'download_button'   => 'DOWNLOAD',
     'tags'              => 'Tags',
+    'tags_help'         => 'Enter keywords separated by spaces. Use short, reusable terms; avoid commas and special punctuation.',
+    'project_help'      => 'Suggested from existing project names. For a new project, the value follows the title until you edit it.',
+    'meta_description'  => 'Meta Description',
+    'meta_keywords'     => 'Meta Keywords',
+    'required_field'    => 'Required field',
     'please_update'     => 'Please update Downloads plugin.',
     'preview'           => 'Preview',
     'commentoption'     => 'Comment Option',
@@ -222,6 +227,7 @@ $LANG_DLM = array(
     '1402' => 'No file was uploaded.',
     '1403' => 'Upload file size is too large.',
     '1404' => 'Failed to upload file.',
+    '1405' => 'The selected image is not a valid JPEG, PNG or GIF file.',
     '9999' => 'OOPS! God Knows',
 );
 
