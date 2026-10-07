@@ -6,6 +6,8 @@
 
 {category_selbox}
 
+{search_form}
+
 {category_part}
 
 <div id="dlm_filelist_info"><strong>{filelisting_info}</strong></div>
