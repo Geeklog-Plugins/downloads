@@ -544,6 +544,20 @@ function plugin_getadminoption_downloads()
 * Setup the user menu options for this plugin
 *
 */
+/**
+ * Provide concise native configuration tooltips.
+ *
+ * @param string $id
+ * @return string
+ */
+function plugin_getconfigtooltip_downloads($id)
+{
+    global $LANG_DLM;
+
+    $key = 'config_tooltip_' . $id;
+    return isset($LANG_DLM[$key]) ? $LANG_DLM[$key] : '';
+}
+
 function plugin_getuseroption_downloads()
 {
     global $_CONF, $LANG_DLM, $_DLM_CONF;
