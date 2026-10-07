@@ -1442,13 +1442,23 @@ class DLDownload
             COM_redirect($_CONF['site_admin_url'] . '/moderation.php');
         }
 
-        $result = DB_query("SELECT url, logourl, date "
+        $result = DB_query("SELECT url, logourl, date, secret_id "
                          . "FROM {$_TABLES['downloadsubmission']} WHERE lid = '$lid'");
-        list($url, $logourl, $date) = DB_fetchArray($result);
-        $tmpfilename = $_DLM_CONF['path_filestore'] . 'tmp' . date('YmdHis', $date) . DLM_createSafeFileName($url);
+        list($url, $logourl, $date, $secret_id) = DB_fetchArray($result);
+        $tmpfilename = DLM_findPendingFile(
+            $_DLM_CONF['path_filestore'],
+            $date,
+            $url,
+            $secret_id
+        );
         $tmpshotname = '';
         if (!empty($logourl)) {
-            $tmpshotname = $_DLM_CONF['path_snapstore'] . 'tmp' . date('YmdHis', $date) . DLM_createSafeFileName($logourl);
+            $tmpshotname = DLM_findPendingFile(
+                $_DLM_CONF['path_snapstore'],
+                $date,
+                $logourl,
+                $secret_id
+            );
         }
 
         DB_query("DELETE FROM {$_TABLES['downloadsubmission']} WHERE lid='$lid'");
@@ -1607,7 +1617,11 @@ class DLDownload
 
             // Upload New file
             if (!empty($this->_url)) {
-                $tmpfilename = 'tmp' . date('YmdHis', $this->_date) . DLM_createSafeFileName($this->_url);
+                $tmpfilename = DLM_createPendingFileName(
+                    $this->_date,
+                    $this->_url,
+                    $this->_secret_id
+                );
                 $success = DLM_uploadNewFile($_FILES['newfile'], $_DLM_CONF['path_filestore'], $tmpfilename);
                 if ($success) {
                     $this->_size = filesize($_DLM_CONF['path_filestore'] . $tmpfilename);
@@ -1623,7 +1637,11 @@ class DLDownload
                     $this->_reedit('showEditor', array($this->_editor_mode));
                 }
                 $this->_logourl = $_FILES['newfileshot']['name'];
-                $tmpshotname = 'tmp' . date('YmdHis', $this->_date) . DLM_createSafeFileName($this->_logourl);
+                $tmpshotname = DLM_createPendingFileName(
+                    $this->_date,
+                    $this->_logourl,
+                    $this->_secret_id
+                );
                 $success = DLM_uploadNewFile($_FILES['newfileshot'], $_DLM_CONF['path_snapstore'], $tmpshotname);
             }
 
