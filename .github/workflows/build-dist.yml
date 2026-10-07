@@ -80,7 +80,12 @@ jobs:
             downloads/plugin.json \
             downloads/include/functions.php \
             downloads/include/download.class.php \
-            downloads/public_html/index.php
+            downloads/public_html/index.php \
+            downloads/public_html/editor.js \
+            downloads/public_html/lightbox.js \
+            downloads/public_html/adveditor.js \
+            downloads/public_html/css/default/downloads.css \
+            downloads/public_html/css/denim/downloads.css
           do
             unzip -Z1 "$archive" | grep -qx "$required"
           done
@@ -110,6 +115,13 @@ jobs:
 
           grep -q 'function DLM_ensureDirectory' verify/downloads/include/functions.php
           grep -q 'if (!DLM_ensureDirectory($directory))' verify/downloads/include/functions.php
+
+          # Asset cache versioning is part of the release contract.
+          grep -q "define('DOWNLOADS_VERSION', '1.3.0')" verify/downloads/functions.inc
+          grep -q "downloads.css.*DOWNLOADS_VERSION\|DOWNLOADS_VERSION" verify/downloads/functions.inc
+          grep -q "lightbox.js?v=.*DOWNLOADS_VERSION" verify/downloads/public_html/index.php
+          grep -q "editor.js?v=.*DOWNLOADS_VERSION" verify/downloads/include/download.class.php
+          grep -q "adveditor.js?v=.*DOWNLOADS_VERSION" verify/downloads/include/download.class.php
 
       - name: Show distribution
         shell: bash
