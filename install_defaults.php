@@ -52,6 +52,8 @@ $_DLM_DEFAULT['download_perpage']      = 5;
 $_DLM_DEFAULT['download_popular']      = 20;
 $_DLM_DEFAULT['download_uploadselect'] = 0;
 $_DLM_DEFAULT['download_emailoption']  = 1;
+$_DLM_DEFAULT['notify_on_submission']   = 1;
+$_DLM_DEFAULT['submission_notify_email'] = $_CONF['site_mail'];
 $_DLM_DEFAULT['filepermissions']       = 755;
 $_DLM_DEFAULT['postmode']              = 'plaintext';
 $_DLM_DEFAULT['enabled_mg_autotag']    = 0;
@@ -108,6 +110,8 @@ function plugin_initconfig_downloads()
     $c->add('download_popular',      $_DLM_DEFAULT['download_popular'],      'text',     0, 0, 0,    $o++, true, $n);
     $c->add('download_uploadselect', $_DLM_DEFAULT['download_uploadselect'], 'select',   0, 0, 0,    $o++, true, $n);
     $c->add('download_emailoption',  $_DLM_DEFAULT['download_emailoption'],  'select',   0, 0, 0,    $o++, true, $n);
+    $c->add('notify_on_submission',   $_DLM_DEFAULT['notify_on_submission'],   'select',   0, 0, 0,    $o++, true, $n);
+    $c->add('submission_notify_email', $_DLM_DEFAULT['submission_notify_email'], 'text',   0, 0, 0,    $o++, true, $n);
     $c->add('filepermissions',       $_DLM_DEFAULT['filepermissions'],       'text',     0, 0, 0,    $o++, true, $n);
     $c->add('postmode',              $_DLM_DEFAULT['postmode'],              'select',   0, 0, 5,    $o++, true, $n);
     $c->add('enabled_mg_autotag',    $_DLM_DEFAULT['enabled_mg_autotag'],    'select',   0, 0, 0,    $o++, true, $n);
@@ -168,6 +172,8 @@ function DLM_updateSortOrder()
         'download_popular',
         'download_uploadselect',
         'download_emailoption',
+        'notify_on_submission',
+        'submission_notify_email',
         'filepermissions',
         'postmode',
         'enabled_mg_autotag',
