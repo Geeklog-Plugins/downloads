@@ -415,12 +415,11 @@ function listCategories()
     $text_arr = array('has_extras' => true,
                       'form_url'   => $_CONF['site_admin_url'] . "/plugins/downloads/index.php?op=listCategories");
 
-    $sql  = "SELECT c.*, COUNT(d.lid) AS download_count "
+    $sql  = "SELECT c.*, "
+          . "(SELECT COUNT(*) FROM {$_TABLES['downloads']} d WHERE d.cid=c.cid) AS download_count "
           . "FROM {$_TABLES['downloadcategories']} c "
-          . "LEFT JOIN {$_TABLES['downloads']} d ON d.cid=c.cid "
           . "WHERE c.cid != '' "
-          . COM_getPermSQL('AND', 0, 2, 'c')
-          . " GROUP BY c.cid";
+          . COM_getPermSQL('AND', 0, 2, 'c');
 
     $query_arr = array('table'          => 'downloadcategories',
                        'sql'            => $sql,
