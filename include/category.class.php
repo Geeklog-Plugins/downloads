@@ -410,6 +410,10 @@ class DLCategory
                . "VALUES ('$cid', '$pid', '$title', '$meta_description', '$meta_keywords', '$imgurl', $corder, $is_enabled, $owner_id, $group_id, "
                . "$perm_owner, $perm_group, $perm_members, $perm_anon)");
 
+        if (!DB_error()) {
+            PLG_itemSaved('category:' . $this->_cid, 'downloads');
+        }
+
         return PLG_afterSaveSwitch('item',
                     "{$_CONF['site_admin_url']}/plugins/downloads/index.php?op=listCategories",
                     'downloads', 106);
@@ -455,6 +459,12 @@ class DLCategory
 
         $this->_unlinkCatImage($this->_imgurlold);
 
+        if (!DB_error()) {
+            $old_identity = (!empty($this->_old_cid) && $this->_old_cid !== $this->_cid)
+                ? 'category:' . $this->_old_cid : '';
+            PLG_itemSaved('category:' . $this->_cid, 'downloads', $old_identity);
+        }
+
         return PLG_afterSaveSwitch('item',
                     "{$_CONF['site_admin_url']}/plugins/downloads/index.php?op=listCategories",
                     'downloads', 101);
@@ -483,20 +493,26 @@ class DLCategory
     {
         global $_TABLES, $_DLM_CONF;
 
+        $category_id = $cid;
         $cid = DB_escapeString($cid);
-        //all subcategory and associated data are deleted, now delete category data and its associated data
+
+        // All subcategory and associated data are deleted, now delete category data and its associated data.
         $result = DB_query("SELECT lid, url, logourl, secret_id FROM {$_TABLES['downloads']} WHERE cid='$cid'");
         while (list($lid, $url, $logourl, $secret_id)= DB_fetchArray($result)) {
+            $download_id = $lid;
             $lid = DB_escapeString($lid);
             DB_query("DELETE FROM {$_TABLES['downloadvotes']} WHERE lid='$lid'");
             DB_query("DELETE FROM {$_TABLES['downloads']}     WHERE lid='$lid'");
             $this->_unlinkDlFile($url, $secret_id);
             $this->_unlinkCatImage($logourl);
             $this->_unlinkTnImage($logourl);
+            PLG_itemDeleted($download_id, 'downloads');
         }
+
         $catimage = DB_getItem($_TABLES['downloadcategories'], 'imgurl', "cid='$cid'");
         DB_query("DELETE FROM {$_TABLES['downloadcategories']} WHERE cid='$cid'");
         $this->_unlinkCatImage($catimage);
+        PLG_itemDeleted('category:' . $category_id, 'downloads');
     }
 
     function _unlinkDlFile($name, $secret_id)
