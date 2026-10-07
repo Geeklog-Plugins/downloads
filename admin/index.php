@@ -428,18 +428,28 @@ function DLM_moveCategory()
 }
 
 /**
-* Enable and Disable menuitem
-*/
-function DLM_changeMenuitemStatus($itemenable)
+ * Enable or disable one category.
+ *
+ * @param string $cid
+ * @param int    $enabled
+ * @return bool
+ */
+function DLM_changeCategoryStatus($cid, $enabled)
 {
     global $_TABLES;
-    
-    DB_query("UPDATE {$_TABLES['downloadcategories']} SET is_enabled = 0");
-    foreach ($itemenable as $index => $value) {
-        $index = COM_applyFilter($index, true);
-        $order = $index * 10;
-        DB_query("UPDATE {$_TABLES['downloadcategories']} SET is_enabled = 1 WHERE corder = $order");
+
+    $cid = DB_escapeString(COM_sanitizeID($cid));
+    if ($cid === '' || DB_count($_TABLES['downloadcategories'], 'cid', $cid) != 1) {
+        return false;
     }
+
+    $enabled = ((int) $enabled === 1) ? 1 : 0;
+    DB_query(
+        "UPDATE {$_TABLES['downloadcategories']} "
+        . "SET is_enabled=$enabled WHERE cid='$cid'"
+    );
+
+    return !DB_error();
 }
 
 /**
@@ -561,12 +571,20 @@ function downloads_getListField_Categories($fieldname, $fieldvalue, $A, $icon_ar
             break;
 
         case 'title':
-            $retval = $fieldvalue . getCatName_by_language($A['cid']);
-            $switch = ($A['is_enabled'] == 1) ? UC_CHECKED : '';
-            $val = ($A['is_enabled'] == 1) ? 1 : 0;
-            $order = intval($A['corder'] / 10);
-            $retval = "<input type=\"checkbox\" name=\"itemenable[$order]\" onclick=\"submit()\" value=\"$val\" $switch>" . $retval;
-            $retval .= "<input type=\"hidden\" name=\"" . CSRF_TOKEN . "\" value=\"$DLM_CSRF_TOKEN\"" . XHTML . ">";
+            $title = DLM_htmlspecialchars($fieldvalue)
+                   . getCatName_by_language($A['cid']);
+            $next_state = ((int) $A['is_enabled'] === 1) ? 0 : 1;
+            $checked = ((int) $A['is_enabled'] === 1) ? ' checked="checked"' : '';
+            $toggle_url = $_CONF['site_admin_url'] . '/plugins/downloads/index.php'
+                        . '?op=toggleCategory'
+                        . '&amp;cid=' . rawurlencode($A['cid'])
+                        . '&amp;enabled=' . $next_state
+                        . $token;
+            $retval = '<a href="' . $toggle_url . '" class="dlm-category-toggle"'
+                    . ' title="' . DLM_htmlspecialchars($LANG_DLM['toggle_category']) . '">'
+                    . '<input type="checkbox" tabindex="-1" aria-hidden="true"'
+                    . $checked . XHTML . '>'
+                    . '<span>' . $title . '</span></a>';
             break;
 
         case 'corder':
@@ -682,11 +700,6 @@ $mode = (!empty($_REQUEST['mode'])) ? $_REQUEST['mode'] : '';
 $cid  = (!empty($_REQUEST['cid'])) ? COM_sanitizeID(trim($_REQUEST['cid'])) : '';
 $lid  = (!empty($_REQUEST['lid'])) ? COM_sanitizeID(trim($_REQUEST['lid'])) : '';
 
-$itemenable = Input::post('itemenable', array());
-if ((count($itemenable) > 0) && SEC_checkToken()) {
-    DLM_changeMenuitemStatus($itemenable);
-}
-
 $op = ($mode == 'editsubmission') ? $mode : $op;
 $op = ($mode == 'edit') ? 'uploadFile' : $op;
 
@@ -779,6 +792,10 @@ switch ($op) {
         break;
 
     case "approve":
+        if (!SEC_checkToken()) {
+            $display = COM_showMessageText($MESSAGE[29], $MESSAGE[30]);
+            break;
+        }
         if ($mode == $LANG_DLM['approve']) {
             $display = $dldl->approve();
         }
@@ -800,7 +817,9 @@ switch ($op) {
         break;
 
     case "addCategory":
-        if ($mode == $LANG_DLM['add'] || $mode == $LANG_DLM['save']) {
+        if (($mode == $LANG_DLM['add'] || $mode == $LANG_DLM['save'])
+            && SEC_checkToken()
+        ) {
             $display = $dlcat->addCategory();
         }
         break;
@@ -828,9 +847,29 @@ switch ($op) {
         break;
 
     case "move":
+        if (!SEC_inGroup('Root') || !SEC_checkToken()) {
+            $display = COM_showMessageText($MESSAGE[29], $MESSAGE[30]);
+            $display = COM_createHTMLDocument($display, array('pagetitle' => $MESSAGE[30]));
+            break;
+        }
         DLM_moveCategory();
         $DLM_CSRF_TOKEN = SEC_createToken();
         $display .= showMessage();
+        $display .= listCategories();
+        $display = COM_createHTMLDocument($display, array('pagetitle' => $LANG_DLM['manager']));
+        break;
+
+    case "toggleCategory":
+        if (!SEC_inGroup('Root') || !SEC_checkToken()) {
+            $display = COM_showMessageText($MESSAGE[29], $MESSAGE[30]);
+            $display = COM_createHTMLDocument($display, array('pagetitle' => $MESSAGE[30]));
+            break;
+        }
+        DLM_changeCategoryStatus(
+            $cid,
+            (int) Input::fGet('enabled', 0)
+        );
+        $DLM_CSRF_TOKEN = SEC_createToken();
         $display .= listCategories();
         $display = COM_createHTMLDocument($display, array('pagetitle' => $LANG_DLM['manager']));
         break;
