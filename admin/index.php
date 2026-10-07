@@ -76,6 +76,7 @@ function listDownloads()
                     array('text' => $LANG_DLM['ver'],        'field' => 'version', 'sort' => true),
                     array('text' => $LANG_DLM['size'],       'field' => 'size',    'sort' => true),
                     array('text' => $LANG_DLM['submitdate'], 'field' => 'date',    'sort' => true),
+                    array('text' => $LANG_DLM['status'],     'field' => 'status',  'sort' => false),
     );
 
     $defsort_arr  = array('field' => 'date', 'direction' => 'desc');
@@ -96,6 +97,14 @@ function listDownloads()
                             'text' => $LANG_DLM['nav_addfile']);
     }
 
+    $pending_count = DB_count($_TABLES['downloadsubmission']);
+    if (plugin_ismoderator_downloads() && $pending_count > 0) {
+        $menu_arr[] = array(
+            'url'  => $_CONF['site_admin_url'] . '/moderation.php',
+            'text' => $LANG_DLM['pending_submissions'] . ' (' . $pending_count . ')'
+        );
+    }
+
     $menu_arr[] = array('url'  => $_CONF['site_admin_url'],
                         'text' => $LANG_ADMIN['admin_home']);
 						
@@ -114,7 +123,8 @@ function listDownloads()
     $text_arr  = array('has_extras'     => true,
                        'form_url'       => $admin_url);
 
-    $sql  = "SELECT lid, url, a.title, a.cid, date, version, size, "
+    $sql  = "SELECT lid, url, a.title, a.cid, date, version, size, project, "
+          . "is_released, is_listing, "
           . "b.owner_id, group_id, perm_owner, perm_group, perm_members, perm_anon "
           . "FROM {$_TABLES['downloads']} a "
           . "LEFT JOIN {$_TABLES['downloadcategories']} b ON a.cid=b.cid "
@@ -123,7 +133,7 @@ function listDownloads()
 
     $query_arr = array('table'          => 'downloads',
                        'sql'            => $sql,
-                       'query_fields'   => array('a.title'),
+                       'query_fields'   => array('a.title', 'a.lid', 'a.project', 'a.version'),
                        'default_filter' => '');
 
     $retval .= ADMIN_list('downloads', 'downloads_getListField_Files', $header_arr, $text_arr,
@@ -178,6 +188,16 @@ function downloads_getListField_Files($fieldname, $fieldvalue, $A, $icon_arr)
 
         case "date":
             $retval = strftime('%Y-%m-%d', $A['date']); // Fixed format
+            break;
+
+        case "status":
+            if ((int) $A['is_released'] !== 1) {
+                $retval = $GLOBALS['LANG_DLM']['status_unreleased'];
+            } elseif ((int) $A['is_listing'] !== 1) {
+                $retval = $GLOBALS['LANG_DLM']['status_hidden'];
+            } else {
+                $retval = $GLOBALS['LANG_DLM']['status_published'];
+            }
             break;
 
         default:
@@ -329,7 +349,7 @@ function listCategories()
 
     $query_arr = array('table'          => 'downloadcategories',
                        'sql'            => $sql,
-                       'query_fields'   => array('title'),
+                       'query_fields'   => array('title', 'cid'),
                        'default_filter' => '');
 
     $retval .= ADMIN_list("downloadcategories", "downloads_getListField_Categories", $header_arr, $text_arr,
