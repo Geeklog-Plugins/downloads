@@ -769,8 +769,12 @@ function plugin_displaycomment_downloads($id, $commentid, $title, $order, $forma
          . " GROUP BY lid";
 
     $result = DB_query($sql);
-    $A = DB_fetchArray($result);
-    $allowed = $A['count'];
+    $allowed = 0;
+    $A = array();
+    if (DB_numRows($result) == 1) {
+        $A = DB_fetchArray($result);
+        $allowed = (int) $A['count'];
+    }
 
     if ($allowed == 1) {
         $delete_option = (SEC_hasRights('downloads.edit') &&
@@ -854,9 +858,15 @@ function plugin_user_delete_downloads($uid)
     // assign ownership to a user from the Root group
     $rootgroup = DB_getItem($_TABLES['groups'], 'grp_id', "grp_name = 'Root'");
     $result = DB_query("SELECT DISTINCT ug_uid FROM {$_TABLES['group_assignments']} "
-                     . "WHERE ug_main_grp_id = $rootgroup ORDER BY ug_uid LIMIT 1");
-    list($rootuser) = DB_fetchArray($result);
-    DB_query("UPDATE {$_TABLES['downloads']} SET owner_id = $rootuser WHERE owner_id = $uid");
+                     . "WHERE ug_main_grp_id = $rootgroup AND ug_uid IS NOT NULL "
+                     . "ORDER BY ug_uid LIMIT 1");
+    if (DB_numRows($result) == 1) {
+        list($rootuser) = DB_fetchArray($result);
+        DB_query("UPDATE {$_TABLES['downloads']} SET owner_id = " . (int) $rootuser
+               . " WHERE owner_id = " . (int) $uid);
+    } else {
+        DLM_errorLog("Downloads: user deletion warning: no Root user available for ownership reassignment.");
+    }
 }
 
 
