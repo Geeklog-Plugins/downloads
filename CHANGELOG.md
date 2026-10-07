@@ -35,6 +35,8 @@
 
 ### SEO and public pages
 
+- Added the Downloads landing page and public categories to XMLSitemap through Geeklog's native sitemap collection API.
+
 - Added Meta Description and Meta Keywords to downloads, submissions and categories.
 - Added public metadata output for category and download pages.
 - Added real 404 handling for invalid download IDs, categories and out-of-range pages.
@@ -52,6 +54,9 @@
 - Improved XMLSitemap / IndexNow compatibility.
 
 ### Administration
+
+- Expanded Preview from Description/Detail only to a representative download card with title, category, file metadata, project, homepage, image and content.
+- Refined the administration form layout with responsive two-column field alignment and cleaner section spacing.
 
 - Moved Meta Description and Meta Keywords directly below Detail in the download editor.
 - Organized the download and category editors into logical General / Content & SEO / Media / Publication sections.
