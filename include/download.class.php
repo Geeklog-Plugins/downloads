@@ -1000,11 +1000,24 @@ class DLDownload
                 }            }
         }
         if ($success) {
-            $this->_size = filesize($_DLM_CONF['path_filestore'] . $safename);
-            $this->_md5  = md5_file($_DLM_CONF['path_filestore'] . $safename);
-            $this->_uploadSnapImage();
+            $active_file = rtrim($_DLM_CONF['path_filestore'], "/\\")
+                         . DIRECTORY_SEPARATOR . $safename;
+            $this->_size = filesize($active_file);
+            $this->_md5  = md5_file($active_file);
+
+            if (!$this->_uploadSnapImage()) {
+                $this->_unlink($active_file);
+                return PLG_afterSaveSwitch('admin', '', 'downloads', 108);
+            }
+
             DLM_makeThumbnail(DLM_createSafeFileName($this->_logourl));
-            $this->_addToDatabase();
+
+            if (!$this->_addToDatabase()) {
+                $this->_unlink($active_file);
+                $this->_unlinkSnapImage($this->_logourl);
+                $this->_unlinkTnImage($this->_logourl);
+                return PLG_afterSaveSwitch('admin', '', 'downloads', 108);
+            }
 
             switch ($this->_page) {
                 case 'item':
@@ -1519,7 +1532,16 @@ class DLDownload
         }
 
         if ($success) {
-            $this->_addToDatabase();
+            if (!$this->_addToDatabase()) {
+                DLM_restoreFinalizedSubmissionFiles(
+                    (int) $submission_date,
+                    $url,
+                    $logourl,
+                    $secret_id
+                );
+                return PLG_afterSaveSwitch('admin', '', 'downloads', 108);
+            }
+
             DLM_recordSubmissionStatus($this->_lid, 'published', $this->_lid);
             DB_delete($_TABLES['downloadsubmission'], "lid", DB_escapeString($this->_old_lid));
 
@@ -1695,7 +1717,34 @@ class DLDownload
         }
 
         if ($success) {
-            $this->_addToDatabase($mode);
+            if (!$this->_addToDatabase($mode)) {
+                if ($mode === 'submission') {
+                    if ($tmpfilename !== '') {
+                        DLM_unlink(
+                            rtrim($_DLM_CONF['path_filestore'], "/\\")
+                            . DIRECTORY_SEPARATOR . $tmpfilename
+                        );
+                    }
+                    if ($tmpshotname !== '') {
+                        DLM_unlink(
+                            rtrim($_DLM_CONF['path_snapstore'], "/\\")
+                            . DIRECTORY_SEPARATOR . $tmpshotname
+                        );
+                    }
+                } else {
+                    if (!empty($safename)) {
+                        DLM_unlink(
+                            rtrim($_DLM_CONF['path_filestore'], "/\\")
+                            . DIRECTORY_SEPARATOR . $safename
+                        );
+                    }
+                    $this->_unlinkSnapImage($this->_logourl);
+                    $this->_unlinkTnImage($this->_logourl);
+                }
+                echo PLG_afterSaveSwitch('home', '', 'downloads', 108);
+                exit();
+            }
+
             if ($mode === 'submission') {
                 DLM_recordSubmissionStatus($this->_lid, 'pending');
                 DLM_sendSubmissionNotification($this->_lid);
