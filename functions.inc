@@ -545,11 +545,17 @@ function plugin_getadminoption_downloads()
 */
 function plugin_getuseroption_downloads()
 {
-    global $_CONF, $_TABLES, $LANG_DLM, $_DLM_CONF;
+    global $_CONF, $LANG_DLM, $_DLM_CONF;
+
+    if (COM_isAnonUser()) {
+        return false;
+    }
 
     if (SEC_hasRights('downloads.upload') || $_DLM_CONF['download_uploadselect'] == 1) {
-        return array($LANG_DLM['user_menu'], $_CONF['site_url'] . '/submit.php?type=downloads');
+        return array($LANG_DLM['my_downloads'],
+                     $_CONF['site_url'] . '/downloads/submissions.php');
     }
+
     return false;
 }
 
