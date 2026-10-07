@@ -424,7 +424,8 @@ class DLDownload
                       'toolbar', 'toolbar1', 'toolbar2', 'toolbar3', 'toolbar5',
                       'md5', 'mg_autotag', 'mg_autotag_info', 'upload', 'tags', 'preview',
                       'meta_description', 'meta_keywords', 'tags_help', 'project_help',
-                      'required_field');
+                      'required_field', 'section_general', 'section_content_seo',
+                      'section_media', 'section_publication');
         foreach ($lang as $v) $T->set_var('lang_' . $v, $LANG_DLM[$v]);
 
         $action = 'index.php';
