@@ -1260,11 +1260,10 @@ function plugin_savesubmission_downloads($A)
 */
 function plugin_getiteminfo_downloads($lid, $what, $uid = 0, $options = array())
 {
-    global $_CONF, $_TABLES, $_DLM_CONF;
+    global $_CONF, $_TABLES;
 
-    // parse $what to see what we need to pull from the database
-    $properties = explode(',', $what);
-    $fields = array();
+    $properties = array_map('trim', explode(',', $what));
+    $fields = array('a.lid');
     foreach ($properties as $p) {
         switch ($p) {
         case 'date-modified':
@@ -1282,87 +1281,142 @@ function plugin_getiteminfo_downloads($lid, $what, $uid = 0, $options = array())
             $fields[] = 'a.title';
             break;
         case 'url':
-            // needed for $lid == '*', but also in case we're only requesting
-            // the URL (so that $fields isn't emtpy)
             $fields[] = 'a.lid';
-            break;
-        default:
-            // nothing to do
             break;
         }
     }
 
     $fields = array_unique($fields);
-
-    if (count($fields) == 0) return array();
-
     $fsingle = ($lid != '*');
+    $now = time();
 
-    $sql = "SELECT " . implode(',', $fields) . " FROM {$_TABLES['downloads']} a "
+    $where = array(
+        'a.is_released=1',
+        'a.date<=' . $now,
+        'b.is_enabled=1'
+    );
+    if ($fsingle) {
+        $where[] = "a.lid='" . DB_escapeString($lid) . "'";
+    }
+
+    if (!$fsingle && isset($options['since']) && is_numeric($options['since'])) {
+        $where[] = 'a.date>=' . (int) $options['since'];
+    }
+
+    $sql = "SELECT " . implode(',', $fields)
+         . " FROM {$_TABLES['downloads']} a "
          . "LEFT JOIN {$_TABLES['downloadcategories']} b ON a.cid=b.cid "
-         . ($fsingle ? " WHERE lid = '" . DB_escapeString($lid) . "'" : '')
-         . COM_getPermSQL(($fsingle ? 'AND' : 'WHERE'), (($uid > 0) ? $uid : 0), 2, 'b')
-         . DLM_helper_getLangSQL()
-         . ($fsingle ? ' LIMIT 1' : '');
+         . "WHERE " . implode(' AND ', $where)
+         . COM_getPermSQL('AND', (($uid > 0) ? $uid : 0), 2, 'b')
+         . DLM_helper_getLangSQL();
+
+    if (!$fsingle) {
+        $order = 'a.date DESC';
+        if (isset($options['order'])) {
+            switch ($options['order']) {
+            case 'title':
+            case 'title-asc':
+                $order = 'a.title ASC';
+                break;
+            case 'title-desc':
+                $order = 'a.title DESC';
+                break;
+            case 'date':
+            case 'date-desc':
+                $order = 'a.date DESC';
+                break;
+            case 'date-asc':
+                $order = 'a.date ASC';
+                break;
+            }
+        }
+        $sql .= ' ORDER BY ' . $order;
+
+        if (isset($options['limit'])) {
+            $limit = (int) $options['limit'];
+            if ($limit > 0) {
+                $sql .= ' LIMIT ' . $limit;
+            }
+        }
+    } else {
+        $sql .= ' LIMIT 1';
+    }
+
     $result = DB_query($sql);
-    $numRows = DB_numRows($result);
-
     $retval = array();
-    for ($i = 0; $i < $numRows; $i++) {
-        $A = DB_fetchArray($result);
 
+    while ($A = DB_fetchArray($result)) {
         $props = array();
         foreach ($properties as $p) {
             switch ($p) {
             case 'date-modified':
-                $props['date-modified'] = $A['unixdate'];
+                $props[$p] = (int) $A['unixdate'];
                 break;
             case 'description':
             case 'excerpt':
-                $desc = stripslashes($A['description'])
-                      . '<br' . XHTML . '>' . stripslashes($A['detail']);
+                $desc = stripslashes($A['description']);
+                if (!empty($A['detail'])) {
+                    $desc .= '<br' . XHTML . '>' . stripslashes($A['detail']);
+                }
                 $props[$p] = PLG_replaceTags($desc);
                 break;
             case 'id':
-                $props['id'] = $A['lid'];
+                $props[$p] = $A['lid'];
                 break;
             case 'title':
-                $props['title'] = stripslashes($A['title']);
+                $props[$p] = stripslashes($A['title']);
                 break;
             case 'url':
-                $props['url'] = COM_buildUrl($_CONF['site_url'] 
-                    . '/downloads/index.php?id=' . (empty($A['lid']) ? $lid : $A['lid']) );
+                $props[$p] = COM_buildURL(
+                    $_CONF['site_url'] . '/downloads/index.php?id=' . rawurlencode($A['lid'])
+                );
                 break;
             default:
-                // return empty string for unknown properties
                 $props[$p] = '';
                 break;
             }
         }
 
-        $mapped = array();
-        foreach ($props as $key => $value) {
-            if (!$fsingle) {
-                if ($value != '') {
-                    $mapped[$key] = $value;
-                }
-            } else {
-                $mapped[] = $value;
-            }
+        if ($fsingle) {
+            $retval = array_values($props);
+            break;
         }
 
-        if (!$fsingle) {
-            $retval[] = $mapped;
-        } else {
-            $retval = $mapped;
-            break;        }
+        $mapped = array();
+        foreach ($props as $key => $value) {
+            if ($value !== '') {
+                $mapped[$key] = $value;
+            }
+        }
+        $retval[] = $mapped;
     }
 
-    if ($fsingle && (count($retval) == 1)) {
-        $retval = $retval[0];
+    if ($fsingle && count($retval) == 1) {
+        return $retval[0];
     }
 
     return $retval;
+}
+
+/**
+ * Convert a Downloads item id to its canonical public URL.
+ *
+ * @param string $id
+ * @return string
+ */
+function plugin_idtourl_downloads($id)
+{
+    global $_CONF;
+
+    $info = plugin_getiteminfo_downloads($id, 'url');
+    if (is_string($info)) {
+        return $info;
+    }
+    if (is_array($info) && isset($info[0])) {
+        return $info[0];
+    }
+
+    return '';
 }
 
 /**
