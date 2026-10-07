@@ -542,6 +542,12 @@ function makeCategoryPart($cid, $search_query = '')
         $T->set_var('cid',           $ele['cid']);
         $T->set_var('chtitle',       $chtitle);
         $T->set_var('totaldownload', $category_total);
+        $category_url = $_CONF['site_url'] . '/downloads/index.php?cid='
+                      . rawurlencode($ele['cid']);
+        if ($search_query !== '') {
+            $category_url .= '&amp;q=' . rawurlencode($search_query);
+        }
+
         $category_image_link = '&nbsp;';
         if ($_DLM_CONF['download_useshots']) {
             if ($ele['imgurl'] && $ele['imgurl'] != "http://") {
@@ -551,11 +557,6 @@ function makeCategoryPart($cid, $search_query = '')
             }
             $category_image_link = COM_createImage($imgurl, $chtitle,
                                                    array('width' => $_DLM_CONF['download_shotwidth']));
-            $category_url = $_CONF['site_url'] . '/downloads/index.php?cid='
-                          . rawurlencode($ele['cid']);
-            if ($search_query !== '') {
-                $category_url .= '&amp;q=' . rawurlencode($search_query);
-            }
             $category_image_link = COM_createLink($category_image_link, $category_url);
         }
         $T->set_var('category_url', $category_url);
