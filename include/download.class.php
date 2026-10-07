@@ -1095,10 +1095,17 @@ class DLDownload
                . $sql_val_additions
                . "'$postmode', $is_released, $is_listing, '$createddate')");
 
+        if (DB_error()) {
+            DLM_errorLog("Downloads: database error while inserting download '$lid'.");
+            return false;
+        }
+
         if ($mode != 'submission') {
             PLG_itemSaved($this->_lid, 'downloads');
             COM_rdfUpToDateCheck('downloads', $this->_cid, $this->_lid);
         }
+
+        return true;
     }
 
     function _saveToDatabase($mode='')
@@ -1353,13 +1360,18 @@ class DLDownload
                 $this->_errno[] = '1405';
                 return false;
             }
+
             $name = $this->_createFilename($newimage_name, $_TABLES['downloads'], 'logourl');
-            if (DLM_uploadNewFile($_FILES['newfileshot'], $_DLM_CONF['path_snapstore'], $name)) {
-                $this->_logourl = $name;
+            if (!DLM_uploadNewFile($_FILES['newfileshot'], $_DLM_CONF['path_snapstore'], $name)) {
+                return false;
             }
-        } else if ($this->_deletesnap) {
+
+            $this->_logourl = $name;
+        } elseif ($this->_deletesnap) {
             $this->_logourl = '';
         }
+
+        return true;
     }
 
     function _unlinkSnapImage($name)
