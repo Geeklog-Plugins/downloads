@@ -228,41 +228,99 @@ function DLM_moveNewFile($tmpfile, $newfile)
     return true;
 }
 
+/**
+ * Finalize files belonging to a pending download submission.
+ *
+ * Shared by both the Downloads administration editor and Geeklog moderation.
+ */
+function DLM_finalizeSubmissionFiles($date, $url, $logourl, $secret_id)
+{
+    global $_DLM_CONF;
+
+    if (empty($url) || empty($secret_id)) {
+        DLM_errorLog("Downloads: approval error: Missing file name or secret id.");
+        return false;
+    }
+
+    if (!DLM_ensureDirectory($_DLM_CONF['path_filestore'])) {
+        return false;
+    }
+    if (!empty($logourl) && !DLM_ensureDirectory($_DLM_CONF['path_snapstore'])) {
+        return false;
+    }
+
+    $safeurl = DLM_createSafeFileName($url);
+    $tmpfile = rtrim($_DLM_CONF['path_filestore'], "/\\") . DIRECTORY_SEPARATOR
+             . 'tmp' . date('YmdHis', $date) . $safeurl;
+    $newfile = rtrim($_DLM_CONF['path_filestore'], "/\\") . DIRECTORY_SEPARATOR
+             . DLM_createSafeFileName($url, $secret_id);
+
+    if (!is_file($tmpfile) || is_file($newfile) || !rename($tmpfile, $newfile)) {
+        DLM_errorLog("Downloads: approval error: Could not finalize pending download file.");
+        return false;
+    }
+
+    @chmod($newfile, intval((string) $_DLM_CONF['filepermissions'], 8));
+
+    if (!empty($logourl)) {
+        $safesnap = DLM_createSafeFileName($logourl);
+        $tmpsnap = rtrim($_DLM_CONF['path_snapstore'], "/\\") . DIRECTORY_SEPARATOR
+                 . 'tmp' . date('YmdHis', $date) . $safesnap;
+        $newsnap = rtrim($_DLM_CONF['path_snapstore'], "/\\") . DIRECTORY_SEPARATOR
+                 . $safesnap;
+
+        if (!is_file($tmpsnap) || is_file($newsnap) || !rename($tmpsnap, $newsnap)) {
+            rename($newfile, $tmpfile);
+            DLM_errorLog("Downloads: approval error: Snapshot finalization failed; main file restored to pending state.");
+            return false;
+        }
+
+        @chmod($newsnap, intval((string) $_DLM_CONF['filepermissions'], 8));
+        DLM_makeThumbnail($safesnap);
+    }
+
+    return is_file($newfile);
+}
+
 // Approve the uploaded file (process after the approval)
 function DLM_approveNewDownload($id)
 {
-    global $_TABLES, $_CONF, $_DLM_CONF;
+    global $_TABLES, $_DLM_CONF;
 
-    $result = DB_query("SELECT url, logourl, date, secret_id "
+    $id = DB_escapeString($id);
+    $result = DB_query("SELECT url, logourl, date, secret_id, cid "
                      . "FROM {$_TABLES['downloads']} "
-                     . "WHERE lid = '" . DB_escapeString($id) . "'");
-    list($url, $logourl, $date, $secret_id) = DB_fetchArray($result);
+                     . "WHERE lid = '$id'");
 
-    $safename = DLM_encodeFileName($url);
-    $tmpfile = $_DLM_CONF['path_filestore'] . 'tmp' . date('YmdHis', $date) . $safename;
-    $newfile = $_DLM_CONF['path_filestore'] . $secret_id . '_' . $safename;
-    $success = DLM_moveNewFile($tmpfile, $newfile);
-
-    if ($success && !empty($logourl)) {
-        $safename = DLM_encodeFileName($logourl);
-        $tmpfile = $_DLM_CONF['path_snapstore'] . 'tmp' . date('YmdHis', $date) . $safename;
-        $newfile = $_DLM_CONF['path_snapstore'] . $safename;
-        $success = DLM_moveNewFile($tmpfile, $newfile);
-        if ($success) {
-            DLM_makeThumbnail($safename);
-        }
+    if (DB_numRows($result) != 1) {
+        DLM_errorLog("Downloads: approval error: Published moderation row not found for '$id'.");
+        return false;
     }
 
-    if ($success) {
+    $A = DB_fetchArray($result);
+    if (!DLM_finalizeSubmissionFiles(
+        (int) $A['date'],
+        $A['url'],
+        $A['logourl'],
+        $A['secret_id']
+    )) {
+        if (DB_count($_TABLES['downloadsubmission'], 'lid', $id) == 0) {
+            DB_query("INSERT INTO {$_TABLES['downloadsubmission']} "
+                   . "SELECT * FROM {$_TABLES['downloads']} WHERE lid = '$id'");
+        }
+        DB_delete($_TABLES['downloads'], 'lid', $id);
+        DLM_errorLog("Downloads: moderation approval rolled back to pending state for '$id'.");
+        return false;
+    }
 
-        // PLG_itemSaved($lid, 'downloads');
+    PLG_itemSaved($id, 'downloads');
+    COM_rdfUpToDateCheck('downloads', $A['cid'], $id);
 
-        // COM_rdfUpToDateCheck('downloads', $cid, $lid);
+    if ($_DLM_CONF['download_emailoption']) {
+        DLM_sendNotification($id);
+    }
 
-        // Send a email to submitter notifying them that file was approved
-        if ($_DLM_CONF['download_emailoption']) {
-            DLM_sendNotification($id);
-        }    }
+    return true;
 }
 
 function DLM_unlink($path)
