@@ -53,6 +53,9 @@
 
 ### Administration
 
+- Moved Meta Description and Meta Keywords directly below Detail in the download editor.
+- Versioned plugin-owned CSS and JavaScript URLs with the 1.3.0 release version to prevent stale browser caches.
+
 - Search now covers title, ID, project and version.
 - Added publication/listing status column.
 - Added file-health column.
