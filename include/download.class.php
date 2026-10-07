@@ -1186,6 +1186,11 @@ class DLDownload
                . "date=$date, createddate='$createddate' "
                . "WHERE lid='$this->_old_lid'");
 
+        if (DB_error()) {
+            DLM_errorLog("Downloads: database error while updating download '$lid'.");
+            return false;
+        }
+
         if ($this->_old_lid == $this->_lid) {
             PLG_itemSaved($this->_lid, 'downloads');
         } else {
@@ -1194,6 +1199,7 @@ class DLDownload
             PLG_itemSaved($this->_lid, 'downloads', $this->_old_lid);
         }
         COM_rdfUpToDateCheck('downloads', $this->_cid, $this->_lid);
+        return true;
     }
 
     function _unlink($path)
@@ -1266,6 +1272,8 @@ class DLDownload
         $old_secret_id = DB_getItem($_TABLES['downloads'], 'secret_id', "lid='" . DB_escapeString($this->_old_lid) . "'");
         $safename = DLM_createSafeFileName($old_filename, $old_secret_id);
         $old_filepath = $_DLM_CONF['path_filestore'] . $safename;
+        $backup_filepath = '';
+        $new_filepath = '';
         if (!empty($newfile_name)) {
             $new_safename = DLM_createSafeFileName($newfile_name, $old_secret_id);
             $staged_safename = uniqid('replace_') . '_' . DLM_encodeFileName($newfile_name);
@@ -1278,7 +1286,6 @@ class DLDownload
                 return PLG_afterSaveSwitch('admin', '', 'downloads', 108);
             }
 
-            $backup_filepath = '';
             if (is_file($old_filepath)) {
                 $backup_filepath = $old_filepath . '.bak-' . uniqid();
                 if (!rename($old_filepath, $backup_filepath)) {
@@ -1305,10 +1312,6 @@ class DLDownload
                 return PLG_afterSaveSwitch('admin', '', 'downloads', 108);
             }
 
-            if ($backup_filepath !== '') {
-                $this->_unlink($backup_filepath);
-            }
-
             @chmod($new_filepath, intval((string) $_DLM_CONF['filepermissions'], 8));
             $safename = $new_safename;
             $this->_url = $newfile_name;
@@ -1323,10 +1326,34 @@ class DLDownload
 
         // The snapshot file
         $logourl_old = DB_getItem($_TABLES['downloads'], 'logourl', "lid='" . DB_escapeString($this->_old_lid) . "'");
-        $this->_uploadSnapImage();
+        if (!$this->_uploadSnapImage()) {
+            if ($new_filepath !== '' && is_file($new_filepath)) {
+                $this->_unlink($new_filepath);
+            }
+            if ($backup_filepath !== '' && is_file($backup_filepath)) {
+                rename($backup_filepath, $old_filepath);
+            }
+            return PLG_afterSaveSwitch('admin', '', 'downloads', 108);
+        }
         DLM_makeThumbnail(DLM_createSafeFileName($this->_logourl));
 
-        $this->_saveToDatabase();
+        if (!$this->_saveToDatabase()) {
+            if ($new_filepath !== '' && is_file($new_filepath)) {
+                $this->_unlink($new_filepath);
+            }
+            if ($backup_filepath !== '' && is_file($backup_filepath)) {
+                rename($backup_filepath, $old_filepath);
+            }
+            if ($this->_logourl !== $logourl_old) {
+                $this->_unlinkSnapImage($this->_logourl);
+                $this->_unlinkTnImage($this->_logourl);
+            }
+            return PLG_afterSaveSwitch('admin', '', 'downloads', 108);
+        }
+
+        if ($backup_filepath !== '') {
+            $this->_unlink($backup_filepath);
+        }
 
         $this->_unlinkSnapImage($logourl_old);
         $this->_unlinkTnImage($logourl_old);
