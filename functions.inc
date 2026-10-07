@@ -757,7 +757,7 @@ function plugin_deletecomment_downloads($cid, $id, $returnBoolean)
 */
 function plugin_displaycomment_downloads($id, $commentid, $title, $order, $format, $page, $view)
 {
-    global $_TABLES, $LANG_DLM;
+    global $_TABLES, $LANG_DLM, $LANG_ACCESS;
 
     $retval = '';
 
@@ -836,7 +836,7 @@ function plugin_upgrade_downloads()
 */
 function plugin_user_delete_downloads($uid)
 {
-    global $_TABLES, $_DLM_CONF;
+    global $_CONF, $_TABLES, $_DLM_CONF;
 
     if (DB_count($_TABLES['downloads'], 'owner_id', $uid) == 0) return;
 
