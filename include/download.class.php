@@ -568,7 +568,10 @@ class DLDownload
         if ($enabled_adv_editor) {
             // Add JavaScript
             $_SCRIPTS->setJavaScriptFile('postmode_control', '/javascript/postmode_control.js');
-            COM_setupAdvancedEditor('/downloads/adveditor.js', 'story.edit');
+            COM_setupAdvancedEditor(
+                '/downloads/adveditor.js?v=' . rawurlencode(DOWNLOADS_VERSION),
+                'story.edit'
+            );
         }
 
         if (empty($this->_postmode)) {
@@ -597,7 +600,10 @@ class DLDownload
             $hidden_values .= $this->_makeForm_hidden('listing_cid', $this->_listing_cid);
         }
 
-        $_SCRIPTS->setJavaScriptFile('downloads_editor', '/downloads/editor.js');
+        $_SCRIPTS->setJavaScriptFile(
+            'downloads_editor',
+            '/downloads/editor.js?v=' . rawurlencode(DOWNLOADS_VERSION)
+        );
 
         $project_options = '';
         $project_result = DB_query("SELECT DISTINCT a.project FROM {$_TABLES['downloads']} a "
