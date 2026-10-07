@@ -1,5 +1,5 @@
 
 <!-- start mod_newfilesubmit.thtml -->
-      <dt>{lang_dlfilename}</dt>
-      <dd><input type="file" name="newfile" size="48" maxlength="200"{xhtml}></dd>
+      <dt>{lang_dlfilename} <span class="required">*</span></dt>
+      <dd><input type="file" name="newfile" size="48" maxlength="200" required="required"{xhtml}></dd>
 <!-- end mod_newfilesubmit.thtml -->
