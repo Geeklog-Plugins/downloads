@@ -449,7 +449,12 @@ function DLM_changeCategoryStatus($cid, $enabled)
         . "SET is_enabled=$enabled WHERE cid='$cid'"
     );
 
-    return !DB_error();
+    if (!DB_error()) {
+        PLG_itemSaved('category:' . COM_sanitizeID($cid, false), 'downloads');
+        return true;
+    }
+
+    return false;
 }
 
 /**
