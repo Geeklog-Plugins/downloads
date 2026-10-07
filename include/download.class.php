@@ -100,7 +100,7 @@ class DLDownload
         $this->_errno = array();
         $this->_retry = false;
         $this->_page = 'admin';
-        $this->_listing_cid = ROOTID;
+        $this->_listing_cid = DLM_ROOTID;
     }
 
     function initCatTree(&$obj = NULL)
@@ -114,8 +114,8 @@ class DLDownload
                 return;
             }
             require_once $_CONF['path'] . 'plugins/downloads/include/gltree.class.php';
-            $this->_cat_tree = new GLTree($_TABLES['downloadcategories'], 'cid', 'pid', 'title', '', ROOTID);
-       //            $mytree = new GLTree($_TABLES['downloadcategories'], 'cid', 'pid', 'title', COM_getPermSQL('AND'), ROOTID, $_DLM_CONF['lang_id']);
+            $this->_cat_tree = new GLTree($_TABLES['downloadcategories'], 'cid', 'pid', 'title', '', DLM_ROOTID);
+       //            $mytree = new GLTree($_TABLES['downloadcategories'], 'cid', 'pid', 'title', COM_getPermSQL('AND'), DLM_ROOTID, $_DLM_CONF['lang_id']);
 
             $this->_cat_tree->setRoot($LANG_DLM['main']);
         }
@@ -594,7 +594,7 @@ class DLDownload
         $hidden_values  = $this->_makeForm_hidden('owner_id', $this->_owner_id);
         $hidden_values .= $this->_makeForm_hidden('editor_mode', $this->_editor_mode);
         $hidden_values .= $this->_makeForm_hidden('page', $this->_page);
-        if (!empty($this->_listing_cid) && $this->_listing_cid != ROOTID) {
+        if (!empty($this->_listing_cid) && $this->_listing_cid != DLM_ROOTID) {
             $hidden_values .= $this->_makeForm_hidden('listing_cid', $this->_listing_cid);
         }
 
@@ -746,7 +746,7 @@ class DLDownload
             $T2->set_file('t_mod_preview', 'mod_preview.thtml');
 
             $preview_category = '';
-            if (!empty($this->_cid) && $this->_cid !== ROOTID) {
+            if (!empty($this->_cid) && $this->_cid !== DLM_ROOTID) {
                 $preview_category = DB_getItem(
                     $_TABLES['downloadcategories'],
                     'title',
@@ -1738,7 +1738,7 @@ class DLDownload
         }
         // Validate the input values -----------------------<
 
-        if (empty($this->_cid)) $this->_cid = ROOTID;
+        if (empty($this->_cid)) $this->_cid = DLM_ROOTID;
 
         $success = false;
         $tmpfilename = '';
