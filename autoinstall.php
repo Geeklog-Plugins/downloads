@@ -54,7 +54,7 @@ function plugin_autoinstall_downloads($pi_name)
     $info = array(
         'pi_name'         => $pi_name,
         'pi_display_name' => $pi_display_name,
-        'pi_version'      => '1.2.3.1',
+        'pi_version'      => '1.3.0',
         'pi_gl_version'   => '2.1.2',
         'pi_homepage'     => 'https://github.com/Geeklog-Plugins/downloads'
     );
@@ -291,11 +291,24 @@ function DLM_upgrade()
 
             case '1.2.2':
                 $current_version = '1.2.3';
-                $done = true;
                 break;
 
             case '1.2.3':
                 $current_version = '1.2.3.1';
+                break;
+
+            case '1.2.3.1':
+                if (isset($_UPDATES[$current_version])) {
+                    $_SQL = $_UPDATES[$current_version];
+                    foreach ($_SQL as $sql) {
+                        DB_query($sql);
+                    }
+                }
+                $current_version = '1.3.0';
+                $done = true;
+                break;
+
+            case '1.3.0':
                 $done = true;
                 break;
 
