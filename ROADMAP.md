@@ -21,6 +21,8 @@ Implemented in the development branch:
 - improved admin search, status visibility and pending-submission navigation;
 - admin file-health and storage diagnostics;
 - hardened Item Info for released/public content;
+- XMLSitemap collection now includes the Downloads landing page, public categories and public downloads;
+- richer Preview rendering with title/category/file/version/size/project/homepage/image/content;
 - deterministic ID-to-URL fallback for IndexNow/XMLSitemap lifecycle consumers;
 - public rating CSRF protection and visibility checks;
 - download history visibility checks;
@@ -64,8 +66,18 @@ The remaining sections below are the acceptance roadmap for the release.
 - [ ] New-submission email notification
 - [ ] Submitter approval email notification
 - [ ] Missing physical file produces admin diagnostic and public 404
-- [ ] XMLSitemap / IndexNow integration
+- [x] IndexNow integration
+- [x] XMLSitemap downloads
+- [ ] XMLSitemap categories (implementation added; real regeneration test required)
+- [x] Generic public 404 handling
+- [ ] Rich editor Preview reflects the intended public content
 - [ ] Oversized upload produces a controlled user-facing error
+
+### Public UI direction
+
+- Public pages should keep their existing visual identity and charm.
+- Prefer spacing, responsive, accessibility and small visual refinements over a wholesale redesign.
+- Administration forms can be modernized more substantially because clarity and maintenance take priority there.
 
 ### Deferred from the 1.3.0 release candidate
 
