@@ -490,7 +490,7 @@ function makeCategoryPart($cid)
 }
 
 
-function makeSortMenu($cid, $nppage, $orderby, $show)
+function makeSortMenu($cid, $nppage, $orderby, $show, $search_query = '')
 {
     global $_DLM_CONF, $LANG_DLM;
 
@@ -524,6 +524,8 @@ function makeSortMenu($cid, $nppage, $orderby, $show)
         'current_num_20'      => (($show == 20) ? 'current' : 'dummy'),
         'current_num_50'      => (($show == 50) ? 'current' : 'dummy'),
         'orderbyTrans'        => $orderbyTrans,
+        'search_query_suffix'  => ($search_query !== '')
+            ? '&amp;q=' . rawurlencode($search_query) : '',
     ));
     return $T->finish($T->parse('sort_menu', 'sortmenu'));
 }
@@ -562,6 +564,7 @@ $T->set_file(array(
     'filedetail_notn' => 'filedetail_no_tn.thtml',
     'records_notn'    => 'filelisting_record_no_tn.thtml',
     'categoryselbox'  => 'filelisting_category_selbox.thtml',
+    'searchform'      => 'filelisting_search.thtml',
 ));
 if (!$_DLM_CONF['show_tn_image']) {
     $T->set_file(array(
@@ -646,6 +649,10 @@ if (!empty($lid)) {
 $T->set_var('tablewidth', $_DLM_CONF['download_shotwidth'] + 10); // probably no longer necessary
 
 $cid = Input::fGet('cid', Input::fPost('selbox_cat', ROOTID));
+$search_query = trim((string) Input::fGet('q', ''));
+if (strlen($search_query) > 120) {
+    $search_query = substr($search_query, 0, 120);
+}
 
 $page = (int) Input::fGet('page', Input::fPost('selbox_page', 0));
 if ($page <= 0) {
@@ -675,6 +682,28 @@ $pathstring = "<a href=\"{$_CONF['site_url']}/downloads/index.php\">" . $LANG_DL
             . $mytree->getNicePathFromId($cid, "title", "{$_CONF['site_url']}/downloads/index.php");
 $T->set_var('category_path_link', $pathstring);
 
+$T->set_var('lang_search_downloads', $LANG_DLM['search_downloads']);
+$T->set_var('lang_search_placeholder', $LANG_DLM['search_placeholder']);
+$T->set_var('lang_search', $LANG_DLM['search']);
+$T->set_var('lang_clear', $LANG_DLM['clear']);
+$T->set_var('search_query_value', DLM_htmlspecialchars($search_query));
+$T->set_var('search_cid', DLM_htmlspecialchars($cid));
+$T->set_var('search_reset_url', $_CONF['site_url'] . '/downloads/index.php?cid=' . rawurlencode($cid));
+$T->parse('search_form', 'searchform');
+
+$search_sql = '';
+if ($search_query !== '') {
+    $search_term = DB_escapeString($search_query);
+    $search_term = str_replace(array('%', '_'), array('\\%', '\\_'), $search_term);
+    $like = "'%" . $search_term . "%'";
+    $search_sql = "AND (d.title LIKE $like ESCAPE '\\\\' "
+                . "OR d.description LIKE $like ESCAPE '\\\\' "
+                . "OR d.detail LIKE $like ESCAPE '\\\\' "
+                . "OR d.project LIKE $like ESCAPE '\\\\' "
+                . "OR d.version LIKE $like ESCAPE '\\\\' "
+                . "OR d.tags LIKE $like ESCAPE '\\\\') ";
+}
+
 // child category objects
 $T->set_var('category_part', makeCategoryPart($cid));
 
@@ -683,8 +712,25 @@ $carr = array_merge(array($cid), $carr);
 $sql_cid_list = "('" . implode("','", $carr) . "') ";
 $carr_count = count($carr);
 
-$maxrows = getTotalItems($carr);
-$T->set_var('filelisting_info', sprintf($LANG_DLM['listingheading'], $maxrows)); // number of file list
+if ($search_query === '') {
+    $maxrows = getTotalItems($carr);
+    $T->set_var('filelisting_info', sprintf($LANG_DLM['listingheading'], $maxrows));
+} else {
+    $count_permsql = $_DLM_CONF['has_edit_rights'] ? '' : COM_getPermSQL('AND', 0, 2, 'c');
+    $count_sql = "SELECT COUNT(*) FROM {$_TABLES['downloads']} d "
+               . "LEFT JOIN {$_TABLES['downloadcategories']} c ON d.cid=c.cid "
+               . "WHERE d.is_released=1 "
+               . (($carr_count > 0) ? "AND d.cid IN " . $sql_cid_list : " ")
+               . "AND d.is_listing=1 "
+               . "AND d.date<=$now "
+               . $search_sql
+               . $count_permsql;
+    list($maxrows) = DB_fetchArray(DB_query($count_sql));
+    $T->set_var(
+        'filelisting_info',
+        sprintf($LANG_DLM['search_results_for'], DLM_htmlspecialchars($search_query), $maxrows)
+    );
+}
 $nppage = (int) Input::fRequest('nppage', Input::fPost('selbox_nppage', 0));
 
 $show = $_DLM_CONF['download_perpage'];
@@ -693,7 +739,7 @@ $numpages = ceil($maxrows / $show);
 $orderby = Input::fGet('orderby', Input::fPost('selbox_orderby', 'dated'));
 
 if ($maxrows > 0) {
-    $T->set_var('sort_menu', makeSortMenu($cid, $nppage, $orderby, $show)); // sort menu
+    $T->set_var('sort_menu', makeSortMenu($cid, $nppage, $orderby, $show, $search_query)); // sort menu
 }
 
 $selbox = $mytree->makeSelBox('title', 'corder', $cid, 1, 'selbox_cat', "javascript:submit()");
@@ -720,9 +766,11 @@ $sql = "SELECT d.lid, d.cid, d.title, url, homepage, version, size, md5, d.owner
      . "LEFT JOIN {$_TABLES['downloadcategories']} c ON d.cid=c.cid "
      . "WHERE is_released=1 "
      . (($carr_count > 0) ? "AND d.cid IN " . $sql_cid_list : " ")
-     . "AND is_listing=1 "
-     . "AND date<=$now "
-     . "ORDER BY $ordersql LIMIT $offset, $show";
+     . "AND d.is_listing=1 "
+     . "AND d.date<=$now "
+     . $search_sql
+     . ($_DLM_CONF['has_edit_rights'] ? '' : COM_getPermSQL('AND', 0, 2, 'c'))
+     . " ORDER BY $ordersql LIMIT $offset, $show";
 $result = DB_query($sql);
 if (DB_numRows($result) > 0) {
     $cssid = 1;
@@ -742,7 +790,11 @@ if (DB_numRows($result) > 0) {
     }
 
     // Print Google-like paging navigation
-    $base_url = $_CONF['site_url'] . '/downloads/index.php?cid=' . $cid . '&amp;nppage=' . $nppage;
+    $base_url = $_CONF['site_url'] . '/downloads/index.php?cid=' . rawurlencode($cid)
+              . '&amp;nppage=' . $nppage;
+    if ($search_query !== '') {
+        $base_url .= '&amp;q=' . rawurlencode($search_query);
+    }
     $page_str = 'orderby=' . $orderby . '&amp;page=';
     $T->set_var('page_navigation', COM_printPageNavigation($base_url, $page, $numpages, $page_str));
 } else {
