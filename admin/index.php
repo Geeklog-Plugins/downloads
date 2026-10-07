@@ -375,6 +375,8 @@ function listCategories()
                     array('text' => $LANG_DLM['corder'],  'field' => 'corder', 'sort' => true),
                     array('text' => $field_title,         'field' => 'title',  'sort' => true),
                     array('text' => $LANG_DLM['catid'],   'field' => 'cid',    'sort' => true),
+                    array('text' => $LANG_DLM['category_files'], 'field' => 'download_count', 'sort' => true),
+                    array('text' => $LANG_DLM['status'],  'field' => 'category_status', 'sort' => false),
     );
 
     $defsort_arr = array('field' => 'corder', 'direction' => 'asc');
@@ -413,8 +415,12 @@ function listCategories()
     $text_arr = array('has_extras' => true,
                       'form_url'   => $_CONF['site_admin_url'] . "/plugins/downloads/index.php?op=listCategories");
 
-    $sql  = "SELECT * FROM {$_TABLES['downloadcategories']} WHERE cid != '' "
-          . COM_getPermSQL('AND', 0, 2);
+    $sql  = "SELECT c.*, COUNT(d.lid) AS download_count "
+          . "FROM {$_TABLES['downloadcategories']} c "
+          . "LEFT JOIN {$_TABLES['downloads']} d ON d.cid=c.cid "
+          . "WHERE c.cid != '' "
+          . COM_getPermSQL('AND', 0, 2, 'c')
+          . " GROUP BY c.cid";
 
     $query_arr = array('table'          => 'downloadcategories',
                        'sql'            => $sql,
@@ -487,6 +493,20 @@ function downloads_getListField_Categories($fieldname, $fieldvalue, $A, $icon_ar
                 $retval .= '&nbsp;&nbsp;&nbsp;';
             }
             $retval .= $A['cid'];
+            break;
+
+        case 'download_count':
+            $retval = (int) $fieldvalue;
+            break;
+
+        case 'category_status':
+            if ((int) $A['is_enabled'] === 1) {
+                $retval = '<span class="dlm-status dlm-status-published">'
+                        . $LANG_DLM['category_enabled'] . '</span>';
+            } else {
+                $retval = '<span class="dlm-status dlm-status-unreleased">'
+                        . $LANG_DLM['category_disabled'] . '</span>';
+            }
             break;
 
         default:
