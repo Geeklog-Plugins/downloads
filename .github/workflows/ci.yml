@@ -1,0 +1,38 @@
+name: Downloads 1.3.0 checks
+
+on:
+  push:
+    branches:
+      - downloads_1.3.0
+    paths-ignore:
+      - 'dist/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  php-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up PHP 8.1
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.1'
+          coverage: none
+
+      - name: Lint shipped PHP
+        shell: bash
+        run: |
+          set -euo pipefail
+          find . -type f \( -name '*.php' -o -name '*.inc' \)             ! -path './.git/*'             ! -path './dist/*'             -print0           | xargs -0 -n1 php -l
+
+      - name: Check forbidden dot-prefixed distributable paths
+        shell: bash
+        run: |
+          set -euo pipefail
+          bad="$(find . -mindepth 1             ! -path './.git' ! -path './.git/*'             ! -path './.github' ! -path './.github/*'             ! -path './dist' ! -path './dist/*'             -printf '%P\n' | awk -F/ '{for(i=1;i<=NF;i++) if($i ~ /^\./){print; break}}')"
+          test -z "$bad" || { printf '%s\n' "$bad"; exit 1; }
