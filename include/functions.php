@@ -611,6 +611,104 @@ function DLM_uploadNewFile($newfile, $directory, $name = '')
 }
 
 
+/**
+ * Record a durable submission status transition.
+ *
+ * @param string $lid
+ * @param string $status pending|published|rejected
+ * @param string $public_lid
+ * @return bool
+ */
+function DLM_recordSubmissionStatus($lid, $status, $public_lid = '')
+{
+    global $_TABLES;
+
+    $lid = DB_escapeString($lid);
+    $status = DB_escapeString($status);
+    $public_lid = DB_escapeString($public_lid);
+
+    $source = $_TABLES['downloadsubmission'];
+    if (DB_count($source, 'lid', $lid) != 1) {
+        $source = $_TABLES['downloads'];
+    }
+    if (DB_count($source, 'lid', $lid) != 1) {
+        DLM_errorLog("Downloads: submission history error: Source record not found for '$lid'.");
+        return false;
+    }
+
+    $result = DB_query("SELECT lid, owner_id, cid, title, date FROM $source WHERE lid='$lid'");
+    $A = DB_fetchArray($result);
+    $owner_id = (int) $A['owner_id'];
+    $cid = DB_escapeString($A['cid']);
+    $title = DB_escapeString($A['title']);
+    $submitted_date = (int) $A['date'];
+    $status_date = time();
+
+    $last = DB_query("SELECT status FROM {$_TABLES['downloadsubmissionhistory']} "
+                   . "WHERE lid='$lid' AND owner_id=$owner_id "
+                   . "ORDER BY history_id DESC LIMIT 1");
+    if (DB_numRows($last) == 1) {
+        list($last_status) = DB_fetchArray($last);
+        if ($last_status === $status) {
+            return true;
+        }
+    }
+
+    DB_query("INSERT INTO {$_TABLES['downloadsubmissionhistory']} "
+           . "(lid, owner_id, cid, title, submitted_date, status, status_date, public_lid) "
+           . "VALUES ('$lid', $owner_id, '$cid', '$title', $submitted_date, "
+           . "'$status', $status_date, '$public_lid')");
+
+    return !DB_error();
+}
+
+/**
+ * Notify the configured moderator address about a new submission.
+ *
+ * @param string $lid
+ * @return bool
+ */
+function DLM_sendSubmissionNotification($lid)
+{
+    global $_CONF, $_TABLES, $_DLM_CONF, $LANG_DLM;
+
+    if (empty($_DLM_CONF['notify_on_submission'])) {
+        return true;
+    }
+
+    $email = isset($_DLM_CONF['submission_notify_email'])
+        ? trim($_DLM_CONF['submission_notify_email']) : '';
+    if ($email === '') {
+        $email = isset($_CONF['site_mail']) ? trim($_CONF['site_mail']) : '';
+    }
+    if ($email === '') {
+        DLM_errorLog("Downloads: submission notification skipped: no recipient configured.");
+        return false;
+    }
+
+    $lid_sql = DB_escapeString($lid);
+    $result = DB_query("SELECT s.title, s.owner_id, u.username "
+                     . "FROM {$_TABLES['downloadsubmission']} s "
+                     . "LEFT JOIN {$_TABLES['users']} u ON u.uid=s.owner_id "
+                     . "WHERE s.lid='$lid_sql'");
+    if (DB_numRows($result) != 1) {
+        DLM_errorLog("Downloads: submission notification skipped: submission '$lid_sql' not found.");
+        return false;
+    }
+
+    $A = DB_fetchArray($result);
+    $subject = $_CONF['site_name'] . ' - ' . $LANG_DLM['submission_notification_subject'];
+    $moderation_url = $_CONF['site_admin_url'] . '/moderation.php';
+    $body = $LANG_DLM['submission_notification_intro'] . "\n\n"
+          . $LANG_DLM['submission_notification_title'] . ': ' . $A['title'] . "\n"
+          . $LANG_DLM['submission_notification_submitter'] . ': '
+          . COM_getDisplayName((int) $A['owner_id'], $A['username']) . "\n\n"
+          . $LANG_DLM['submission_notification_moderate'] . ': ' . $moderation_url . "\n";
+
+    COM_mail($email, $subject, $body);
+    return true;
+}
+
 // Send a email to submitter notifying them that file was approved
 function DLM_sendNotification($lid)
 {
