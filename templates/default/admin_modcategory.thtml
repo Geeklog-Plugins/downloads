@@ -19,6 +19,9 @@
 
         <dt><label for="downloads-is_enabled">{lang_is_enabled}</label></dt>
         <dd><input type="checkbox" name="is_enabled" {val_is_enabled} id="downloads-is_enabled"{xhtml}></dd>
+
+        <dt></dt>
+        <dd class="dlm-required-note"><small>* {lang_required_field}</small></dd>
       </dl>
     </fieldset>
 
@@ -37,12 +40,14 @@
       <legend>{lang_section_media}</legend>
       <dl class="form_block">
         <dt><label for="downloads-imgurl">{lang_imgurlmain}</label></dt>
-        <dd><input type="text" maxlength="250" name="imgurl" value="{imgurl}" id="downloads-imgurl" size="48" class="size5"{xhtml}>
-            <p class="dlm-field-note">{lang_upload}: <input type="file" name="imgurl" size="48" accept="image/jpeg,image/png,image/gif"{xhtml}></p>
-            <p class="dlm-field-note">{preview}</p></dd>
-
-        <dt></dt>
-        <dd><small>* {lang_required_field}</small></dd>
+        <dd>
+          <input type="text" maxlength="250" name="imgurl" value="{imgurl}" id="downloads-imgurl" size="48" class="size5"{xhtml}>
+          <div class="dlm-upload-row">
+            <span>{lang_upload}:</span>
+            <input type="file" name="imgurl" size="48" accept="image/jpeg,image/png,image/gif"{xhtml}>
+          </div>
+          <div class="dlm-image-preview">{preview}</div>
+        </dd>
       </dl>
     </fieldset>
   </div>
