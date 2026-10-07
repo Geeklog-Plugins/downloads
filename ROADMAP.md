@@ -115,3 +115,12 @@ A full XMLSitemap regeneration is required after installing this build to remove
 - Downloads itself de-duplicates its collection output.
 - A separate core XMLSitemap fix is maintained in `hostellerie/geeklog-2.2.2:xmlsitemap-deduplicate-types`.
 - After deploying that core fix, run a full sitemap regeneration once to remove previously persisted duplicate rows.
+
+
+### Plugin configuration interoperability
+
+- [x] Runtime configuration loading no longer leaks generic temporary globals.
+- [x] Generic `ROOTID` constant replaced by `DLM_ROOTID`.
+- [x] Multilingual SQL helper accepts the category table alias.
+- [x] XMLSitemap/Item Info queries using alias `c` explicitly request `DLM_helper_getLangSQL('c')`.
+- [ ] Validate saving the configuration of another active plugin while Downloads is enabled.
