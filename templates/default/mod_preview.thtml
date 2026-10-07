@@ -1,7 +1,41 @@
-
 <!-- start mod_preview.thtml -->
-<div class="dlm_main">
-    <div class="dlm_description">{file_description}</div>
-    <div class="dlm_detail">{file_detail}</div>
+<div class="dlm-preview-card">
+    <div class="dlm-preview-media" style="{preview_image_style}">
+        <img src="{preview_image}" alt="" class="dlm-preview-image"{xhtml}>
+    </div>
+
+    <div class="dlm-preview-main">
+        <h2 class="dlm-preview-title">{preview_title}</h2>
+
+        <dl class="dlm-preview-meta">
+            <dt>{lang_category}</dt>
+            <dd>{preview_category}</dd>
+
+            <dt>{lang_dlfilename}</dt>
+            <dd>{preview_filename}</dd>
+
+            <dt>{lang_ver}</dt>
+            <dd>{preview_version}</dd>
+
+            <dt>{lang_filesize}</dt>
+            <dd>{preview_size}</dd>
+
+            <dt>{lang_project}</dt>
+            <dd>{preview_project}</dd>
+
+            <dt>{lang_homepage}</dt>
+            <dd>{preview_homepage}</dd>
+        </dl>
+
+        <section class="dlm-preview-section">
+            <h3>{lang_description}</h3>
+            <div class="dlm_description">{file_description}</div>
+        </section>
+
+        <section class="dlm-preview-section">
+            <h3>{lang_detail}</h3>
+            <div class="dlm_detail">{file_detail}</div>
+        </section>
+    </div>
 </div>
 <!-- end mod_preview.thtml -->
