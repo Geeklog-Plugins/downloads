@@ -1,13 +1,14 @@
-
 <!-- start mod_download.thtml -->
 {js_script}
-<form enctype="multipart/form-data" action="{action}" method="post" onsubmit="set_postcontent();" class="compact">
+<form enctype="multipart/form-data" action="{action}" method="post" onsubmit="set_postcontent();" class="compact dlm-admin-editor">
   <div class="admin_basic">
-    <dl class="form_block">
+    <fieldset class="dlm-admin-section">
+      <legend>{lang_section_general}</legend>
+      <dl class="form_block">
 {mod_submitter}
 
-      <dt><label for="downloads-filetitle">{lang_filetitle}</label></dt>
-      <dd><input type="text" maxlength="200" name="title" value="{title}" id="downloads-filetitle" size="48" class="size5"{xhtml}></dd>
+      <dt><label for="downloads-filetitle">{lang_filetitle} <span class="required">*</span></label></dt>
+      <dd><input type="text" maxlength="200" name="title" value="{title}" id="downloads-filetitle" size="48" class="size5" required="required"{xhtml}></dd>
 
 {mod_file_id}
 {mod_dl_file_name}
@@ -16,8 +17,9 @@
       <dt>{lang_category}</dt>
       <dd>{categorylist}</dd>
 
-      <dt>{lang_tags}</dt>
-      <dd><input type="text" maxlength="150" name="tags" value="{tags}" id="downloads-tags" size="48" class="size5"{xhtml}></dd>
+      <dt><label for="downloads-tags">{lang_tags}</label></dt>
+      <dd><input type="text" maxlength="150" name="tags" value="{tags}" id="downloads-tags" size="48" class="size5" aria-describedby="downloads-tags-help"{xhtml}>
+          <br{xhtml}><small id="downloads-tags-help">{lang_tags_help}</small></dd>
 
       <dt><label for="downloads-homepage">{lang_homepage}</label></dt>
       <dd><input type="text" maxlength="250" name="homepage" value="{homepage}" id="downloads-homepage" size="48" class="size5"{xhtml}></dd>
@@ -26,8 +28,13 @@
       <dd><input type="text" maxlength="10" name="version" value="{version}" id="downloads-ver" size="10" class="size2"{xhtml}></dd>
 
 {mod_file_size}
+      </dl>
+    </fieldset>
 
-      <dt>{lang_description}</dt>
+    <fieldset class="dlm-admin-section">
+      <legend>{lang_section_content_seo}</legend>
+      <dl class="form_block">
+      <dt>{lang_description} <span class="required">*</span></dt>
       <dd><div id="text_editor" style="display:{show_texteditor}; width:95%">
             <img src="{layout_url}/images/expand.png" title="{lang_expandhelp}" alt="" onclick="changeTextAreaSize('text_description','larger');"{xhtml}>
             <img src="{layout_url}/images/collapse.png" title="{lang_reducehelp}" alt="" onclick="changeTextAreaSize('text_description','smaller');"{xhtml}>
@@ -61,6 +68,12 @@
             <textarea id="html_detail" name="html_detail" style="width:100%" cols="50" rows="10">{detail}</textarea>
           </div></dd>
 
+      <dt>{lang_meta_description}</dt>
+      <dd><textarea name="meta_description" id="downloads-meta-description" maxlength="320" cols="50" rows="3" class="size5">{meta_description}</textarea></dd>
+
+      <dt>{lang_meta_keywords}</dt>
+      <dd><input type="text" maxlength="255" name="meta_keywords" value="{meta_keywords}" id="downloads-meta-keywords" size="48" class="size5"{xhtml}></dd>
+
       <dt><label for="sel_editmode">{lang_postmode}</label></dt>
       <dd><select id="sel_editmode" name="postmode" onchange="change_editmode(this);">
 {post_options}
@@ -68,10 +81,22 @@
           <br{xhtml}>
           {lang_allowed_html}</dd>
 
+      </dl>
+    </fieldset>
+
+    <fieldset class="dlm-admin-section">
+      <legend>{lang_section_media}</legend>
+      <dl class="form_block">
 {mod_logourl}
 {mod_newfileshot}
 {mod_mg_autotag}
 
+      </dl>
+    </fieldset>
+
+    <fieldset class="dlm-admin-section">
+      <legend>{lang_section_publication}</legend>
+      <dl class="form_block">
       <dt>{lang_comment_mode}</dt>
       <dd><select name="commentcode">
 {comment_options}
@@ -92,15 +117,26 @@
 {mod_date}
 
       <dt><label for="downloads-project">{lang_project}</label></dt>
-      <dd><input type="text" maxlength="150" name="project" value="{project}" id="downloads-project" size="48" class="size5"{xhtml}></dd>
-    </dl>
+      <dd><input type="text" maxlength="150" name="project" value="{project}" id="downloads-project" size="48" class="size5" list="downloads-project-list" aria-describedby="downloads-project-help"{xhtml}>
+          <datalist id="downloads-project-list">
+{project_options}
+          </datalist>
+          <br{xhtml}><small id="downloads-project-help">{lang_project_help}</small></dd>
+
+      <dt></dt>
+      <dd><small>* {lang_required_field}</small></dd>
+      </dl>
+    </fieldset>
   </div>
 
-  <div class="submit">
-    <input type="submit" value="{lang_submit}" name="mode" class="submit"{xhtml}>
+  <div class="dlm-action-grid">
+    <div></div>
+    <div class="dlm-action-buttons">
+      <input type="submit" value="{lang_submit}" name="mode" class="submit"{xhtml}>
 {mod_submit_preview}
 {mod_submit_cancel}
 {mod_submit_delete}
+    </div>
     <input type="hidden" name="op" value="{op}"{xhtml}>
     <input type="hidden" name="old_lid" value="{old_lid}"{xhtml}>
     <input type="hidden" name="old_date" value="{old_date}"{xhtml}>

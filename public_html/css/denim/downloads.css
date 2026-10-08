@@ -533,3 +533,442 @@ a.dlbtn-green:active {
 	  left: auto;
 	}
 }
+
+
+/* Downloads image lightbox */
+.dlm-lightbox-dialog {
+    width: 100vw;
+    height: 100vh;
+    max-width: none;
+    max-height: none;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: rgba(0, 0, 0, 0.88);
+    cursor: zoom-out;
+    overflow: hidden;
+}
+
+.dlm-lightbox-dialog::backdrop {
+    background: rgba(0, 0, 0, 0.88);
+}
+
+.dlm-lightbox-image {
+    display: block;
+    max-width: 92vw;
+    max-height: 92vh;
+    width: auto;
+    height: auto;
+    margin: 4vh auto;
+    object-fit: contain;
+}
+
+
+/* Public Downloads search */
+.dlm-search-form {
+    margin: 1rem 0;
+}
+
+.dlm-search-form label {
+    display: block;
+    margin-bottom: 0.35rem;
+    font-weight: 600;
+}
+
+.dlm-search-controls {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.dlm-search-controls input[type="search"] {
+    flex: 1 1 18rem;
+    min-width: 12rem;
+}
+
+.dlm-search-reset {
+    white-space: nowrap;
+}
+
+
+/* Downloads administration editor sections */
+.dlm-admin-editor .dlm-admin-section {
+    margin: 0 0 1rem;
+    padding: 0.75rem 1rem 1rem;
+    border: 1px solid rgba(128, 128, 128, 0.35);
+    border-radius: 0.35rem;
+}
+
+.dlm-admin-editor .dlm-admin-section legend {
+    padding: 0 0.4rem;
+    font-weight: 700;
+}
+
+.dlm-admin-editor .dlm-admin-section .form_block {
+    margin-bottom: 0;
+}
+
+
+.dlm-admin-editor .dlm-field-note {
+    margin: 0.45rem 0 0;
+}
+
+
+/* Downloads administration list summary */
+.dlm-admin-summary {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1rem;
+    margin: 0 0 1rem;
+    padding: 0.75rem 1rem;
+    border: 1px solid rgba(128, 128, 128, 0.28);
+    border-radius: 0.35rem;
+}
+
+.dlm-admin-summary span {
+    white-space: nowrap;
+}
+
+.dlm-summary-warning {
+    font-weight: 700;
+}
+
+.dlm-admin-actions {
+    white-space: nowrap;
+}
+
+.dlm-admin-actions a {
+    display: inline-block;
+    margin-right: 0.35rem;
+}
+
+.dlm-status {
+    display: inline-block;
+    padding: 0.1rem 0.45rem;
+    border: 1px solid rgba(128, 128, 128, 0.32);
+    border-radius: 999px;
+    white-space: nowrap;
+}
+
+.dlm-status-published,
+.dlm-file-ok {
+    font-weight: 600;
+}
+
+.dlm-status-unreleased,
+.dlm-status-hidden {
+    opacity: 0.78;
+}
+
+.dlm-file-missing {
+    font-weight: 700;
+}
+
+
+.dlm-admin-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem 0.9rem;
+    align-items: end;
+    margin: 0 0 1rem;
+    padding: 0.75rem 1rem;
+    border: 1px solid rgba(128, 128, 128, 0.22);
+    border-radius: 0.35rem;
+}
+
+.dlm-admin-filters label {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    font-weight: 600;
+}
+
+.dlm-admin-filters select {
+    min-width: 10rem;
+}
+
+.dlm-filter-reset {
+    align-self: center;
+    white-space: nowrap;
+}
+
+
+.dlm-category-toggle {
+    display: inline-flex;
+    gap: 0.4rem;
+    align-items: center;
+}
+
+.dlm-category-toggle-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.35rem;
+    height: 1.35rem;
+    border: 1px solid rgba(128, 128, 128, 0.35);
+    border-radius: 0.2rem;
+    font-weight: 700;
+    line-height: 1;
+}
+
+
+/* Space between download content and Geeklog comments */
+.dlm-comments {
+    margin-top: 1.5rem;
+}
+
+
+/* Rich download preview */
+.dlm-preview-card {
+    display: grid;
+    grid-template-columns: minmax(0, 220px) minmax(0, 1fr);
+    gap: 1.25rem;
+    align-items: start;
+}
+
+.dlm-preview-media {
+    padding: 0.5rem;
+    border: 1px solid rgba(128, 128, 128, 0.3);
+    border-radius: 0.4rem;
+}
+
+.dlm-preview-image {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    margin: 0 auto;
+}
+
+.dlm-preview-title {
+    margin-top: 0;
+}
+
+.dlm-preview-meta {
+    display: grid;
+    grid-template-columns: max-content minmax(0, 1fr);
+    gap: 0.3rem 0.75rem;
+    margin: 0 0 1rem;
+}
+
+.dlm-preview-meta dt {
+    font-weight: 700;
+}
+
+.dlm-preview-meta dd {
+    margin: 0;
+    overflow-wrap: anywhere;
+}
+
+.dlm-preview-section + .dlm-preview-section {
+    margin-top: 1rem;
+}
+
+.dlm-preview-section h3 {
+    margin-bottom: 0.45rem;
+}
+
+/* Modernized Downloads administration forms */
+.dlm-admin-editor .dlm-admin-section {
+    padding: 1rem 1.15rem 1.15rem;
+}
+
+.dlm-admin-editor .form_block {
+    display: grid;
+    grid-template-columns: minmax(9rem, 12rem) minmax(0, 1fr);
+    gap: 0.75rem 1rem;
+    align-items: start;
+}
+
+.dlm-admin-editor .form_block dt,
+.dlm-admin-editor .form_block dd {
+    margin: 0;
+}
+
+.dlm-admin-editor .form_block dt {
+    padding-top: 0.45rem;
+    font-weight: 600;
+}
+
+.dlm-admin-editor input[type="text"],
+.dlm-admin-editor input[type="url"],
+.dlm-admin-editor input[type="search"],
+.dlm-admin-editor input[type="file"],
+.dlm-admin-editor select,
+.dlm-admin-editor textarea {
+    box-sizing: border-box;
+    max-width: 100%;
+}
+
+.dlm-admin-editor input[type="text"],
+.dlm-admin-editor input[type="url"],
+.dlm-admin-editor select,
+.dlm-admin-editor textarea {
+    padding: 0.45rem 0.55rem;
+}
+
+.dlm-admin-editor textarea {
+    min-height: 5rem;
+    resize: vertical;
+}
+
+.dlm-admin-editor .submit {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.55rem;
+    align-items: center;
+    margin-top: 1rem;
+}
+
+@media (max-width: 720px) {
+    .dlm-preview-card {
+        grid-template-columns: 1fr;
+    }
+
+    .dlm-preview-media {
+        max-width: 22rem;
+    }
+
+    .dlm-admin-editor .form_block {
+        grid-template-columns: 1fr;
+        gap: 0.35rem;
+    }
+
+    .dlm-admin-editor .form_block dt {
+        padding-top: 0.6rem;
+    }
+}
+
+
+/* Refined administration form presentation */
+.dlm-admin-editor .dlm-admin-section {
+    background: rgba(248, 249, 252, 0.72);
+}
+
+.dlm-admin-editor .dlm-admin-section legend {
+    font-size: 1.05rem;
+}
+
+.dlm-admin-editor .form_block > dd {
+    min-width: 0;
+}
+
+.dlm-admin-editor .form_block input[type="text"],
+.dlm-admin-editor .form_block input[type="url"],
+.dlm-admin-editor .form_block textarea,
+.dlm-admin-editor .form_block select {
+    width: min(100%, 42rem);
+}
+
+.dlm-admin-editor .form_block input[type="file"] {
+    max-width: 100%;
+}
+
+.dlm-required-note {
+    color: inherit;
+    opacity: 0.78;
+}
+
+.dlm-upload-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem 0.65rem;
+    align-items: center;
+    margin-top: 0.65rem;
+}
+
+.dlm-image-preview {
+    margin-top: 0.75rem;
+}
+
+.dlm-image-preview img {
+    display: block;
+    max-width: min(100%, 18rem);
+    height: auto;
+}
+
+.dlm-access-section {
+    margin-top: 1rem;
+}
+
+.dlm-access-permissions {
+    max-width: 100%;
+    overflow-x: auto;
+}
+
+.dlm-access-permissions table {
+    width: auto;
+    max-width: 100%;
+}
+
+.dlm-access-help {
+    max-width: 50rem;
+    margin-top: 0.75rem;
+    opacity: 0.78;
+    line-height: 1.45;
+}
+
+.dlm-access-help p {
+    margin: 0.2rem 0;
+}
+
+@media (max-width: 720px) {
+    .dlm-admin-editor .form_block input[type="text"],
+    .dlm-admin-editor .form_block input[type="url"],
+    .dlm-admin-editor .form_block textarea,
+    .dlm-admin-editor .form_block select {
+        width: 100%;
+    }
+
+    .dlm-access-permissions {
+        margin-right: -0.25rem;
+    }
+}
+
+
+/* Shared alignment for Access Rights and form actions */
+.dlm-admin-editor > .admin_basic,
+.dlm-admin-editor .admin_basic {
+    width: 100%;
+}
+
+.dlm-admin-editor .dlm-access-section {
+    box-sizing: border-box;
+    width: 100%;
+}
+
+.dlm-admin-editor .dlm-action-grid {
+    display: grid;
+    grid-template-columns: minmax(9rem, 12rem) minmax(0, 1fr);
+    gap: 0.75rem 1rem;
+    align-items: center;
+    margin: 1rem 0 0;
+    padding: 0 1.15rem;
+}
+
+.dlm-admin-editor .dlm-action-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.55rem;
+    align-items: center;
+}
+
+.dlm-admin-editor .dlm-action-buttons input,
+.dlm-admin-editor .dlm-action-buttons button {
+    margin: 0;
+}
+
+@media (max-width: 720px) {
+    .dlm-admin-editor .dlm-action-grid {
+        grid-template-columns: 1fr;
+        padding: 0;
+    }
+
+    .dlm-admin-editor .dlm-action-grid > div:first-child {
+        display: none;
+    }
+
+    .dlm-admin-editor .dlm-action-buttons {
+        grid-column: 1;
+    }
+}

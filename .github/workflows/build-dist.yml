@@ -1,0 +1,169 @@
+name: Build Downloads distribution
+
+on:
+  push:
+    branches:
+      - downloads_1.3.0
+    paths-ignore:
+      - 'dist/**'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: downloads-1.3.0-dist
+  cancel-in-progress: true
+
+jobs:
+  build-dist:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout release branch
+        uses: actions/checkout@v4
+        with:
+          ref: downloads_1.3.0
+          fetch-depth: 0
+
+      - name: Prepare installable plugin tree
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          rm -rf package dist
+          mkdir -p package/downloads dist
+
+          rsync -a ./ package/downloads/ \
+            --exclude='.*' \
+            --exclude='package/' \
+            --exclude='dist/'
+
+          find package/downloads -depth -name '.*' -print -delete
+
+      - name: Validate package structure
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          test -f package/downloads/autoinstall.php
+          test -f package/downloads/plugin.json
+          test -f package/downloads/functions.inc
+          test -f package/downloads/install_defaults.php
+          test -f package/downloads/include/functions.php
+          test -f package/downloads/include/download.class.php
+          test -f package/downloads/admin/index.php
+          test -f package/downloads/public_html/index.php
+          test -f package/downloads/sql/mysql_install.php
+
+          if find package/downloads -mindepth 1 -name '.*' -print -quit | grep -q .; then
+            echo 'Error: dotfile or dot-directory found in package tree.' >&2
+            find package/downloads -mindepth 1 -name '.*' -print >&2
+            exit 1
+          fi
+
+      - name: Build ZIP
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          (
+            cd package
+            zip -r -9 ../dist/downloads_1.3.0_2.1.2.zip downloads
+          )
+
+      - name: Verify distribution archive
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          archive='dist/downloads_1.3.0_2.1.2.zip'
+          test -s "$archive"
+          unzip -t "$archive"
+
+          for required in \
+            downloads/autoinstall.php \
+            downloads/functions.inc \
+            downloads/install_defaults.php \
+            downloads/plugin.json \
+            downloads/include/functions.php \
+            downloads/include/download.class.php \
+            downloads/public_html/index.php \
+            downloads/public_html/editor.js \
+            downloads/public_html/lightbox.js \
+            downloads/public_html/adveditor.js \
+            downloads/public_html/css/default/downloads.css \
+            downloads/public_html/css/denim/downloads.css
+          do
+            unzip -Z1 "$archive" | grep -qx "$required"
+          done
+
+          if unzip -Z1 "$archive" | awk -F/ '
+            {
+              for (i = 1; i <= NF; i++) {
+                if ($i ~ /^\./) {
+                  print
+                  found=1
+                }
+              }
+            }
+            END { exit found ? 0 : 1 }
+          '; then
+            echo 'Error: archive contains a dot-prefixed path component.' >&2
+            exit 1
+          fi
+
+          rm -rf verify
+          mkdir verify
+          unzip -q "$archive" -d verify
+
+          cmp -s include/functions.php verify/downloads/include/functions.php
+          cmp -s include/download.class.php verify/downloads/include/download.class.php
+          cmp -s autoinstall.php verify/downloads/autoinstall.php
+
+          grep -q 'function DLM_ensureDirectory' verify/downloads/include/functions.php
+          grep -q 'if (!DLM_ensureDirectory($directory))' verify/downloads/include/functions.php
+
+          # Asset cache versioning is part of the release contract.
+          grep -q "define('DOWNLOADS_VERSION', '1.3.0')" verify/downloads/functions.inc
+          grep -q "DOWNLOADS_VERSION" verify/downloads/functions.inc
+          grep -q "function DLM_getAssetVersion" verify/downloads/functions.inc
+          grep -q "function DLM_getVersionedAssetUrl" verify/downloads/functions.inc
+          grep -q "plugin_getheadercode_downloads" verify/downloads/functions.inc
+          grep -q "lightbox.js" verify/downloads/public_html/index.php
+          grep -q "DLM_getVersionedAssetUrl" verify/downloads/public_html/index.php
+          grep -q "editor.js" verify/downloads/include/download.class.php
+          grep -q "DLM_getVersionedAssetUrl" verify/downloads/include/download.class.php
+          grep -q "COM_setupAdvancedEditor('/downloads/adveditor.js'" verify/downloads/include/download.class.php
+
+      - name: Show distribution
+        shell: bash
+        run: |
+          ls -lh dist/
+          sha256sum dist/downloads_1.3.0_2.1.2.zip
+
+      - name: Commit distribution archive
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          git fetch origin downloads_1.3.0
+          REMOTE_HEAD="$(git rev-parse origin/downloads_1.3.0)"
+          if [ "$REMOTE_HEAD" != "$GITHUB_SHA" ]; then
+            echo "Branch advanced from $GITHUB_SHA to $REMOTE_HEAD; skipping stale dist commit."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add -A dist/
+
+          if git diff --cached --quiet; then
+            echo "Distribution archive is already up to date."
+            exit 0
+          fi
+
+          git commit -m "build: refresh Downloads 1.3.0 distribution"
+          git push origin HEAD:downloads_1.3.0

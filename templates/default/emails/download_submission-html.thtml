@@ -1,0 +1,8 @@
+<p>{notification_intro}</p>
+
+<p><strong>{lang_title}:</strong> {submission_title}<br{XHTML}>
+<strong>{lang_submitter}:</strong> {submission_submitter}</p>
+
+{email_divider_html}
+
+<p><a href="{moderation_url}">{lang_moderate}</a></p>

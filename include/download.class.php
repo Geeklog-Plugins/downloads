@@ -57,6 +57,8 @@ class DLDownload
     private $_date;
     private $_commentcode;
     private $_project;
+    private $_meta_description;
+    private $_meta_keywords;
     private $_description;
     private $_detail;
     private $_text_version;
@@ -77,6 +79,12 @@ class DLDownload
     private $_old_date;
 
     private $_cat_tree;
+    private $_cat_owner_id;
+    private $_group_id;
+    private $_perm_owner;
+    private $_perm_group;
+    private $_perm_members;
+    private $_perm_anon;
 
     private $_editor_mode;
     private $_retry;
@@ -92,7 +100,7 @@ class DLDownload
         $this->_errno = array();
         $this->_retry = false;
         $this->_page = 'admin';
-        $this->_listing_cid = ROOTID;
+        $this->_listing_cid = DLM_ROOTID;
     }
 
     function initCatTree(&$obj = NULL)
@@ -106,8 +114,8 @@ class DLDownload
                 return;
             }
             require_once $_CONF['path'] . 'plugins/downloads/include/gltree.class.php';
-            $this->_cat_tree = new GLTree($_TABLES['downloadcategories'], 'cid', 'pid', 'title', '', ROOTID);
-       //            $mytree = new GLTree($_TABLES['downloadcategories'], 'cid', 'pid', 'title', COM_getPermSQL('AND'), ROOTID, $_DLM_CONF['lang_id']);
+            $this->_cat_tree = new GLTree($_TABLES['downloadcategories'], 'cid', 'pid', 'title', '', DLM_ROOTID);
+       //            $mytree = new GLTree($_TABLES['downloadcategories'], 'cid', 'pid', 'title', COM_getPermSQL('AND'), DLM_ROOTID, $_DLM_CONF['lang_id']);
 
             $this->_cat_tree->setRoot($LANG_DLM['main']);
         }
@@ -155,7 +163,11 @@ class DLDownload
         $this->_lid          = COM_applyFilter(trim($array['lid']));
         $this->_old_lid      = COM_applyFilter(trim($array['old_lid']));
         $this->_title        = COM_checkHTML(COM_checkWords(trim($array['title'])));
-        $this->_project      = COM_checkHTML(COM_checkWords(trim($array['project'])));
+        $this->_project      = COM_checkHTML(COM_checkWords(trim(isset($array['project']) ? $array['project'] : '')));
+        $this->_meta_description = isset($array['meta_description'])
+            ? trim(strip_tags($array['meta_description'])) : '';
+        $this->_meta_keywords = isset($array['meta_keywords'])
+            ? trim(strip_tags($array['meta_keywords'])) : '';
         $this->_homepage     = strip_tags($array['homepage']);
         $this->_size         = isset($array['size']) ? intval(COM_applyFilter($array['size'], true)) : 0;
         $this->_md5          = isset($array['md5']) ? COM_applyFilter($array['md5']) : '';
@@ -201,11 +213,12 @@ class DLDownload
     {
         global $_TABLES;
 
-        $sql  = "SELECT lid, a.cid, a.title, url, homepage, version, size, md5, "
-              . "project, description, detail, postmode, logourl, mg_autotag, tags, date, hits, rating, votes, "
-              . "commentcode, is_released, is_listing, createddate, a.owner_id, b.owner_id AS cat_owner_id, "
-              . "text_version, "
-              . "group_id, perm_owner, perm_group, perm_members, perm_anon "
+        $sql  = "SELECT a.lid, a.cid, a.title, a.url, a.homepage, a.version, a.size, a.md5, "
+              . "a.project, a.meta_description, a.meta_keywords, a.description, a.detail, a.postmode, "
+              . "a.logourl, a.mg_autotag, a.tags, a.date, a.hits, a.rating, a.votes, "
+              . "a.commentcode, a.is_released, a.is_listing, a.createddate, "
+              . "a.owner_id, b.owner_id AS cat_owner_id, a.text_version, "
+              . "b.group_id, b.perm_owner, b.perm_group, b.perm_members, b.perm_anon "
               . "FROM {$_TABLES['downloads']} a "
               . "LEFT JOIN {$_TABLES['downloadcategories']} b ON a.cid=b.cid "
               . "WHERE lid='" . DB_escapeString($lid) . "'";
@@ -257,10 +270,34 @@ class DLDownload
         $this->_description = '';
         $this->_detail      = '';
         $this->_project     = '';
+        $this->_meta_description = '';
+        $this->_meta_keywords = '';
         $this->_date        = floor(time()/60)*60;
         $this->_owner_id    = $_USER['uid'];
         $this->_commentcode = $_CONF['comment_code'];
         $this->_text_version = 2; // GLTEXT_LATEST_VERSION
+    }
+
+    function _loadCategoryPermissions($cid)
+    {
+        global $_TABLES;
+
+        $cid = DB_escapeString($cid);
+        $result = DB_query("SELECT owner_id AS cat_owner_id, group_id, perm_owner, perm_group, perm_members, perm_anon "
+                         . "FROM {$_TABLES['downloadcategories']} WHERE cid = '$cid'");
+        if (DB_numRows($result) != 1) {
+            return false;
+        }
+
+        $A = DB_fetchArray($result);
+        $this->_cat_owner_id = $A['cat_owner_id'];
+        $this->_group_id = $A['group_id'];
+        $this->_perm_owner = $A['perm_owner'];
+        $this->_perm_group = $A['perm_group'];
+        $this->_perm_members = $A['perm_members'];
+        $this->_perm_anon = $A['perm_anon'];
+
+        return true;
     }
 
     function _checkHasAccess()
@@ -334,10 +371,6 @@ class DLDownload
             }
         }
 
-        if ($mode != 'create' && $mode != 'submit') {
-            $this->_checkHasAccess();
-        }
-
         if ($mode == 'editsubmission') {
             if ($this->_retry == true) {
                 $this->_loadFromArgs($_POST);
@@ -345,6 +378,12 @@ class DLDownload
                 $this->_lid = COM_applyFilter($_GET['id']);
                 $this->_loadSubmission($this->_lid);
             }
+            if (!$this->_loadCategoryPermissions($this->_cid)) {
+                return PLG_afterSaveSwitch('admin', '', 'downloads', 110);
+            }
+            $this->_checkHasAccess();
+        } elseif ($mode != 'create' && $mode != 'submit') {
+            $this->_checkHasAccess();
         }
 
         $ja = ($_CONF['language'] == 'japanese_utf-8');
@@ -383,7 +422,10 @@ class DLDownload
                       'submit', 'delete', 'cancel', 'confirm_delete', 'submitter',
                       'release_date', 'postmode', 'comment_mode', 'project',
                       'toolbar', 'toolbar1', 'toolbar2', 'toolbar3', 'toolbar5',
-                      'md5', 'mg_autotag', 'mg_autotag_info', 'upload', 'tags', 'preview');
+                      'md5', 'mg_autotag', 'mg_autotag_info', 'upload', 'tags', 'preview',
+                      'meta_description', 'meta_keywords', 'tags_help', 'project_help',
+                      'required_field', 'section_general', 'section_content_seo',
+                      'section_media', 'section_publication');
         foreach ($lang as $v) $T->set_var('lang_' . $v, $LANG_DLM[$v]);
 
         $action = 'index.php';
@@ -397,8 +439,7 @@ class DLDownload
             $T->set_var('lang_submit', $LANG_DLM['add']);
             $T->set_var('lang_replfilename', $LANG_DLM['addfilename']);
             $T->set_var('lang_replshotimage', $LANG_DLM['addshotimage']);
-            $op = 'add';
-            break;
+            $op = 'add';            break;
 
         case 'clone':
             $T->set_var('lang_submit', $LANG_DLM['add']);
@@ -427,6 +468,8 @@ class DLDownload
             }
             $this->_title       = DLM_htmlspecialchars(stripslashes($this->_title));
             $this->_project     = DLM_htmlspecialchars(stripslashes($this->_project));
+            $this->_meta_description = DLM_htmlspecialchars($this->_meta_description);
+            $this->_meta_keywords = DLM_htmlspecialchars($this->_meta_keywords);
             $pathstring         = $this->_cat_tree->getNicePathFromId($this->_cid, "title", "{$_CONF['site_url']}/downloads/index.php?op=");
             $this->_url         = DLM_htmlspecialchars(stripslashes($this->_url));
             $this->_logourl     = DLM_htmlspecialchars(stripslashes($this->_logourl));
@@ -456,9 +499,7 @@ class DLDownload
                     $this->_lid = $this->_createID();
                 }
             }
-        }
-
-        if (version_compare(VERSION, '2.1.0') >= 0) {
+        }        if (version_compare(VERSION, '2.1.0') >= 0) {
             require_once $_CONF['path_system'] . 'classes/gltext.class.php';
             $description      = GLText::getEditText($this->_description, $this->_postmode, 2);
             $detail           = GLText::getEditText($this->_detail,      $this->_postmode, 2);
@@ -553,8 +594,26 @@ class DLDownload
         $hidden_values  = $this->_makeForm_hidden('owner_id', $this->_owner_id);
         $hidden_values .= $this->_makeForm_hidden('editor_mode', $this->_editor_mode);
         $hidden_values .= $this->_makeForm_hidden('page', $this->_page);
-        if (!empty($this->_listing_cid) && $this->_listing_cid != ROOTID) {
+        if (!empty($this->_listing_cid) && $this->_listing_cid != DLM_ROOTID) {
             $hidden_values .= $this->_makeForm_hidden('listing_cid', $this->_listing_cid);
+        }
+
+        $_SCRIPTS->setJavaScriptFile(
+            'downloads_editor',
+            DLM_getVersionedAssetUrl(
+                '/downloads/editor.js',
+                $_CONF['path_html'] . 'downloads/editor.js'
+            )
+        );
+
+        $project_options = '';
+        $project_result = DB_query("SELECT DISTINCT a.project FROM {$_TABLES['downloads']} a "
+                                 . "LEFT JOIN {$_TABLES['downloadcategories']} b ON a.cid=b.cid "
+                                 . "WHERE a.project <> '' "
+                                 . COM_getPermSQL('AND', 0, 2, 'b')
+                                 . " ORDER BY a.project ASC");
+        while (list($project_name) = DB_fetchArray($project_result)) {
+            $project_options .= '<option value="' . DLM_htmlspecialchars($project_name) . '"></option>' . LB;
         }
 
         $T->set_var('show_texteditor',      $show_texteditor);
@@ -577,6 +636,9 @@ class DLDownload
         $T->set_var('description',          $description);
         $T->set_var('detail',               $detail);
         $T->set_var('project',              $this->_project);
+        $T->set_var('project_options',       $project_options);
+        $T->set_var('meta_description',      $this->_meta_description);
+        $T->set_var('meta_keywords',         $this->_meta_keywords);
         $T->set_var('snapstore_url',         $_DLM_CONF['snapstore_url']);
         $T->set_var('categorylist',         $categorylist);
         $T->set_var('val_is_released_1',    ($this->_is_released) ? UC_SELECTED : '');
@@ -679,11 +741,60 @@ class DLDownload
         $retval .= COM_endBlock(COM_getBlockTemplate('_admin_block', 'footer'));
 
         if (!empty($file_description) || !empty($file_detail)) {
-            // Display Preview Block
+            // Display a representative preview of the public download card.
             $T2 = COM_newTemplate(CTL_plugin_templatePath('downloads'));
             $T2->set_file('t_mod_preview', 'mod_preview.thtml');
-            $T2->set_var('file_description', $file_description);
-            $T2->set_var('file_detail',      $file_detail);
+
+            $preview_category = '';
+            if (!empty($this->_cid) && $this->_cid !== DLM_ROOTID) {
+                $preview_category = DB_getItem(
+                    $_TABLES['downloadcategories'],
+                    'title',
+                    "cid='" . DB_escapeString($this->_cid) . "'"
+                );
+            }
+            if ($preview_category === '') {
+                $preview_category = $LANG_DLM['main'];
+            }
+
+            $preview_image = '';
+            if ($mode === 'editsubmission' && !empty($tempsnapurl)) {
+                $preview_image = $tempsnapurl;
+            } elseif (!empty($this->_logourl)) {
+                $preview_image = rtrim($_DLM_CONF['snapstore_url'], '/')
+                               . '/' . DLM_createSafeFileName($this->_logourl);
+            }
+
+            $preview_homepage = '';
+            if (!empty($this->_homepage)) {
+                $preview_homepage = COM_createLink(
+                    DLM_htmlspecialchars($this->_homepage),
+                    $this->_homepage,
+                    array('rel' => 'noopener')
+                );
+            }
+
+            $T2->set_var('preview_title',       $this->_title);
+            $T2->set_var('preview_category',    DLM_htmlspecialchars($preview_category));
+            $T2->set_var('preview_filename',    DLM_htmlspecialchars($this->_url));
+            $T2->set_var('preview_version',     $this->_version);
+            $T2->set_var('preview_size',        $this->_size);
+            $T2->set_var('preview_project',     $this->_project);
+            $T2->set_var('preview_homepage',    $preview_homepage);
+            $T2->set_var('preview_image',       $preview_image);
+            $T2->set_var('preview_image_style', $preview_image === '' ? 'display:none;' : '');
+            $T2->set_var('file_description',    $file_description);
+            $T2->set_var('file_detail',         $file_detail);
+
+            $T2->set_var('lang_category',       $LANG_DLM['category']);
+            $T2->set_var('lang_dlfilename',     $LANG_DLM['dlfilename']);
+            $T2->set_var('lang_ver',            $LANG_DLM['ver']);
+            $T2->set_var('lang_filesize',       $LANG_DLM['filesize']);
+            $T2->set_var('lang_project',        $LANG_DLM['project']);
+            $T2->set_var('lang_homepage',       $LANG_DLM['homepage']);
+            $T2->set_var('lang_description',    $LANG_DLM['description']);
+            $T2->set_var('lang_detail',         $LANG_DLM['detail']);
+
             $T2->parse('output', 't_mod_preview');
             $blocktitle = $LANG_DLM['preview'];
             $retval .= COM_startBlock($blocktitle, '', COM_getBlockTemplate ('_admin_block', 'header'));
@@ -797,8 +908,7 @@ class DLDownload
         );
         $data_arr = array();
         $text_arr = array('has_menu' => false,
-                          'title'    => sprintf($LANG_DLM['reguservotes'], $votes),
-        );
+                          'title'    => sprintf($LANG_DLM['reguservotes'], $votes),        );
 
         while ($A = DB_fetchArray($result)) {
 
@@ -943,17 +1053,28 @@ class DLDownload
                 $safename = DLM_createSafeFileName($this->_old_url, $this->_secret_id);
                 $success = copy($_DLM_CONF['path_filestore'] . $old_safeurl,
                                 $_DLM_CONF['path_filestore'] . $safename);
-                if ($success) {
-                    $this->_url = $this->_old_url;
-                }
-            }
+                if ($success) {                    $this->_url = $this->_old_url;
+                }            }
         }
         if ($success) {
-            $this->_size = filesize($_DLM_CONF['path_filestore'] . $safename);
-            $this->_md5  = md5_file($_DLM_CONF['path_filestore'] . $safename);
-            $this->_uploadSnapImage();
+            $active_file = rtrim($_DLM_CONF['path_filestore'], "/\\")
+                         . DIRECTORY_SEPARATOR . $safename;
+            $this->_size = filesize($active_file);
+            $this->_md5  = md5_file($active_file);
+
+            if (!$this->_uploadSnapImage()) {
+                $this->_unlink($active_file);
+                return PLG_afterSaveSwitch('admin', '', 'downloads', 108);
+            }
+
             DLM_makeThumbnail(DLM_createSafeFileName($this->_logourl));
-            $this->_addToDatabase();
+
+            if (!$this->_addToDatabase()) {
+                $this->_unlink($active_file);
+                $this->_unlinkSnapImage($this->_logourl);
+                $this->_unlinkTnImage($this->_logourl);
+                return PLG_afterSaveSwitch('admin', '', 'downloads', 108);
+            }
 
             switch ($this->_page) {
                 case 'item':
@@ -1021,6 +1142,8 @@ class DLDownload
         $date        = (int) $this->_date;
         $commentcode = (int) $this->_commentcode;
         $project     = DB_escapeString($this->_project);
+        $meta_description = DB_escapeString($this->_meta_description);
+        $meta_keywords = DB_escapeString($this->_meta_keywords);
         $description = DB_escapeString($description);
         $detail      = DB_escapeString($detail);
         $owner_id    = (int) $this->_owner_id;
@@ -1033,19 +1156,26 @@ class DLDownload
         DB_query("INSERT INTO $table "
 
                . "(lid, cid, title, url, homepage, version, size, secret_id, md5, logourl, mg_autotag, tags, "
-               . "date, hits, rating, votes, commentcode, project, description, detail, owner_id, "
+               . "date, hits, rating, votes, commentcode, project, meta_description, meta_keywords, description, detail, owner_id, "
                . $sql_var_additions
                . "postmode, is_released, is_listing, createddate) "
 
                . "VALUES ('$lid', '$cid', '$title', '$url', '$homepage', '$version', $size, '$secret_id', '$md5', '$logourl', '$mg_autotag', '$tags', "
-               . "$date, 0, 0, 0, $commentcode, '$project', '$description', '$detail', $owner_id, "
+               . "$date, 0, 0, 0, $commentcode, '$project', '$meta_description', '$meta_keywords', '$description', '$detail', $owner_id, "
                . $sql_val_additions
                . "'$postmode', $is_released, $is_listing, '$createddate')");
+
+        if (DB_error()) {
+            DLM_errorLog("Downloads: database error while inserting download '$lid'.");
+            return false;
+        }
 
         if ($mode != 'submission') {
             PLG_itemSaved($this->_lid, 'downloads');
             COM_rdfUpToDateCheck('downloads', $this->_cid, $this->_lid);
         }
+
+        return true;
     }
 
     function _saveToDatabase($mode='')
@@ -1092,6 +1222,8 @@ class DLDownload
         $date        = (int) $this->_date;
         $commentcode = (int) $this->_commentcode;
         $project     = DB_escapeString($this->_project);
+        $meta_description = DB_escapeString($this->_meta_description);
+        $meta_keywords = DB_escapeString($this->_meta_keywords);
         $description = DB_escapeString($description);
         $detail      = DB_escapeString($detail);
         $owner_id    = (int) $this->_owner_id;
@@ -1103,12 +1235,18 @@ class DLDownload
         $table = empty($mode) ? $_TABLES['downloads'] : $_TABLES['downloadsubmission'];
         DB_query("UPDATE $table "
                . "SET lid='$lid', cid='$cid', title='$title', url='$url', mg_autotag='$mg_autotag', tags='$tags', "
-               . "homepage='$homepage', project='$project', description='$description', detail='$detail', "
+               . "homepage='$homepage', project='$project', meta_description='$meta_description', "
+               . "meta_keywords='$meta_keywords', description='$description', detail='$detail', "
                . "version='$version', size=$size, md5='$md5', commentcode=$commentcode, owner_id=$owner_id, "
                . "postmode='$postmode', logourl='$logourl', is_released=$is_released, is_listing=$is_listing, "
                . $sql_additions
                . "date=$date, createddate='$createddate' "
                . "WHERE lid='$this->_old_lid'");
+
+        if (DB_error()) {
+            DLM_errorLog("Downloads: database error while updating download '$lid'.");
+            return false;
+        }
 
         if ($this->_old_lid == $this->_lid) {
             PLG_itemSaved($this->_lid, 'downloads');
@@ -1118,6 +1256,7 @@ class DLDownload
             PLG_itemSaved($this->_lid, 'downloads', $this->_old_lid);
         }
         COM_rdfUpToDateCheck('downloads', $this->_cid, $this->_lid);
+        return true;
     }
 
     function _unlink($path)
@@ -1136,7 +1275,7 @@ class DLDownload
         global $_CONF, $_TABLES, $_DLM_CONF;
 
         $this->_loadFromArgs($_POST);
-        $newfile_name = $_FILES['newfile']['name'];
+        $newfile_name = isset($_FILES['newfile']['name']) ? $_FILES['newfile']['name'] : '';
 
         // Validate the input values ----------------------->
         if (isset($_FILES['newfile']['error']) && is_int($_FILES['newfile']['error'])) {
@@ -1190,25 +1329,88 @@ class DLDownload
         $old_secret_id = DB_getItem($_TABLES['downloads'], 'secret_id', "lid='" . DB_escapeString($this->_old_lid) . "'");
         $safename = DLM_createSafeFileName($old_filename, $old_secret_id);
         $old_filepath = $_DLM_CONF['path_filestore'] . $safename;
+        $backup_filepath = '';
+        $new_filepath = '';
         if (!empty($newfile_name)) {
-            $this->_unlink($old_filepath);
-            $safename = DLM_createSafeFileName($newfile_name, $old_secret_id);
-            if (DLM_uploadNewFile($_FILES['newfile'], $_DLM_CONF['path_filestore'], $safename)) {
-                $this->_url = $newfile_name;
+            $new_safename = DLM_createSafeFileName($newfile_name, $old_secret_id);
+            $staged_safename = uniqid('replace_') . '_' . DLM_encodeFileName($newfile_name);
+            $staged_filepath = rtrim($_DLM_CONF['path_filestore'], "/\\")
+                             . DIRECTORY_SEPARATOR . $staged_safename;
+            $new_filepath = rtrim($_DLM_CONF['path_filestore'], "/\\")
+                          . DIRECTORY_SEPARATOR . $new_safename;
+
+            if (!DLM_uploadNewFile($_FILES['newfile'], $_DLM_CONF['path_filestore'], $staged_safename)) {
+                return PLG_afterSaveSwitch('admin', '', 'downloads', 108);
             }
+
+            if (is_file($old_filepath)) {
+                $backup_filepath = $old_filepath . '.bak-' . uniqid();
+                if (!rename($old_filepath, $backup_filepath)) {
+                    $this->_unlink($staged_filepath);
+                    DLM_errorLog("Downloads: replacement error: Could not stage existing file for replacement.");
+                    return PLG_afterSaveSwitch('admin', '', 'downloads', 108);
+                }
+            }
+
+            if (is_file($new_filepath) && $new_filepath !== $old_filepath) {
+                if ($backup_filepath !== '' && is_file($backup_filepath)) {
+                    rename($backup_filepath, $old_filepath);
+                }
+                $this->_unlink($staged_filepath);
+                DLM_errorLog("Downloads: replacement error: Destination file already exists.");
+                return PLG_afterSaveSwitch('admin', '', 'downloads', 108);
+            }
+
+            if (!rename($staged_filepath, $new_filepath)) {
+                if ($backup_filepath !== '' && is_file($backup_filepath)) {
+                    rename($backup_filepath, $old_filepath);
+                }
+                DLM_errorLog("Downloads: replacement error: Could not activate uploaded replacement file.");
+                return PLG_afterSaveSwitch('admin', '', 'downloads', 108);
+            }
+
+            @chmod($new_filepath, intval((string) $_DLM_CONF['filepermissions'], 8));
+            $safename = $new_safename;
+            $this->_url = $newfile_name;
         }
 
-        if (file_exists($_DLM_CONF['path_filestore'] . $safename)) {
-          $this->_size = filesize($_DLM_CONF['path_filestore'] . $safename);
-          $this->_md5  = md5_file($_DLM_CONF['path_filestore'] . $safename);
+        $active_filepath = rtrim($_DLM_CONF['path_filestore'], "/\\")
+                         . DIRECTORY_SEPARATOR . $safename;
+        if (file_exists($active_filepath)) {
+            $this->_size = filesize($active_filepath);
+            $this->_md5  = md5_file($active_filepath);
         }
 
         // The snapshot file
         $logourl_old = DB_getItem($_TABLES['downloads'], 'logourl', "lid='" . DB_escapeString($this->_old_lid) . "'");
-        $this->_uploadSnapImage();
+        if (!$this->_uploadSnapImage()) {
+            if ($new_filepath !== '' && is_file($new_filepath)) {
+                $this->_unlink($new_filepath);
+            }
+            if ($backup_filepath !== '' && is_file($backup_filepath)) {
+                rename($backup_filepath, $old_filepath);
+            }
+            return PLG_afterSaveSwitch('admin', '', 'downloads', 108);
+        }
         DLM_makeThumbnail(DLM_createSafeFileName($this->_logourl));
 
-        $this->_saveToDatabase();
+        if (!$this->_saveToDatabase()) {
+            if ($new_filepath !== '' && is_file($new_filepath)) {
+                $this->_unlink($new_filepath);
+            }
+            if ($backup_filepath !== '' && is_file($backup_filepath)) {
+                rename($backup_filepath, $old_filepath);
+            }
+            if ($this->_logourl !== $logourl_old) {
+                $this->_unlinkSnapImage($this->_logourl);
+                $this->_unlinkTnImage($this->_logourl);
+            }
+            return PLG_afterSaveSwitch('admin', '', 'downloads', 108);
+        }
+
+        if ($backup_filepath !== '') {
+            $this->_unlink($backup_filepath);
+        }
 
         $this->_unlinkSnapImage($logourl_old);
         $this->_unlinkTnImage($logourl_old);
@@ -1248,15 +1450,25 @@ class DLDownload
     {
         global $_TABLES, $_DLM_CONF;
 
-        $newimage_name = COM_applyFilter($_FILES['newfileshot']['name']);
+        $newimage_name = isset($_FILES['newfileshot']['name'])
+            ? COM_applyFilter($_FILES['newfileshot']['name']) : '';
         if (!empty($newimage_name)) {
-            $name = $this->_createFilename($newimage_name, $_TABLES['downloads'], 'logourl');
-            if (DLM_uploadNewFile($_FILES['newfileshot'], $_DLM_CONF['path_snapstore'], $name)) {
-                $this->_logourl = $name;
+            if (!DLM_isUploadedImage($_FILES['newfileshot'])) {
+                $this->_errno[] = '1405';
+                return false;
             }
-        } else if ($this->_deletesnap) {
+
+            $name = $this->_createFilename($newimage_name, $_TABLES['downloads'], 'logourl');
+            if (!DLM_uploadNewFile($_FILES['newfileshot'], $_DLM_CONF['path_snapstore'], $name)) {
+                return false;
+            }
+
+            $this->_logourl = $name;
+        } elseif ($this->_deletesnap) {
             $this->_logourl = '';
         }
+
+        return true;
     }
 
     function _unlinkSnapImage($name)
@@ -1287,21 +1499,31 @@ class DLDownload
     {
         global $_CONF, $_TABLES, $_DLM_CONF;
 
-        $this->_checkHasAccess();
-
         if (!empty($id)) {
-            $lid = DB_escapeString(COM_applyFilter($id));
-            $name = DB_getItem($_TABLES['downloads'], 'url', "lid = '$lid'");
+            $raw_lid = COM_applyFilter($id);
         } else {
-            $lid = DB_escapeString(COM_applyFilter($_POST['old_lid']));
-            $name = COM_applyFilter($_POST['url']);
+            $raw_lid = isset($_POST['old_lid']) ? COM_applyFilter($_POST['old_lid']) : '';
         }
 
-        $secret_id = DB_getItem($_TABLES['downloads'], 'secret_id', "lid = '$lid'");
-        $safename = DLM_createSafeFileName($name, $secret_id);
-        $tmpfile = $_DLM_CONF['path_filestore'] . $safename;
+        $lid = DB_escapeString($raw_lid);
+        if ($lid === '' || DB_count($_TABLES['downloads'], 'lid', $lid) != 1) {
+            if ($switch) {
+                return PLG_afterSaveSwitch('admin', '', 'downloads', 110);
+            }
+            return;
+        }
 
-        $tmpsnapfile = DB_getItem($_TABLES['downloads'], 'logourl', "lid = '$lid'");
+        // Load the authoritative item/category permissions before checking ACLs.
+        $this->_loadFromDatabase($raw_lid);
+        $this->_checkHasAccess();
+
+        $name = $this->_url;
+        $secret_id = $this->_secret_id;
+        $safename = DLM_createSafeFileName($name, $secret_id);
+        $tmpfile = rtrim($_DLM_CONF['path_filestore'], "/\\")
+                 . DIRECTORY_SEPARATOR . $safename;
+
+        $tmpsnapfile = $this->_logourl;
 
         DB_query("DELETE FROM {$_TABLES['downloads']}     WHERE lid = '$lid'");
         DB_query("DELETE FROM {$_TABLES['downloadvotes']} WHERE lid = '$lid'");
@@ -1339,13 +1561,23 @@ class DLDownload
             COM_redirect($_CONF['site_admin_url'] . '/moderation.php');
         }
 
-        $result = DB_query("SELECT url, logourl, date "
+        $result = DB_query("SELECT url, logourl, date, secret_id "
                          . "FROM {$_TABLES['downloadsubmission']} WHERE lid = '$lid'");
-        list($url, $logourl, $date) = DB_fetchArray($result);
-        $tmpfilename = $_DLM_CONF['path_filestore'] . 'tmp' . date('YmdHis', $date) . DLM_createSafeFileName($url);
+        list($url, $logourl, $date, $secret_id) = DB_fetchArray($result);
+        $tmpfilename = DLM_findPendingFile(
+            $_DLM_CONF['path_filestore'],
+            $date,
+            $url,
+            $secret_id
+        );
         $tmpshotname = '';
         if (!empty($logourl)) {
-            $tmpshotname = $_DLM_CONF['path_snapstore'] . 'tmp' . date('YmdHis', $date) . DLM_createSafeFileName($logourl);
+            $tmpshotname = DLM_findPendingFile(
+                $_DLM_CONF['path_snapstore'],
+                $date,
+                $logourl,
+                $secret_id
+            );
         }
 
         DB_query("DELETE FROM {$_TABLES['downloadsubmission']} WHERE lid='$lid'");
@@ -1368,37 +1600,43 @@ class DLDownload
         if (empty($this->_lid)) $this->_lid = $this->_old_lid;
         if (empty($this->_cid)) $this->_cid = $this->_cat_tree->getRootid();
 
-        // Move file from tmp directory under the document filestore to the main file directory
-        $result = DB_query("SELECT url, logourl, secret_id FROM {$_TABLES['downloadsubmission']} "
+        // Finalize pending files through the shared approval workflow.
+        $result = DB_query("SELECT url, logourl, secret_id, date FROM {$_TABLES['downloadsubmission']} "
                          . "WHERE lid = '" . DB_escapeString($this->_old_lid) . "'");
-        list($url, $logourl, $secret_id) = DB_fetchArray($result);
-        $this->_secret_id = $secret_id;
-
-        $success = false;
-        if (!empty($url)) {
-            $tmpfile = $_DLM_CONF['path_filestore'] . 'tmp' . date('YmdHis', $this->_old_date) . DLM_createSafeFileName($url);
-            $newfile = $_DLM_CONF['path_filestore'] . DLM_createSafeFileName($url, $secret_id);
-            $success = $this->_moveNewFile($tmpfile, $newfile);
-            if (!$success) {
-                $this->_retry = true;
-                $this->_reedit('showEditor', array($this->_editor_mode));
-            }
+        if (DB_numRows($result) != 1) {
+            $this->_errno[] = '1001';
+            $this->_retry = true;
+            $this->_reedit('showEditor', array($this->_editor_mode));
         }
 
-        if ($success && !empty($logourl)) {
-            $safename = DLM_createSafeFileName($logourl);
-            $tmpfile = $_DLM_CONF['path_snapstore'] . 'tmp' . date('YmdHis', $this->_old_date) . $safename;
-            $newfile = $_DLM_CONF['path_snapstore'] . $safename;
-            $success = $this->_moveNewFile($tmpfile, $newfile);
-            if (!$success) {
-                $this->_retry = true;
-                $this->_reedit('showEditor', array($this->_editor_mode));
-            }
-            DLM_makeThumbnail($safename);
+        list($url, $logourl, $secret_id, $submission_date) = DB_fetchArray($result);
+        $this->_secret_id = $secret_id;
+
+        $success = DLM_finalizeSubmissionFiles(
+            (int) $submission_date,
+            $url,
+            $logourl,
+            $secret_id
+        );
+
+        if (!$success) {
+            $this->_errno[] = '1002';
+            $this->_retry = true;
+            $this->_reedit('showEditor', array($this->_editor_mode));
         }
 
         if ($success) {
-            $this->_addToDatabase();
+            if (!$this->_addToDatabase()) {
+                DLM_restoreFinalizedSubmissionFiles(
+                    (int) $submission_date,
+                    $url,
+                    $logourl,
+                    $secret_id
+                );
+                return PLG_afterSaveSwitch('admin', '', 'downloads', 108);
+            }
+
+            DLM_recordSubmissionStatus($this->_lid, 'published', $this->_lid);
             DB_delete($_TABLES['downloadsubmission'], "lid", DB_escapeString($this->_old_lid));
 
             // Send an email to submitter notifying them that file was approved
@@ -1414,29 +1652,6 @@ class DLDownload
     {
         $this->_retry = true;
         $this->_reedit('showEditor', array($editor_mode));
-    }
-
-    function _moveNewFile($tmpfile, $newfile)
-    {
-        global $_DLM_CONF;
-
-        if (!file_exists($tmpfile) || is_dir($tmpfile)) {
-            DLM_errorLog("Downloads: upload approve error: "
-                       . "Temporary file does not exist: '" . $tmpfile . "'");
-            $this->_errno[] = '1001';
-            return false;
-        }
-
-        $rename = @rename($tmpfile, $newfile);
-        $chown = @chmod($newfile, intval((string)$_DLM_CONF['filepermissions'], 8));
-
-        if (!file_exists($newfile)) {
-            DLM_errorLog("Downloads: upload approve error: "
-                       . "New file does not exist after move of tmp file: '" . $newfile . "'");
-            $this->_errno[] = '1002';
-            return false;
-        }
-        return true;
     }
 
     function _reedit($method, $args = array())
@@ -1523,14 +1738,20 @@ class DLDownload
         }
         // Validate the input values -----------------------<
 
-        if (empty($this->_cid)) $this->_cid = ROOTID;
+        if (empty($this->_cid)) $this->_cid = DLM_ROOTID;
 
         $success = false;
+        $tmpfilename = '';
+        $tmpshotname = '';
         if (!SEC_hasRights('downloads.submit')) {
 
             // Upload New file
             if (!empty($this->_url)) {
-                $tmpfilename = 'tmp' . date('YmdHis', $this->_date) . DLM_createSafeFileName($this->_url);
+                $tmpfilename = DLM_createPendingFileName(
+                    $this->_date,
+                    $this->_url,
+                    $this->_secret_id
+                );
                 $success = DLM_uploadNewFile($_FILES['newfile'], $_DLM_CONF['path_filestore'], $tmpfilename);
                 if ($success) {
                     $this->_size = filesize($_DLM_CONF['path_filestore'] . $tmpfilename);
@@ -1540,9 +1761,30 @@ class DLDownload
 
             // Upload New file snapshot image
             if ($success && !empty($_FILES['newfileshot']['name'])) {
+                if (!DLM_isUploadedImage($_FILES['newfileshot'])) {
+                    if ($tmpfilename !== '') {
+                        DLM_unlink(
+                            rtrim($_DLM_CONF['path_filestore'], "/\\")
+                            . DIRECTORY_SEPARATOR . $tmpfilename
+                        );
+                    }
+                    $this->_errno[] = '1405';
+                    $this->_retry = true;
+                    $this->_reedit('showEditor', array($this->_editor_mode));
+                }
                 $this->_logourl = $_FILES['newfileshot']['name'];
-                $tmpshotname = 'tmp' . date('YmdHis', $this->_date) . DLM_createSafeFileName($this->_logourl);
+                $tmpshotname = DLM_createPendingFileName(
+                    $this->_date,
+                    $this->_logourl,
+                    $this->_secret_id
+                );
                 $success = DLM_uploadNewFile($_FILES['newfileshot'], $_DLM_CONF['path_snapstore'], $tmpshotname);
+                if (!$success && $tmpfilename !== '') {
+                    DLM_unlink(
+                        rtrim($_DLM_CONF['path_filestore'], "/\\")
+                        . DIRECTORY_SEPARATOR . $tmpfilename
+                    );
+                }
             }
 
             $mode = 'submission';
@@ -1569,7 +1811,38 @@ class DLDownload
         }
 
         if ($success) {
-            $this->_addToDatabase($mode);
+            if (!$this->_addToDatabase($mode)) {
+                if ($mode === 'submission') {
+                    if ($tmpfilename !== '') {
+                        DLM_unlink(
+                            rtrim($_DLM_CONF['path_filestore'], "/\\")
+                            . DIRECTORY_SEPARATOR . $tmpfilename
+                        );
+                    }
+                    if ($tmpshotname !== '') {
+                        DLM_unlink(
+                            rtrim($_DLM_CONF['path_snapstore'], "/\\")
+                            . DIRECTORY_SEPARATOR . $tmpshotname
+                        );
+                    }
+                } else {
+                    if (!empty($safename)) {
+                        DLM_unlink(
+                            rtrim($_DLM_CONF['path_filestore'], "/\\")
+                            . DIRECTORY_SEPARATOR . $safename
+                        );
+                    }
+                    $this->_unlinkSnapImage($this->_logourl);
+                    $this->_unlinkTnImage($this->_logourl);
+                }
+                echo PLG_afterSaveSwitch('home', '', 'downloads', 108);
+                exit();
+            }
+
+            if ($mode === 'submission') {
+                DLM_recordSubmissionStatus($this->_lid, 'pending');
+                DLM_sendSubmissionNotification($this->_lid);
+            }
             $msg = $_DLM_CONF['download_emailoption'] ? 109 : 115;
             echo PLG_afterSaveSwitch('home', '', 'downloads', $msg);
         } else {

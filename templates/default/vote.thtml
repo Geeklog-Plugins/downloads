@@ -19,6 +19,7 @@
             <input type="submit" name="submit" value="{lang_rateit}"{xhtml}>
             <input type="button" value="{lang_cancel}" onclick="javascript:history.go(-1)"{xhtml}>
             <input type="hidden" name="lid" value="{val_lid}"{xhtml}>
+            <input type="hidden" name="{gltoken_name}" value="{gltoken}"{xhtml}>
         </div>
     </div>
 </form>

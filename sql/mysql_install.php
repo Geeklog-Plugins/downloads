@@ -34,6 +34,8 @@ $_SQL[] = "CREATE TABLE {$_TABLES['downloadcategories']} (
   cid varchar(40) NOT NULL default '',
   pid varchar(40) NOT NULL default '',
   title varchar(50) NOT NULL default '',
+  meta_description varchar(320) NOT NULL default '',
+  meta_keywords varchar(255) NOT NULL default '',
   imgurl varchar(150) NOT NULL default '',
   corder smallint(5) unsigned NOT NULL default '1',
   is_enabled tinyint(1) unsigned NOT NULL default '1',
@@ -57,7 +59,9 @@ $_SQL[] = "CREATE TABLE {$_TABLES['downloads']} (
   size int(8) NOT NULL default '0',
   secret_id varchar(32) NOT NULL default '',
   md5 varchar(32) NOT NULL default '',
-  project varchar(50) NOT NULL default '',
+  project varchar(150) NOT NULL default '',
+  meta_description varchar(320) NOT NULL default '',
+  meta_keywords varchar(255) NOT NULL default '',
   description text NOT NULL,
   detail text NOT NULL,
   text_version tinyint(2) unsigned NOT NULL default '1',
@@ -89,7 +93,9 @@ $_SQL[] = "CREATE TABLE {$_TABLES['downloadsubmission']} (
   size int(8) NOT NULL default '0',
   secret_id varchar(32) NOT NULL default '',
   md5 varchar(32) NOT NULL default '',
-  project varchar(50) NOT NULL default '',
+  project varchar(150) NOT NULL default '',
+  meta_description varchar(320) NOT NULL default '',
+  meta_keywords varchar(255) NOT NULL default '',
   description text NOT NULL,
   detail text NOT NULL,
   text_version tinyint(2) unsigned NOT NULL default '1',
@@ -129,4 +135,22 @@ $_SQL[] = "CREATE TABLE {$_TABLES['downloadhistories']} (
   date datetime NOT NULL default '0000-00-00 00:00:00',
   KEY lid (lid),
   KEY uid (uid)
+) ENGINE=MyISAM";
+
+
+$_SQL[] = "CREATE TABLE {$_TABLES['downloadsubmissionhistory']} (
+  history_id int(11) unsigned NOT NULL auto_increment,
+  lid varchar(40) NOT NULL default '',
+  owner_id mediumint(8) unsigned NOT NULL default '1',
+  cid varchar(40) NOT NULL default '',
+  title varchar(100) NOT NULL default '',
+  submitted_date int(10) NOT NULL default '0',
+  status varchar(20) NOT NULL default 'pending',
+  status_date int(10) NOT NULL default '0',
+  public_lid varchar(40) NOT NULL default '',
+  PRIMARY KEY (history_id),
+  KEY lid (lid),
+  KEY owner_id (owner_id),
+  KEY status (status),
+  KEY submitted_date (submitted_date)
 ) ENGINE=MyISAM";

@@ -39,21 +39,23 @@ if (!defined ('UC_CHECKED'))  define('UC_CHECKED',  (XHTML == '') ? 'checked'  :
 if (!defined ('UC_READONLY')) define('UC_READONLY', (XHTML == '') ? 'readonly' : 'readonly="readonly"');
 if (!defined ('UC_DISABLED')) define('UC_DISABLED', (XHTML == '') ? 'disabled' : 'disabled="disabled"');
 
-define('ROOTID', 'root');
+define('DLM_ROOTID', 'root');
+define('DOWNLOADS_VERSION', '1.3.0');
 
 /**
 * Include language file
 */
 global $LANG24, $LANG32, $LANG_postmodes;
 
-$plugin_path = $_CONF['path'] . 'plugins/downloads/';
-$langfile = $plugin_path . 'language/' . $_CONF['language'] . '.php';
+$dlm_plugin_path = $_CONF['path'] . 'plugins/downloads/';
+$dlm_langfile = $dlm_plugin_path . 'language/' . $_CONF['language'] . '.php';
 
-if (file_exists($langfile)) {
-    require_once $langfile;
+if (file_exists($dlm_langfile)) {
+    require_once $dlm_langfile;
 } else {
-    require_once $plugin_path . 'language/english.php';
+    require_once $dlm_plugin_path . 'language/english.php';
 }
+unset($dlm_plugin_path, $dlm_langfile);
 
 global $_DB_table_prefix, $_TABLES; // Needed when enabling plugin
 
@@ -62,6 +64,7 @@ $_TABLES['downloads']          = $_DB_table_prefix . 'downloads';
 $_TABLES['downloadvotes']      = $_DB_table_prefix . 'downloadvotes';
 $_TABLES['downloadhistories']  = $_DB_table_prefix . 'downloadhistories';
 $_TABLES['downloadsubmission'] = $_DB_table_prefix . 'downloadsubmission';
+$_TABLES['downloadsubmissionhistory'] = $_DB_table_prefix . 'downloadsubmissionhistory';
 
 
 /**
@@ -69,11 +72,20 @@ $_TABLES['downloadsubmission'] = $_DB_table_prefix . 'downloadsubmission';
 */
 $_DLM_CONF = array();
 require_once $_CONF['path_system'] . 'classes/config.class.php';
-$plg_config = config::get_instance();
-$temp = $plg_config->get_config('downloads');
-if (is_array($temp)) {
-    $_DLM_CONF = array_merge($_DLM_CONF, $temp);
+
+/*
+ * Load Downloads runtime configuration.
+ *
+ * Keep temporary variables plugin-prefixed and remove them immediately after
+ * use. This preserves the long-standing activation-safe bootstrap behaviour
+ * while avoiding leakage into Geeklog's global namespace.
+ */
+$dlm_config_instance = config::get_instance();
+$dlm_loaded_config = $dlm_config_instance->get_config('downloads');
+if (is_array($dlm_loaded_config)) {
+    $_DLM_CONF = array_merge($_DLM_CONF, $dlm_loaded_config);
 }
+unset($dlm_config_instance, $dlm_loaded_config);
 
 $_DLM_CONF['lang_id'] = COM_getLanguageId();
 
@@ -128,13 +140,21 @@ function plugin_whatsnewsupported_downloads()
     return false;
 }
 
-function DLM_helper_getLangSQL()
+function DLM_helper_getLangSQL($category_alias = 'b')
 {
     global $_DLM_CONF;
 
-    if (empty($_DLM_CONF['lang_id'])) return '';
+    if (empty($_DLM_CONF['lang_id'])) {
+        return '';
+    }
+
+    // Alias is always supplied internally; keep it restricted to an SQL identifier.
+    if (!preg_match('/^[A-Za-z_][A-Za-z0-9_]*$/', $category_alias)) {
+        $category_alias = 'b';
+    }
+
     $len = strlen($_DLM_CONF['lang_id']) + 1;
-    return "AND RIGHT(b.cid, $len)='_{$_DLM_CONF['lang_id']}' ";
+    return "AND RIGHT(" . $category_alias . ".cid, $len)='_{$_DLM_CONF['lang_id']}' ";
 }
 
 /**
@@ -447,8 +467,7 @@ function plugin_dopluginsearch_downloads($query, $datestart, $dateend, $topic, $
 			$datestart = "0000-00-00";
 		} else {
 			$datestart = date('Y-m-d', strtotime($datestart));
-		}
-		if (empty($dateend) || (strtotime($dateend) == false)) {
+		}		if (empty($dateend) || (strtotime($dateend) == false)) {
 			$dateend = date('Y-m-d');
 		} else {
 			$dateend = date('Y-m-d', strtotime($dateend));
@@ -544,13 +563,33 @@ function plugin_getadminoption_downloads()
 * Setup the user menu options for this plugin
 *
 */
+/**
+ * Provide concise native configuration tooltips.
+ *
+ * @param string $id
+ * @return string
+ */
+function plugin_getconfigtooltip_downloads($id)
+{
+    global $LANG_DLM;
+
+    $key = 'config_tooltip_' . $id;
+    return isset($LANG_DLM[$key]) ? $LANG_DLM[$key] : '';
+}
+
 function plugin_getuseroption_downloads()
 {
-    global $_CONF, $_TABLES, $LANG_DLM, $_DLM_CONF;
+    global $_CONF, $LANG_DLM, $_DLM_CONF;
+
+    if (COM_isAnonUser()) {
+        return false;
+    }
 
     if (SEC_hasRights('downloads.upload') || $_DLM_CONF['download_uploadselect'] == 1) {
-        return array($LANG_DLM['user_menu'], $_CONF['site_url'] . '/submit.php?type=downloads');
+        return array($LANG_DLM['my_downloads'],
+                     $_CONF['site_url'] . '/downloads/submissions.php');
     }
+
     return false;
 }
 
@@ -737,7 +776,7 @@ function plugin_deletecomment_downloads($cid, $id, $returnBoolean)
 */
 function plugin_displaycomment_downloads($id, $commentid, $title, $order, $format, $page, $view)
 {
-    global $_TABLES, $LANG_DLM;
+    global $_TABLES, $LANG_DLM, $LANG_ACCESS;
 
     $retval = '';
 
@@ -749,8 +788,12 @@ function plugin_displaycomment_downloads($id, $commentid, $title, $order, $forma
          . " GROUP BY lid";
 
     $result = DB_query($sql);
-    $A = DB_fetchArray($result);
-    $allowed = $A['count'];
+    $allowed = 0;
+    $A = array();
+    if (DB_numRows($result) == 1) {
+        $A = DB_fetchArray($result);
+        $allowed = (int) $A['count'];
+    }
 
     if ($allowed == 1) {
         $delete_option = (SEC_hasRights('downloads.edit') &&
@@ -816,7 +859,7 @@ function plugin_upgrade_downloads()
 */
 function plugin_user_delete_downloads($uid)
 {
-    global $_TABLES, $_DLM_CONF;
+    global $_CONF, $_TABLES, $_DLM_CONF;
 
     if (DB_count($_TABLES['downloads'], 'owner_id', $uid) == 0) return;
 
@@ -834,9 +877,15 @@ function plugin_user_delete_downloads($uid)
     // assign ownership to a user from the Root group
     $rootgroup = DB_getItem($_TABLES['groups'], 'grp_id', "grp_name = 'Root'");
     $result = DB_query("SELECT DISTINCT ug_uid FROM {$_TABLES['group_assignments']} "
-                     . "WHERE ug_main_grp_id = $rootgroup ORDER BY ug_uid LIMIT 1");
-    list($rootuser) = DB_fetchArray($result);
-    DB_query("UPDATE {$_TABLES['downloads']} SET owner_id = $rootuser WHERE owner_id = $uid");
+                     . "WHERE ug_main_grp_id = $rootgroup AND ug_uid IS NOT NULL "
+                     . "ORDER BY ug_uid LIMIT 1");
+    if (DB_numRows($result) == 1) {
+        list($rootuser) = DB_fetchArray($result);
+        DB_query("UPDATE {$_TABLES['downloads']} SET owner_id = " . (int) $rootuser
+               . " WHERE owner_id = " . (int) $uid);
+    } else {
+        DLM_errorLog("Downloads: user deletion warning: no Root user available for ownership reassignment.");
+    }
 }
 
 
@@ -846,15 +895,62 @@ function plugin_user_delete_downloads($uid)
 * @return   string
 *
 */
+/**
+ * Return deterministic cache version for a shipped asset.
+ *
+ * @param string $file Absolute filesystem path
+ * @return string
+ */
+function DLM_getAssetVersion($file)
+{
+    $version = DOWNLOADS_VERSION;
+    if (is_file($file)) {
+        $mtime = @filemtime($file);
+        if ($mtime !== false) {
+            $version .= '-' . (int) $mtime;
+        }
+    }
+
+    return $version;
+}
+
+/**
+ * Return a public URL for a plugin asset with deterministic cache versioning.
+ *
+ * @param string $url
+ * @param string $file
+ * @return string
+ */
+function DLM_getVersionedAssetUrl($url, $file)
+{
+    global $_CONF;
+
+    if (stripos($url, 'http://') !== 0
+        && stripos($url, 'https://') !== 0
+        && strpos($url, '//') !== 0
+    ) {
+        $url = rtrim($_CONF['site_url'], '/') . '/' . ltrim($url, '/');
+    }
+
+    return $url . '?v=' . rawurlencode(DLM_getAssetVersion($file));
+}
+
 function plugin_getheadercode_downloads()
 {
-    global $_SCRIPTS;
+    global $_CONF;
 
     $retval = '';
 
-    // use the CSS only if we are on the plugin's pages
+    // Use the CSS only if we are on the plugin's pages.
     if (substr_count($_SERVER['PHP_SELF'], '/downloads/') > 0) {
-        $_SCRIPTS->setCSSFile('downloads', CTL_plugin_themeFindFile('downloads', 'css', 'downloads.css'));
+        $css_url = CTL_plugin_themeFindFile('downloads', 'css', 'downloads.css', true);
+        $css_file = CTL_plugin_themeFindFile('downloads', 'css', 'downloads.css', false);
+        if (!empty($css_url) && !empty($css_file)) {
+            $href = DLM_getVersionedAssetUrl($css_url, $css_file);
+            $retval = '<link rel="stylesheet" href="'
+                    . htmlspecialchars($href, ENT_QUOTES, 'UTF-8')
+                    . '" type="text/css"' . XHTML . '>' . LB;
+        }
     }
 
     return $retval;
@@ -892,13 +988,12 @@ function plugin_getfeednames_downloads()
     $num = DB_numRows($result);
 
     if ($num > 0) {
-        $feeds[] = array('id' => ROOTID, 'name' => $LANG_DLM['main']);
+        $feeds[] = array('id' => DLM_ROOTID, 'name' => $LANG_DLM['main']);
 
         if (isset($_CONF['languages'])) {
             foreach ($_CONF['languages'] as $langid => $lang) {
-                $feeds[] = array('id'   => ROOTID . '_' . $langid ,
-                                 'name' => $LANG_DLM['main'] . ' (' . $lang . ')');
-            }
+                $feeds[] = array('id'   => DLM_ROOTID . '_' . $langid ,
+                                 'name' => $LANG_DLM['main'] . ' (' . $lang . ')');            }
         }
 
         for ($i = 0; $i < $num; $i++) {
@@ -925,13 +1020,13 @@ function DLM_helper_buildSQL($cid, $limits)
     global $_CONF, $_TABLES, $LANG_DLM;
 
     require_once $_CONF['path'] . 'plugins/downloads/include/gltree.class.php';
-    $mytree = new GLTree($_TABLES['downloadcategories'], 'cid', 'pid', 'title', '', ROOTID);
+    $mytree = new GLTree($_TABLES['downloadcategories'], 'cid', 'pid', 'title', '', DLM_ROOTID);
 
     $lang_id = '';
     if (isset($_CONF['languages'])) {
         foreach ($_CONF['languages'] as $langid => $lang) {
-            if ($cid == ROOTID . '_' . $langid) {
-                $cid = ROOTID;
+            if ($cid == DLM_ROOTID . '_' . $langid) {
+                $cid = DLM_ROOTID;
                 $lang_id = $langid;
                 break;
             }
@@ -939,13 +1034,13 @@ function DLM_helper_buildSQL($cid, $limits)
     }
 
     $where = '';
-    if ($cid != ROOTID) {
+    if ($cid != DLM_ROOTID) {
         $carr = $mytree->getAllChildId($cid);
         $carr = array_merge(array($cid), $carr);
         $where = " cid IN ('" . implode("','", $carr) . "')";
     } else if (!empty($lang_id)) {
         $mytree->setLangid($lang_id);
-        $carr = $mytree->getAllChildId(ROOTID);
+        $carr = $mytree->getAllChildId(DLM_ROOTID);
         $where = " cid IN ('" . implode("','", $carr) . "')";
     }
 
@@ -1047,7 +1142,7 @@ function plugin_feedupdatecheck_downloads($feed, $topic, $update_data, $limit,
 
     $sql = "SELECT lid "
          . "FROM {$_TABLES['downloads']}"
-         . DLM_helper_buildSQL($topic, $limits);
+         . DLM_helper_buildSQL($topic, $limit);
     $result = DB_query($sql);
     $num = DB_numRows($result);
 
@@ -1150,7 +1245,7 @@ function plugin_moderationvalues_downloads()
         'lid',
         $_TABLES['downloads'],
         'lid, cid, title, url, homepage, version, size, secret_id, md5, project, '
-        . 'description, detail, postmode, logourl, mg_autotag, tags, date, hits, rating, '
+        . 'meta_description, meta_keywords, description, detail, postmode, logourl, mg_autotag, tags, date, hits, rating, '
         . 'votes, commentcode, is_released, is_listing, createddate, owner_id',
         $_TABLES['downloadsubmission']);
 }
@@ -1191,10 +1286,13 @@ function plugin_moderationdelete_downloads($id)
 */
 function plugin_moderationapprove_downloads($id)
 {
-    global $_CONF;
+    global $_CONF, $LANG_DLM;
 
     require_once $_CONF['path'] . 'plugins/downloads/include/functions.php';
-    DLM_approveNewDownload($id);
+
+    if (!DLM_approveNewDownload($id)) {
+        return COM_showMessageText($LANG_DLM['approval_failed_pending']);
+    }
 
     return '';
 }
@@ -1241,121 +1339,497 @@ function plugin_savesubmission_downloads($A)
 }
 
 /**
-* Return information for a download
-*
-* @param    string  $lid        file ID or '*'
-* @param    string  $what       comma-separated list of properties
-* @param    int     $uid        user ID or 0 = current user
-* @param    array   $options    (reserved for future extensions)
-* @return   mixed               string or array of strings with the information
-*
-*/
-function plugin_getiteminfo_downloads($lid, $what, $uid = 0, $options = array())
+ * Resolve a stable Downloads interoperability identity.
+ *
+ * Supported public identities:
+ * - root
+ * - category:<cid>
+ * - raw download id (legacy-compatible)
+ *
+ * @param string $id
+ * @return array
+ */
+function DLM_parseInteropId($id)
 {
-    global $_CONF, $_TABLES, $_DLM_CONF;
+    $id = trim((string) $id);
 
-    // parse $what to see what we need to pull from the database
-    $properties = explode(',', $what);
-    $fields = array();
-    foreach ($properties as $p) {
-        switch ($p) {
-        case 'date-modified':
-            $fields[] = 'a.date AS unixdate';
-            break;
-        case 'description':
-        case 'excerpt':
-            $fields[] = 'a.description';
-            $fields[] = 'a.detail';
-            break;
-        case 'id':
-            $fields[] = 'a.lid';
-            break;
-        case 'title':
-            $fields[] = 'a.title';
-            break;
-        case 'url':
-            // needed for $lid == '*', but also in case we're only requesting
-            // the URL (so that $fields isn't emtpy)
-            $fields[] = 'a.lid';
-            break;
-        default:
-            // nothing to do
-            break;
+    if ($id === 'root') {
+        return array('subtype' => 'root', 'id' => 'root');
+    }
+
+    if (strpos($id, 'category:') === 0) {
+        return array(
+            'subtype' => 'category',
+            'id' => substr($id, strlen('category:')),
+        );
+    }
+
+    if (strpos($id, 'download:') === 0) {
+        return array(
+            'subtype' => 'download',
+            'id' => substr($id, strlen('download:')),
+        );
+    }
+
+    return array('subtype' => 'download', 'id' => $id);
+}
+
+/**
+ * Build normalized Item Info properties in request order.
+ *
+ * @param array $properties
+ * @param array $record
+ * @param bool  $indexed
+ * @return array
+ */
+function DLM_buildItemInfoResult($properties, $record, $indexed = false)
+{
+    $result = array();
+
+    foreach ($properties as $property) {
+        $value = isset($record[$property]) ? $record[$property] : '';
+        if ($indexed) {
+            $result[] = $value;
+        } elseif ($value !== '') {
+            $result[$property] = $value;
         }
     }
 
-    $fields = array_unique($fields);
+    return $result;
+}
 
-    if (count($fields) == 0) return array();
+/**
+ * Return normalized information for one Downloads-owned public resource.
+ *
+ * @param string $id
+ * @param array  $properties
+ * @param int    $uid
+ * @return array
+ */
+function DLM_getInteropItem($id, $properties, $uid = 0)
+{
+    global $_CONF, $_TABLES, $_DLM_CONF, $LANG_DLM;
 
-    $fsingle = ($lid != '*');
+    $identity = DLM_parseInteropId($id);
+    $uid = (int) $uid;
 
-    $sql = "SELECT " . implode(',', $fields) . " FROM {$_TABLES['downloads']} a "
-         . "LEFT JOIN {$_TABLES['downloadcategories']} b ON a.cid=b.cid "
-         . ($fsingle ? " WHERE lid = '" . DB_escapeString($lid) . "'" : '')
-         . COM_getPermSQL(($fsingle ? 'AND' : 'WHERE'), (($uid > 0) ? $uid : 0), 2, 'b')
-         . DLM_helper_getLangSQL()
-         . ($fsingle ? ' LIMIT 1' : '');
-    $result = DB_query($sql);
-    $numRows = DB_numRows($result);
+    if ($identity['subtype'] === 'root') {
+        $record = array(
+            'id' => 'root',
+            'title' => (is_array($LANG_DLM) && isset($LANG_DLM['downloads'])) ? $LANG_DLM['downloads'] : 'Downloads',
+            'url' => $_CONF['site_url'] . '/downloads/index.php',
+            'description' => '',
+            'excerpt' => '',
+            'date-created' => '',
+            'date-modified' => '',
+            'type' => 'downloads',
+            'subtype' => 'root',
+            'is-container' => 1,
+            'parent-id' => '',
+            'parent-subtype' => '',
+            'hits' => '',
+            'image' => '',
+            'category' => '',
+        );
 
-    $retval = array();
-    for ($i = 0; $i < $numRows; $i++) {
+        return DLM_buildItemInfoResult($properties, $record, true);
+    }
+
+    if ($identity['subtype'] === 'category') {
+        $cid = DB_escapeString($identity['id']);
+        $sql = "SELECT c.cid, c.pid, c.title, c.meta_description, c.imgurl "
+             . "FROM {$_TABLES['downloadcategories']} c "
+             . "WHERE c.cid='$cid' AND c.is_enabled=1 "
+             . COM_getPermSQL('AND', $uid, 2, 'c')
+             . " LIMIT 1";
+        $result = DB_query($sql);
+        if (DB_numRows($result) !== 1) {
+            return array();
+        }
+
         $A = DB_fetchArray($result);
+        $parent_id = ($A['pid'] === '' || $A['pid'] === DLM_ROOTID)
+            ? 'root' : 'category:' . $A['pid'];
 
-        $props = array();
-        foreach ($properties as $p) {
-            switch ($p) {
-            case 'date-modified':
-                $props['date-modified'] = $A['unixdate'];
-                break;
-            case 'description':
-            case 'excerpt':
-                $desc = stripslashes($A['description'])
-                      . '<br' . XHTML . '>' . stripslashes($A['detail']);
-                $props[$p] = PLG_replaceTags($desc);
-                break;
-            case 'id':
-                $props['id'] = $A['lid'];
-                break;
-            case 'title':
-                $props['title'] = stripslashes($A['title']);
-                break;
-            case 'url':
-                $props['url'] = COM_buildUrl($_CONF['site_url'] 
-                    . '/downloads/index.php?id=' . (empty($A['lid']) ? $lid : $A['lid']) );
-                break;
-            default:
-                // return empty string for unknown properties
-                $props[$p] = '';
-                break;
-            }
+        $image = '';
+        if (!empty($A['imgurl'])) {
+            $image = rtrim($_DLM_CONF['snapcat_url'], '/')
+                   . '/' . DLM_encodeFileName($A['imgurl']);
         }
 
-        $mapped = array();
-        foreach ($props as $key => $value) {
-            if (!$fsingle) {
-                if ($value != '') {
-                    $mapped[$key] = $value;
-                }
-            } else {
-                $mapped[] = $value;
-            }
+        $record = array(
+            'id' => 'category:' . $A['cid'],
+            'title' => stripslashes($A['title']),
+            'url' => $_CONF['site_url'] . '/downloads/index.php?cid='
+                   . rawurlencode($A['cid']),
+            'description' => stripslashes($A['meta_description']),
+            'excerpt' => stripslashes($A['meta_description']),
+            'date-created' => '',
+            'date-modified' => '',
+            'type' => 'downloads',
+            'subtype' => 'category',
+            'is-container' => 1,
+            'parent-id' => $parent_id,
+            'parent-subtype' => ($parent_id === 'root') ? 'root' : 'category',
+            'hits' => '',
+            'image' => $image,
+            'category' => stripslashes($A['title']),
+        );
+
+        return DLM_buildItemInfoResult($properties, $record, true);
+    }
+
+    $lid = DB_escapeString($identity['id']);
+    $now = time();
+    $sql = "SELECT d.lid, d.cid, d.title, d.description, d.detail, d.date, "
+         . "d.createddate, d.hits, d.logourl, c.title AS category_title "
+         . "FROM {$_TABLES['downloads']} d "
+         . "LEFT JOIN {$_TABLES['downloadcategories']} c ON d.cid=c.cid "
+         . "WHERE d.lid='$lid' AND d.is_released=1 AND d.date<=$now "
+         . "AND c.is_enabled=1 "
+         . COM_getPermSQL('AND', $uid, 2, 'c')
+         . DLM_helper_getLangSQL('c')
+         . " LIMIT 1";
+    $result = DB_query($sql);
+    if (DB_numRows($result) !== 1) {
+        return array();
+    }
+
+    $A = DB_fetchArray($result);
+    $description = stripslashes($A['description']);
+    if (!empty($A['detail'])) {
+        $description .= '<br' . XHTML . '>' . stripslashes($A['detail']);
+    }
+
+    $created = '';
+    if (!empty($A['createddate']) && $A['createddate'] !== '0000-00-00 00:00:00') {
+        $created = strtotime($A['createddate']);
+        if ($created === false) {
+            $created = '';
+        }
+    }
+
+    $image = '';
+    if (!empty($A['logourl'])) {
+        $image = rtrim($_DLM_CONF['snapstore_url'], '/')
+               . '/' . DLM_createSafeFileName($A['logourl']);
+    }
+
+    $record = array(
+        'id' => $A['lid'],
+        'title' => stripslashes($A['title']),
+        'url' => COM_buildURL(
+            $_CONF['site_url'] . '/downloads/index.php?id=' . rawurlencode($A['lid'])
+        ),
+        'description' => PLG_replaceTags($description),
+        'excerpt' => PLG_replaceTags($description),
+        'date-created' => $created,
+        'date-modified' => (int) $A['date'],
+        'type' => 'downloads',
+        'subtype' => 'download',
+        'is-container' => 0,
+        'parent-id' => 'category:' . $A['cid'],
+        'parent-subtype' => 'category',
+        'hits' => (int) $A['hits'],
+        'image' => $image,
+        'category' => stripslashes($A['category_title']),
+    );
+
+    return DLM_buildItemInfoResult($properties, $record, true);
+}
+
+/**
+ * Collect public Downloads URLs for XMLSitemap.
+ *
+ * @param int $uid User id used for permission checks
+ * @param int $limit Maximum number of items, 0 = unlimited
+ * @return array
+ */
+function plugin_collectSitemapItems_downloads($uid = 1, $limit = 0)
+{
+    global $_CONF, $_TABLES, $_PLUGINS;
+
+    /*
+     * XMLSitemap may rebuild during plugin state changes before Geeklog has
+     * refreshed the enabled plugin list. Avoid querying Downloads while its
+     * activation state is still transient.
+     */
+    if (!is_array($_PLUGINS) || !in_array('downloads', $_PLUGINS, true)) {
+        return array();
+    }
+
+    $uid = (int) $uid;
+    $limit = (int) $limit;
+    $result = array();
+    $seen = array();
+
+    // Plugin landing page.
+    $url = $_CONF['site_url'] . '/downloads/index.php';
+    $result[] = array(
+        'url' => $url,
+        'change-freq' => 'weekly',
+        'priority' => 0.6,
+    );
+    $seen[$url] = true;
+
+    if ($limit > 0 && count($result) >= $limit) {
+        return $result;
+    }
+
+    // Public categories.
+    $sql = "SELECT c.cid FROM {$_TABLES['downloadcategories']} c "
+         . "WHERE c.cid<>'' AND c.is_enabled=1 "
+         . COM_getPermSQL('AND', $uid, 2, 'c')
+         . DLM_helper_getLangSQL('c')
+         . " ORDER BY c.corder ASC, c.title ASC";
+    $query = DB_query($sql);
+    while ($A = DB_fetchArray($query)) {
+        $url = $_CONF['site_url'] . '/downloads/index.php?cid=' . rawurlencode($A['cid']);
+        if (!isset($seen[$url])) {
+            $result[] = array(
+                'url' => $url,
+                'change-freq' => 'weekly',
+                'priority' => 0.6,
+            );
+            $seen[$url] = true;
         }
 
-        if (!$fsingle) {
-            $retval[] = $mapped;
-        } else {
-            $retval = $mapped;
+        if ($limit > 0 && count($result) >= $limit) {
+            return $result;
+        }
+    }
+
+    // Public downloads.
+    $now = time();
+    $sql = "SELECT d.lid, d.date FROM {$_TABLES['downloads']} d "
+         . "LEFT JOIN {$_TABLES['downloadcategories']} c ON d.cid=c.cid "
+         . "WHERE d.lid<>'' AND d.is_released=1 AND d.is_listing=1 "
+         . "AND d.date<=$now AND c.is_enabled=1 "
+         . COM_getPermSQL('AND', $uid, 2, 'c')
+         . DLM_helper_getLangSQL('c')
+         . " ORDER BY d.date DESC";
+    $query = DB_query($sql);
+    while ($A = DB_fetchArray($query)) {
+        $url = COM_buildURL(
+            $_CONF['site_url'] . '/downloads/index.php?id=' . rawurlencode($A['lid'])
+        );
+
+        if (isset($seen[$url])) {
+            continue;
+        }
+
+        $entry = array(
+            'url' => $url,
+            'change-freq' => 'monthly',
+            'priority' => 0.5,
+        );
+        if (!empty($A['date'])) {
+            $entry['date-modified'] = (int) $A['date'];
+        }
+
+        $result[] = $entry;
+        $seen[$url] = true;
+
+        if ($limit > 0 && count($result) >= $limit) {
             break;
         }
     }
 
-    if ($fsingle && (count($retval) == 1)) {
-        $retval = $retval[0];
+    return $result;
+}
+
+/**
+ * Return normalized information for Downloads-owned public resources.
+ *
+ * Legacy raw download ids remain supported. Additional stable ids are:
+ * root and category:<cid>.
+ *
+ * @param string $id
+ * @param string $what
+ * @param int    $uid
+ * @param array  $options
+ * @return mixed
+ */
+function plugin_getiteminfo_downloads($id, $what, $uid = 0, $options = array())
+{
+    global $_CONF, $_TABLES, $_DLM_CONF, $LANG_DLM;
+
+    $properties = array_map('trim', explode(',', $what));
+    $uid = (int) $uid;
+
+    if ($id !== '*') {
+        $item = DLM_getInteropItem($id, $properties, $uid);
+
+        // Geeklog's PLG_getItemInfo API expects a scalar when requesting one
+        // property (e.g. 'url' in the What's New comments block), whereas
+        // multi-property requests retain the ordered array contract.
+        if (count($properties) === 1) {
+            return isset($item[0]) ? $item[0] : '';
+        }
+
+        return $item;
     }
 
-    return $retval;
+    // Preserve legacy collection behavior unless a subtype is explicitly requested.
+    $subtype = isset($options['subtype']) ? strtolower($options['subtype']) : 'download';
+    $allowed = array('download', 'category', 'root', 'all');
+    if (!in_array($subtype, $allowed, true)) {
+        $subtype = 'download';
+    }
+
+    $records = array();
+
+    if ($subtype === 'root' || $subtype === 'all') {
+        $root = DLM_getInteropItem('root', $properties, $uid);
+        if (!empty($root)) {
+            $records[] = DLM_buildItemInfoResult(
+                $properties,
+                array_combine($properties, $root),
+                false
+            );
+        }
+    }
+
+    if ($subtype === 'category' || $subtype === 'all') {
+        $sql = "SELECT c.cid FROM {$_TABLES['downloadcategories']} c "
+             . "WHERE c.cid<>'' AND c.is_enabled=1 "
+             . COM_getPermSQL('AND', $uid, 2, 'c')
+             . " ORDER BY c.corder ASC, c.title ASC";
+        $result = DB_query($sql);
+        while ($A = DB_fetchArray($result)) {
+            if (!matchLanguage($A['cid'])) {
+                continue;
+            }
+            $row = DLM_getInteropItem('category:' . $A['cid'], $properties, $uid);
+            if (!empty($row)) {
+                $records[] = DLM_buildItemInfoResult(
+                    $properties,
+                    array_combine($properties, $row),
+                    false
+                );
+            }
+        }
+    }
+
+    if ($subtype === 'download' || $subtype === 'all') {
+        $now = time();
+        $where = "d.is_released=1 AND d.is_listing=1 "
+               . "AND d.date<=$now AND c.is_enabled=1 ";
+        if (isset($options['since']) && is_numeric($options['since'])) {
+            $where .= "AND d.date>=" . (int) $options['since'] . " ";
+        }
+
+        $sql = "SELECT d.lid FROM {$_TABLES['downloads']} d "
+             . "LEFT JOIN {$_TABLES['downloadcategories']} c ON d.cid=c.cid "
+             . "WHERE $where"
+             . COM_getPermSQL('AND', $uid, 2, 'c')
+             . DLM_helper_getLangSQL('c');
+
+        $order = 'd.date DESC';
+        if (isset($options['order'])) {
+            switch ($options['order']) {
+            case 'title':
+            case 'title-asc':
+                $order = 'd.title ASC';
+                break;
+            case 'title-desc':
+                $order = 'd.title DESC';
+                break;
+            case 'date-asc':
+            case 'created-asc':
+            case 'modified-asc':
+                $order = 'd.date ASC';
+                break;
+            case 'hits-desc':
+                $order = 'd.hits DESC, d.date DESC';
+                break;
+            case 'date':
+            case 'date-desc':
+            case 'created-desc':
+            case 'modified-desc':
+            default:
+                $order = 'd.date DESC';
+                break;
+            }
+        }
+        $sql .= ' ORDER BY ' . $order;
+
+        $result = DB_query($sql);
+        while ($A = DB_fetchArray($result)) {
+            $row = DLM_getInteropItem($A['lid'], $properties, $uid);
+            if (!empty($row)) {
+                $records[] = DLM_buildItemInfoResult(
+                    $properties,
+                    array_combine($properties, $row),
+                    false
+                );
+            }
+        }
+    }
+
+    if (isset($options['limit'])) {
+        $limit = (int) $options['limit'];
+        if ($limit > 0 && count($records) > $limit) {
+            $records = array_slice($records, 0, $limit);
+        }
+    }
+
+    return $records;
+}
+
+/**
+ * Convert a Downloads identity to its canonical public URL.
+ *
+ * Geeklog 2.2.2 calls this with ($sub_type, $item_id). The second parameter
+ * remains optional so older direct one-argument calls continue to work.
+ *
+ * @param string $sub_type
+ * @param string $item_id
+ * @return string
+ */
+function plugin_idToURL_downloads($sub_type, $item_id = '')
+{
+    global $_CONF;
+
+    if ($item_id === '') {
+        $item_id = $sub_type;
+        $sub_type = '';
+    }
+
+    $identity = DLM_parseInteropId($item_id);
+    if ($sub_type !== '') {
+        $normalized_subtype = strtolower((string) $sub_type);
+        if (in_array($normalized_subtype, array('root', 'category', 'download'), true)) {
+            $identity['subtype'] = $normalized_subtype;
+            if ($normalized_subtype === 'category'
+                && strpos($item_id, 'category:') === 0
+            ) {
+                $identity['id'] = substr($item_id, strlen('category:'));
+            }
+        }
+    }
+
+    if ($identity['subtype'] === 'root') {
+        return $_CONF['site_url'] . '/downloads/index.php';
+    }
+
+    if ($identity['subtype'] === 'category') {
+        $cid = COM_sanitizeID($identity['id'], false);
+        if ($cid === '') {
+            return '';
+        }
+
+        return $_CONF['site_url'] . '/downloads/index.php?cid=' . rawurlencode($cid);
+    }
+
+    $lid = COM_sanitizeID($identity['id'], false);
+    if ($lid === '') {
+        return '';
+    }
+
+    return COM_buildURL(
+        $_CONF['site_url'] . '/downloads/index.php?id=' . rawurlencode($lid)
+    );
 }
 
 /**

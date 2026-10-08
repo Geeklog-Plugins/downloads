@@ -52,6 +52,8 @@ $_DLM_DEFAULT['download_perpage']      = 5;
 $_DLM_DEFAULT['download_popular']      = 20;
 $_DLM_DEFAULT['download_uploadselect'] = 0;
 $_DLM_DEFAULT['download_emailoption']  = 1;
+$_DLM_DEFAULT['notify_on_submission']   = 1;
+$_DLM_DEFAULT['submission_notify_email'] = $_CONF['site_mail'];
 $_DLM_DEFAULT['filepermissions']       = 755;
 $_DLM_DEFAULT['postmode']              = 'plaintext';
 $_DLM_DEFAULT['enabled_mg_autotag']    = 0;
@@ -108,6 +110,8 @@ function plugin_initconfig_downloads()
     $c->add('download_popular',      $_DLM_DEFAULT['download_popular'],      'text',     0, 0, 0,    $o++, true, $n);
     $c->add('download_uploadselect', $_DLM_DEFAULT['download_uploadselect'], 'select',   0, 0, 0,    $o++, true, $n);
     $c->add('download_emailoption',  $_DLM_DEFAULT['download_emailoption'],  'select',   0, 0, 0,    $o++, true, $n);
+    $c->add('notify_on_submission',   $_DLM_DEFAULT['notify_on_submission'],   'select',   0, 0, 0,    $o++, true, $n);
+    $c->add('submission_notify_email', $_DLM_DEFAULT['submission_notify_email'], 'text',   0, 0, 0,    $o++, true, $n);
     $c->add('filepermissions',       $_DLM_DEFAULT['filepermissions'],       'text',     0, 0, 0,    $o++, true, $n);
     $c->add('postmode',              $_DLM_DEFAULT['postmode'],              'select',   0, 0, 5,    $o++, true, $n);
     $c->add('enabled_mg_autotag',    $_DLM_DEFAULT['enabled_mg_autotag'],    'select',   0, 0, 0,    $o++, true, $n);
@@ -168,6 +172,8 @@ function DLM_updateSortOrder()
         'download_popular',
         'download_uploadselect',
         'download_emailoption',
+        'notify_on_submission',
+        'submission_notify_email',
         'filepermissions',
         'postmode',
         'enabled_mg_autotag',
@@ -221,4 +227,30 @@ function DLM_update_ConfValues_addTabs()
     DB_query("UPDATE {$_TABLES['conf_values']} SET tab = fieldset WHERE group_name = '$n'");
 
     return true;
+}
+
+
+/**
+ * Add Downloads 1.3.0 configuration values to an existing installation.
+ *
+ * @return void
+ */
+function DLM_add130ConfigValues()
+{
+    global $_CONF, $_TABLES;
+
+    $c = config::get_instance();
+    $n = 'downloads';
+
+    if (DB_count($_TABLES['conf_values'], array('name', 'group_name'),
+                 array('notify_on_submission', $n)) == 0) {
+        $c->add('notify_on_submission', 1, 'select', 0, 0, 0, 8, true, $n);
+    }
+
+    if (DB_count($_TABLES['conf_values'], array('name', 'group_name'),
+                 array('submission_notify_email', $n)) == 0) {
+        $c->add('submission_notify_email', $_CONF['site_mail'], 'text', 0, 0, 0, 9, true, $n);
+    }
+
+    DLM_updateSortOrder();
 }

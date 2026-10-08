@@ -55,7 +55,12 @@ $pagetitle = $LANG_DLM['DownloadReport'];
 $display = '';
 
 COM_setArgNames(array('lid'));
-$lid = DB_escapeString(COM_applyFilter(COM_getArgument('lid')));
+$lid_raw = COM_applyFilter(COM_getArgument('lid'));
+if (!DLM_canViewDownload($lid_raw)) {
+    COM_handle404($_CONF['site_url'] . '/downloads/index.php');
+    exit;
+}
+$lid = DB_escapeString($lid_raw);
 $title = DB_getItem($_TABLES['downloads'], 'title', "lid = '$lid'");
 $result = DB_query("SELECT date, uid, remote_ip "
                  . "FROM {$_TABLES['downloadhistories']} WHERE lid = '$lid'");

@@ -1,49 +1,82 @@
-Install/Upgrade/Uninstall instructions for the Geeklog Downloads Plugin v1.1.3+
+Install / Upgrade / Uninstall instructions for Geeklog Downloads 1.3.0
 
-These instructions assume you have installed a Geeklog plugin before.
+REQUIREMENTS
+============
 
-You must be using at least Geeklog version v2.1.2 to install this plugin.
+- Geeklog 2.1.2 or newer
+- PHP 5.6 or newer
+- Write access for the configured Downloads storage directories
 
-For more help you can also read: <admin>/plugins/downloads/readme.html or (readme_ja.html)
+The plugin declares Geeklog 2.1.2 as its minimum supported Geeklog release.
 
+BEFORE INSTALLING OR UPGRADING
+==============================
 
-INSTALL/UPGRADE:
+1. Back up the Geeklog database.
+2. Back up the existing Downloads plugin directories.
+3. Back up the configured Downloads file/snapshot/thumbnail storage directories.
+4. For an upgrade, do not delete existing download files.
 
-Step 1:  Back up your Geeklog Database.  The Downloads Plugin adds tables to your Geeklog database.  You can do this with the built in admin backup facility.
+AUTOMATIC INSTALL / UPGRADE
+===========================
 
-Step 2:  Either A) Log in to your Geeklog as a root user and upload the plugin using the Geeklog upload functionality found in the Admin Plugins page. If you do this, skip to Step 6, OR B) Go to Step 3.
+The recommended method is the Geeklog Plugins administration page.
 
-Step 3:  Uncompress the Downloads Plugin archive from the path.to.geeklog/plugins directory.  The archive will create a directory called "downloads" in the plugins directory.
+1. Log in as a Root user.
+2. Upload the installable Downloads archive.
+3. Install or upgrade the plugin.
+4. Review the Downloads Configuration after the operation.
+5. Open Downloads Administration and check that the file-store diagnostic does not report an unwritable path.
 
-Step 4:  Create the public_html and admin directories.  Under your html directory (usually public_html) create a directory called "downloads".  Under your admin/plugins/ directory create a directory called "downloads".
+Downloads 1.3.0 includes a sequential upgrade from 1.2.3.1. The upgrade adds SEO metadata fields, submission-history storage and the new submission-notification configuration.
 
-Step 5:  From the path.to.geeklog/plugins/downloads/ directory, copy the files in the admin directory to the admin/plugins/downloads/ directory your created in Step 4.  Likewise, copy the files and directories in the public_html directory to the public_html/downloads/ directory your created in Step 4. 
+MANUAL INSTALL
+==============
 
-Step 6:  Upgrades can skip this step. For new installs, from the path.to.geeklog/plugins/downloads/ directory copy the directory downloads_data into the public_html/ directory.  IMPORTANT: Set directory permission so that your webserver has write access to this directory and all sub directories. This may require write permissions to be 744, 754 or 777 depending on your webserver setup.
+1. Extract the archive under <geeklog>/plugins/downloads/.
+2. Copy the contents of the plugin's public_html directory to <public_html>/downloads/.
+3. Copy the contents of the plugin's admin directory to <admin>/plugins/downloads/.
+4. For a new installation, copy downloads_data to <public_html>/downloads_data/ if you intend to use the legacy default storage locations.
+5. Ensure the configured file-store, snapshot, category-image and thumbnail directories are writable by the web server.
+6. Complete the installation from Geeklog's Plugins administration page.
 
-Step 7:  Log in to your Geeklog as a root user and visit the Admin Plugins page.  For new installs look at the list of Uninstalled Plugins and you should fine the Downloads Plugin listed. Click the install button. For upgrades, look at the plugin list, there should be an upgrade button visible that you can press to start the upgrade process. 
+Downloads 1.3.0 can create missing configured upload directories when possible, but the parent path must allow the web server to create them.
 
-Once installed/upgraded a success message will be displayed. If not examine Geeklog's logs/error.log for possible problems.
+STORAGE NOTE
+============
 
-Step 8:  The Downloads Plugin should now be installed and functioning.  From the Geeklog Admin Control Panel, click on the Downloads icon and it will take you to the admin page.
+The legacy defaults still use:
 
-Step 9:  Go to the Geeklog Configuration and find the Downloads Configuration. Update any configuration options as needed.
+- <public_html>/downloads_data/files/
+- <public_html>/downloads_data/snaps/
+- <public_html>/downloads_data/category_snaps/
+- <public_html>/downloads_data/tn/
 
-Step 10:  All root users will have access to the features of the Downloads Plugin since they belong to the Downloads Admin group. If you wish other users to have access, either add them to this user group or create/use another user group (that the user belongs too) and give that group one or more of the following security rights:
+These locations remain configurable. Persistent-storage migration outside the web root is a planned hardening task and is not assumed to have been completed in this development release.
 
-- Downloads.edit      = Access to downloads editor
-- Downloads.upload    = Downloads file upload rights
-- Downloads.moderate  = Ability to moderate pending downloads
-- Downloads.submit    = May skip the downloads submission queue
+SECURITY RIGHTS
+===============
 
+- downloads.edit      Access to Downloads administration/editor
+- downloads.upload    Upload rights
+- downloads.moderate  Moderate pending Downloads submissions
+- downloads.submit    Bypass the moderation queue
 
-UNINSTALL:
+SUBMISSION NOTIFICATIONS
+========================
 
-Step 1:  From the Admin Plugins page, you can uninstall the Downloads Plugin by clicking on the Delete button.
+Downloads 1.3.0 separates:
 
-Step 2:  You then must manually delete the three plugin directories created in the install process:  
+- submitter notification after approval;
+- moderator/site notification when a new submission enters the queue.
 
-<geeklog-dir>plugins/downloads/ 
-<public_html>/downloads/
-<public_html>/downloads_data/
-<admin>/plugins/downloads/
+The notification recipient can be configured independently.
+
+UNINSTALL
+=========
+
+Uninstall the plugin from Geeklog's Plugins administration page.
+
+The plugin uninstall contract removes the plugin tables, features, group and registered PHP block. Persistent uploaded files must be reviewed separately before manual deletion of storage directories.
+
+After uninstalling, remove plugin code directories only when you are sure the Downloads content and files are no longer required.

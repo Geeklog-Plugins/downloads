@@ -40,6 +40,14 @@ if (!in_array('downloads', $_PLUGINS)) {
 
 require_once $_CONF['path'] . 'plugins/downloads/include/functions.php';
 
+$_SCRIPTS->setJavaScriptFile(
+    'downloads_lightbox',
+    DLM_getVersionedAssetUrl(
+        '/downloads/lightbox.js',
+        $_CONF['path_html'] . 'downloads/lightbox.js'
+    )
+);
+
 if (COM_isAnonUser() && ($_CONF['loginrequired'] == 1 || $_DLM_CONF['loginrequired'] == 1)) {
     $display = SEC_loginRequiredForm();
     $display = COM_createHTMLDocument($display);
@@ -50,6 +58,43 @@ if (COM_isAnonUser() && ($_CONF['loginrequired'] == 1 || $_DLM_CONF['loginrequir
 require_once $_CONF['path'] . 'plugins/downloads/include/gltree.class.php';
 
 define('BCSEPALATOR', '&nbsp;:&nbsp;');
+
+function DLM_buildMetaHeader($description, $keywords, $id = '')
+{
+    global $_CONF;
+
+    $description = trim(strip_tags((string) $description));
+    $keywords = trim(strip_tags((string) $keywords));
+
+    $tags = array();
+    if ($description !== '') {
+        $tags[] = array(
+            'name' => 'description',
+            'content' => $description,
+        );
+    }
+    if ($keywords !== '') {
+        $tags[] = array(
+            'name' => 'keywords',
+            'content' => $keywords,
+        );
+    }
+
+    if (!empty($_CONF['meta_tags']) && function_exists('PLG_getMetaTags')) {
+        return LB . PLG_getMetaTags('downloads', $id, $tags);
+    }
+
+    $header = '';
+    foreach ($tags as $tag) {
+        $header .= '<meta name="'
+                . htmlspecialchars($tag['name'], ENT_QUOTES, COM_getCharset())
+                . '" content="'
+                . htmlspecialchars($tag['content'], ENT_QUOTES, COM_getCharset())
+                . '">' . LB;
+    }
+
+    return $header;
+}
 
 //returns the total number of items in items table that are accociated with a given table $table id
 function getTotalItems($sel_id)
@@ -99,6 +144,8 @@ function makeProjectFileList($lid) {
                      . "WHERE a.project='" . DB_escapeString($project) . "' "
                      . "AND a.project<>'' "
                      . "AND a.is_released=1 "
+                     . "AND a.date<=" . time() . " "
+                     . "AND b.is_enabled=1 "
                      . $permsql
                      . " ORDER BY a.date DESC LIMIT 10");
 
@@ -172,7 +219,7 @@ function getTagList($tags)
 }
 
 
-function dlformat(&$T, &$A, $isListing=false, $cid=ROOTID)
+function dlformat(&$T, &$A, $isListing=false, $cid=DLM_ROOTID)
 {
     global $_CONF, $_TABLES, $LANG01, $_DLM_CONF, $LANG_DLM, $mytree;
 
@@ -347,8 +394,7 @@ function dlformat(&$T, &$A, $isListing=false, $cid=ROOTID)
     $T->set_var('lang_version',    $LANG_DLM['ver']);
     $T->set_var('lang_rating',     $LANG_DLM['ratingc']);
     $T->set_var('lang_submitdate', $LANG_DLM['submitdate']);
-    $T->set_var('lang_size',       $LANG_DLM['size']);
-    $T->set_var('datetime',        $A['datetime']);
+    $T->set_var('lang_size',       $LANG_DLM['size']);    $T->set_var('datetime',        $A['datetime']);
     $T->set_var('version',         $A['version']);
 
     // Check if restricted access has been enabled for download report to admin's only
@@ -413,7 +459,71 @@ function dlformat(&$T, &$A, $isListing=false, $cid=ROOTID)
 }
 
 
-function makeCategoryPart($cid)
+/**
+ * Build the SQL condition used by public Downloads search.
+ *
+ * @param string $query
+ * @param string $alias
+ * @return string
+ */
+function DLM_buildSearchSQL($query, $alias = 'd')
+{
+    $query = trim((string) $query);
+    if ($query === '') {
+        return '';
+    }
+
+    $term = DB_escapeString($query);
+    $term = str_replace(array('%', '_'), array('\\%', '\\_'), $term);
+    $like = "'%" . $term . "%'";
+    $prefix = ($alias !== '') ? $alias . '.' : '';
+
+    return "AND (" . $prefix . "title LIKE $like ESCAPE '\\\\' "
+         . "OR " . $prefix . "description LIKE $like ESCAPE '\\\\' "
+         . "OR " . $prefix . "detail LIKE $like ESCAPE '\\\\' "
+         . "OR " . $prefix . "project LIKE $like ESCAPE '\\\\' "
+         . "OR " . $prefix . "version LIKE $like ESCAPE '\\\\' "
+         . "OR " . $prefix . "tags LIKE $like ESCAPE '\\\\') ";
+}
+
+/**
+ * Count matching public downloads in a category and its descendants.
+ *
+ * @param string $cid
+ * @param string $query
+ * @return int
+ */
+function DLM_getSearchTotalItems($cid, $query)
+{
+    global $_TABLES, $_DLM_CONF, $mytree;
+
+    $ids = $mytree->getAllChildId($cid);
+    $ids = array_merge(array($cid), $ids);
+    $escaped = array();
+    foreach ($ids as $id) {
+        $escaped[] = "'" . DB_escapeString($id) . "'";
+    }
+
+    if (empty($escaped)) {
+        return 0;
+    }
+
+    $now = time();
+    $sql = "SELECT COUNT(*) FROM {$_TABLES['downloads']} d "
+         . "LEFT JOIN {$_TABLES['downloadcategories']} c ON d.cid=c.cid "
+         . "WHERE d.cid IN (" . implode(',', $escaped) . ") "
+         . "AND d.is_released=1 "
+         . "AND d.is_listing=1 "
+         . "AND d.date<=$now "
+         . "AND c.is_enabled=1 "
+         . DLM_buildSearchSQL($query, 'd')
+         . ($_DLM_CONF['has_edit_rights'] ? '' : COM_getPermSQL('AND', 0, 2, 'c'));
+
+    list($count) = DB_fetchArray(DB_query($sql));
+    return (int) $count;
+}
+
+function makeCategoryPart($cid, $search_query = '')
 {
     global $_CONF, $_DLM_CONF, $LANG_DLM, $mytree;
 
@@ -437,10 +547,24 @@ function makeCategoryPart($cid)
 
     $count = 0;
     foreach ($arr as $ele) { // Each category
+        $category_total = ($search_query === '')
+            ? getTotalItems($ele['cid'])
+            : DLM_getSearchTotalItems($ele['cid'], $search_query);
+
+        if ($search_query !== '' && $category_total < 1) {
+            continue;
+        }
+
         $chtitle = DLM_htmlspecialchars($ele['title']);
         $T->set_var('cid',           $ele['cid']);
         $T->set_var('chtitle',       $chtitle);
-        $T->set_var('totaldownload', getTotalItems($ele['cid']));
+        $T->set_var('totaldownload', $category_total);
+        $category_url = $_CONF['site_url'] . '/downloads/index.php?cid='
+                      . rawurlencode($ele['cid']);
+        if ($search_query !== '') {
+            $category_url .= '&amp;q=' . rawurlencode($search_query);
+        }
+
         $category_image_link = '&nbsp;';
         if ($_DLM_CONF['download_useshots']) {
             if ($ele['imgurl'] && $ele['imgurl'] != "http://") {
@@ -450,9 +574,9 @@ function makeCategoryPart($cid)
             }
             $category_image_link = COM_createImage($imgurl, $chtitle,
                                                    array('width' => $_DLM_CONF['download_shotwidth']));
-            $category_image_link = COM_createLink($category_image_link,
-                                                  $_CONF['site_url'] . '/downloads/index.php?cid=' . $ele['cid']);
+            $category_image_link = COM_createLink($category_image_link, $category_url);
         }
+        $T->set_var('category_url', $category_url);
         $T->set_var('category_link', $category_image_link);
         $T->parse('category_row', 'categoryitem', true);
         $count++;
@@ -469,7 +593,7 @@ function makeCategoryPart($cid)
 }
 
 
-function makeSortMenu($cid, $nppage, $orderby, $show)
+function makeSortMenu($cid, $nppage, $orderby, $show, $search_query = '')
 {
     global $_DLM_CONF, $LANG_DLM;
 
@@ -503,6 +627,8 @@ function makeSortMenu($cid, $nppage, $orderby, $show)
         'current_num_20'      => (($show == 20) ? 'current' : 'dummy'),
         'current_num_50'      => (($show == 50) ? 'current' : 'dummy'),
         'orderbyTrans'        => $orderbyTrans,
+        'search_query_suffix'  => ($search_query !== '')
+            ? '&amp;q=' . rawurlencode($search_query) : '',
     ));
     return $T->finish($T->parse('sort_menu', 'sortmenu'));
 }
@@ -518,7 +644,7 @@ $_DLM_CONF['has_edit_rights'] = SEC_hasRights('downloads.edit');
 $permsql = $_DLM_CONF['has_edit_rights'] ? '' : COM_getPermSQL('AND');
 
 $mytree = new GLTree($_TABLES['downloadcategories'], 'cid', 'pid', 'title',
-                     $permsql . 'AND is_enabled=1 ', ROOTID, $_DLM_CONF['lang_id']);
+                     $permsql . 'AND is_enabled=1 ', DLM_ROOTID, $_DLM_CONF['lang_id']);
 $mytree->setSepalator(BCSEPALATOR);
 $mytree->setRoot($LANG_DLM['main']);
 
@@ -541,6 +667,7 @@ $T->set_file(array(
     'filedetail_notn' => 'filedetail_no_tn.thtml',
     'records_notn'    => 'filelisting_record_no_tn.thtml',
     'categoryselbox'  => 'filelisting_category_selbox.thtml',
+    'searchform'      => 'filelisting_search.thtml',
 ));
 if (!$_DLM_CONF['show_tn_image']) {
     $T->set_file(array(
@@ -564,7 +691,7 @@ if (empty($lid)) {  // Check if the script is being called from the commentbar
 if (!empty($lid)) {
     $permsql = $_DLM_CONF['has_edit_rights'] ? '' : COM_getPermSQL('AND', 0, 2, 'b');
     $sql = "SELECT a.lid, a.cid, a.title, url, homepage, version, size, md5, logourl, mg_autotag, tags, a.owner_id, date, "
-         . "hits, rating, votes, commentcode, project, description, detail, postmode, "
+         . "hits, rating, votes, commentcode, project, a.meta_description, a.meta_keywords, description, detail, postmode, "
          . "imgurl, b.title AS cat_title "
          . "FROM {$_TABLES['downloads']} a "
          . "LEFT JOIN {$_TABLES['downloadcategories']} b ON a.cid=b.cid "
@@ -582,6 +709,12 @@ if (!empty($lid)) {
         $T->set_var('category_path_link', $pathstring);
         $T->set_var('cssid', 1);
         $T->set_var('project_filelist', makeProjectFileList($lid));
+
+        $item_extensions = PLG_itemDisplay($lid, 'downloads');
+        $T->set_var(
+            'item_extensions',
+            is_array($item_extensions) ? implode('', $item_extensions) : ''
+        );
 
         require_once $_CONF['path_system'] . 'lib-comment.php';
         $A['title'] = str_replace('&#039;', "'", $A['title']);
@@ -603,46 +736,128 @@ if (!empty($lid)) {
         $display .= PLG_replaceTags($filedetail);
 
         $pagetitle .= ': ' . $A['title'];
-        $display = COM_createHTMLDocument($display, array('pagetitle' => $pagetitle));
+        $meta_description = $A['meta_description'];
+        if (trim($meta_description) === '') {
+            $meta_description = $A['description'];
+        }
+        $headercode = DLM_buildMetaHeader(
+            $meta_description,
+            $A['meta_keywords'],
+            $A['lid']
+        );
+        $display = COM_createHTMLDocument($display, array(
+            'pagetitle' => $pagetitle,
+            'headercode' => $headercode
+        ));
         COM_output($display);
 
         exit;
     }
+
+    COM_handle404($_CONF['site_url'] . '/downloads/index.php');
+    exit;
 }
 // ----------------------------------------------------------------------------------------------------------
 
 $T->set_var('tablewidth', $_DLM_CONF['download_shotwidth'] + 10); // probably no longer necessary
 
-$cid = Input::fGet('cid', Input::fPost('selbox_cat', ROOTID));
+$cid = Input::fGet('cid', Input::fPost('selbox_cat', DLM_ROOTID));
+$search_query = trim((string) Input::fGet('q', ''));
+if (strlen($search_query) > 120) {
+    $search_query = substr($search_query, 0, 120);
+}
 
 $page = (int) Input::fGet('page', Input::fPost('selbox_page', 0));
 if ($page <= 0) {
     $page = 1;
 }
 
+$category_headercode = '';
+if ($cid != DLM_ROOTID) {
+    $cat_result = DB_query("SELECT title, meta_description, meta_keywords "
+                         . "FROM {$_TABLES['downloadcategories']} "
+                         . "WHERE cid='" . DB_escapeString($cid) . "' "
+                         . "AND is_enabled=1 " . COM_getPermSQL('AND'));
+    if (DB_numRows($cat_result) != 1) {
+        COM_handle404($_CONF['site_url'] . '/downloads/index.php');
+        exit;
+    }
+
+    $cat_meta = DB_fetchArray($cat_result);
+    $pagetitle .= ': ' . $cat_meta['title'];
+    $category_headercode = DLM_buildMetaHeader(
+        $cat_meta['meta_description'],
+        $cat_meta['meta_keywords'],
+        'category:' . $cid
+    );
+}
+
 $pathstring = "<a href=\"{$_CONF['site_url']}/downloads/index.php\">" . $LANG_DLM['main'] . "</a>" . BCSEPALATOR
             . $mytree->getNicePathFromId($cid, "title", "{$_CONF['site_url']}/downloads/index.php");
 $T->set_var('category_path_link', $pathstring);
 
-// child category objects
-$T->set_var('category_part', makeCategoryPart($cid));
+$T->set_var('lang_search_downloads', $LANG_DLM['search_downloads']);
+$T->set_var('lang_search_placeholder', $LANG_DLM['search_placeholder']);
+$T->set_var('lang_search', $LANG_DLM['search']);
+$T->set_var('lang_clear', $LANG_DLM['clear']);
+$T->set_var('search_query_value', DLM_htmlspecialchars($search_query));
+$T->set_var('search_cid', DLM_htmlspecialchars($cid));
+$T->set_var('search_reset_url', $_CONF['site_url'] . '/downloads/index.php?cid=' . rawurlencode($cid));
+$T->parse('search_form', 'searchform');
+
+$search_sql = DLM_buildSearchSQL($search_query, 'd');
+
+// Child category objects. During a search, only categories containing
+// matching files are shown and their counters reflect the search result.
+$T->set_var('category_part', makeCategoryPart($cid, $search_query));
+
+$container_extensions = '';
+if ($search_query === '' && $page === 1) {
+    $container_id = ($cid === DLM_ROOTID) ? 'root' : 'category:' . $cid;
+    $extensions = PLG_itemDisplay($container_id, 'downloads');
+    if (is_array($extensions)) {
+        $container_extensions = implode('', $extensions);
+    }
+}
+$T->set_var('item_extensions', $container_extensions);
 
 $carr = $mytree->getAllChildId($cid);
 $carr = array_merge(array($cid), $carr);
 $sql_cid_list = "('" . implode("','", $carr) . "') ";
 $carr_count = count($carr);
 
-$maxrows = getTotalItems($carr);
-$T->set_var('filelisting_info', sprintf($LANG_DLM['listingheading'], $maxrows)); // number of file list
+if ($search_query === '') {
+    $maxrows = getTotalItems($carr);
+    $T->set_var('filelisting_info', sprintf($LANG_DLM['listingheading'], $maxrows));
+} else {
+    $count_permsql = $_DLM_CONF['has_edit_rights'] ? '' : COM_getPermSQL('AND', 0, 2, 'c');
+    $count_sql = "SELECT COUNT(*) FROM {$_TABLES['downloads']} d "
+               . "LEFT JOIN {$_TABLES['downloadcategories']} c ON d.cid=c.cid "
+               . "WHERE d.is_released=1 "
+               . (($carr_count > 0) ? "AND d.cid IN " . $sql_cid_list : " ")
+               . "AND d.is_listing=1 "
+               . "AND d.date<=$now "
+               . $search_sql
+               . $count_permsql;
+    list($maxrows) = DB_fetchArray(DB_query($count_sql));
+    $T->set_var(
+        'filelisting_info',
+        sprintf($LANG_DLM['search_results_for'], DLM_htmlspecialchars($search_query), $maxrows)
+    );
+}
 $nppage = (int) Input::fRequest('nppage', Input::fPost('selbox_nppage', 0));
 
 $show = $_DLM_CONF['download_perpage'];
 $show = ($nppage > 0) ? $nppage : $show;
-$numpages = ceil($maxrows / $show);
+$numpages = ($maxrows > 0) ? (int) ceil($maxrows / $show) : 0;
+if (($page > 1 && $numpages === 0) || ($numpages > 0 && $page > $numpages)) {
+    COM_handle404($_CONF['site_url'] . '/downloads/index.php');
+    exit;
+}
 $orderby = Input::fGet('orderby', Input::fPost('selbox_orderby', 'dated'));
 
 if ($maxrows > 0) {
-    $T->set_var('sort_menu', makeSortMenu($cid, $nppage, $orderby, $show)); // sort menu
+    $T->set_var('sort_menu', makeSortMenu($cid, $nppage, $orderby, $show, $search_query)); // sort menu
 }
 
 $selbox = $mytree->makeSelBox('title', 'corder', $cid, 1, 'selbox_cat', "javascript:submit()");
@@ -669,9 +884,11 @@ $sql = "SELECT d.lid, d.cid, d.title, url, homepage, version, size, md5, d.owner
      . "LEFT JOIN {$_TABLES['downloadcategories']} c ON d.cid=c.cid "
      . "WHERE is_released=1 "
      . (($carr_count > 0) ? "AND d.cid IN " . $sql_cid_list : " ")
-     . "AND is_listing=1 "
-     . "AND date<=$now "
-     . "ORDER BY $ordersql LIMIT $offset, $show";
+     . "AND d.is_listing=1 "
+     . "AND d.date<=$now "
+     . $search_sql
+     . ($_DLM_CONF['has_edit_rights'] ? '' : COM_getPermSQL('AND', 0, 2, 'c'))
+     . " ORDER BY $ordersql LIMIT $offset, $show";
 $result = DB_query($sql);
 if (DB_numRows($result) > 0) {
     $cssid = 1;
@@ -691,13 +908,19 @@ if (DB_numRows($result) > 0) {
     }
 
     // Print Google-like paging navigation
-    $base_url = $_CONF['site_url'] . '/downloads/index.php?cid=' . $cid . '&amp;nppage=' . $nppage;
+    $base_url = $_CONF['site_url'] . '/downloads/index.php?cid=' . rawurlencode($cid)
+              . '&amp;nppage=' . $nppage;
+    if ($search_query !== '') {
+        $base_url .= '&amp;q=' . rawurlencode($search_query);
+    }
     $page_str = 'orderby=' . $orderby . '&amp;page=';
     $T->set_var('page_navigation', COM_printPageNavigation($base_url, $page, $numpages, $page_str));
 } else {
     $T->set_var('filelisting_records', '<div class="pluginAlert dlm_alert">' . $LANG_DLM['nofiles'] . '</div>');
 }
 $display .= PLG_replaceTags($T->finish($T->parse('output', 'page')));
-
-$display = COM_createHTMLDocument($display, array('pagetitle' => $pagetitle));
+$display = COM_createHTMLDocument($display, array(
+    'pagetitle' => $pagetitle,
+    'headercode' => $category_headercode
+));
 COM_output($display);

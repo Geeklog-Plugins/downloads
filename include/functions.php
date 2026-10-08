@@ -57,6 +57,7 @@ function DLM_updaterating($sel_id)
                           ."WHERE lid = '$sel_id'");
     $votesDB = DB_numRows($voteresult);
     $totalrating = 0;
+    $finalrating = 0;
     if ($votesDB > 0) {
         while (list($rating) = DB_fetchArray($voteresult)){
             $totalrating += $rating;
@@ -145,6 +146,31 @@ function DLM_showMessageArray($e_code_array)
 /**
 * Escape a string for displaying in HTML
 */
+/**
+ * Check whether a download is publicly readable by a user.
+ *
+ * @param string $lid
+ * @param int    $uid 0 = current user
+ * @return bool
+ */
+function DLM_canViewDownload($lid, $uid = 0)
+{
+    global $_TABLES;
+
+    $lid = DB_escapeString($lid);
+    $now = time();
+    $sql = "SELECT COUNT(*) FROM {$_TABLES['downloads']} a "
+         . "LEFT JOIN {$_TABLES['downloadcategories']} b ON a.cid=b.cid "
+         . "WHERE a.lid='$lid' "
+         . "AND a.is_released=1 "
+         . "AND a.date<=$now "
+         . "AND b.is_enabled=1 "
+         . COM_getPermSQL('AND', $uid, 2, 'b');
+    list($count) = DB_fetchArray(DB_query($sql));
+
+    return ((int) $count === 1);
+}
+
 function DLM_htmlspecialchars($text)
 {
     $text = str_replace( // Unescape a string
@@ -188,67 +214,195 @@ function DLM_reedit($function, $args = array())
     exit;
 }
 
-// Move file from tmp directory to the main file directory
-function DLM_moveNewFile($tmpfile, $newfile)
+/**
+ * Build the pending storage filename used for new 1.3.0 submissions.
+ *
+ * @param int    $date
+ * @param string $name
+ * @param string $secret_id
+ * @return string
+ */
+function DLM_createPendingFileName($date, $name, $secret_id)
+{
+    return 'tmp' . date('YmdHis', (int) $date)
+         . '_' . DLM_encodeFileName($secret_id)
+         . '_' . DLM_createSafeFileName($name);
+}
+
+/**
+ * Locate a pending file, accepting the pre-1.3.0 legacy naming scheme.
+ *
+ * @param string $directory
+ * @param int    $date
+ * @param string $name
+ * @param string $secret_id
+ * @return string
+ */
+function DLM_findPendingFile($directory, $date, $name, $secret_id)
+{
+    $directory = rtrim($directory, "/\\") . DIRECTORY_SEPARATOR;
+
+    $current = $directory . DLM_createPendingFileName($date, $name, $secret_id);
+    if (is_file($current)) {
+        return $current;
+    }
+
+    $legacy = $directory . 'tmp' . date('YmdHis', (int) $date)
+            . DLM_createSafeFileName($name);
+    if (is_file($legacy)) {
+        return $legacy;
+    }
+
+    return $current;
+}
+
+/**
+ * Finalize files belonging to a pending download submission.
+ *
+ * Shared by both the Downloads administration editor and Geeklog moderation.
+ */
+function DLM_finalizeSubmissionFiles($date, $url, $logourl, $secret_id)
 {
     global $_DLM_CONF;
 
-    if (file_exists($tmpfile) && !is_dir($tmpfile)) {
-        $rename = @rename($tmpfile, $newfile);
-        $chown = @chmod($newfile, intval((string)$_DLM_CONF['filepermissions'], 8));
-        $success = true;
-        if (!file_exists($newfile)) {
-            DLM_errorLog("Downloads: upload approve error: "
-                       . "New file does not exist after move of tmp file: '" . $newfile . "'");
-            DLM_showErrorMessage('1002');
-            $success = false;
-        }
-    } else {
-        DLM_errorLog("Downloads: upload approve error: "
-                   . "Temporary file does not exist: '" . $tmpfile . "'");
-        DLM_showErrorMessage('1001');
-        $success = false;
+    if (empty($url) || empty($secret_id)) {
+        DLM_errorLog("Downloads: approval error: Missing file name or secret id.");
+        return false;
     }
 
-    return $success;
+    if (!DLM_ensureDirectory($_DLM_CONF['path_filestore'])) {
+        return false;
+    }
+    if (!empty($logourl) && !DLM_ensureDirectory($_DLM_CONF['path_snapstore'])) {
+        return false;
+    }
+
+    $tmpfile = DLM_findPendingFile(
+        $_DLM_CONF['path_filestore'],
+        $date,
+        $url,
+        $secret_id
+    );
+    $newfile = rtrim($_DLM_CONF['path_filestore'], "/\\") . DIRECTORY_SEPARATOR
+             . DLM_createSafeFileName($url, $secret_id);
+
+    if (!is_file($tmpfile) || is_file($newfile) || !rename($tmpfile, $newfile)) {
+        DLM_errorLog("Downloads: approval error: Could not finalize pending download file.");
+        return false;
+    }
+
+    @chmod($newfile, intval((string) $_DLM_CONF['filepermissions'], 8));
+
+    if (!empty($logourl)) {
+        $safesnap = DLM_createSafeFileName($logourl);
+        $tmpsnap = DLM_findPendingFile(
+            $_DLM_CONF['path_snapstore'],
+            $date,
+            $logourl,
+            $secret_id
+        );
+        $newsnap = rtrim($_DLM_CONF['path_snapstore'], "/\\") . DIRECTORY_SEPARATOR
+                 . $safesnap;
+
+        if (!is_file($tmpsnap) || is_file($newsnap) || !rename($tmpsnap, $newsnap)) {
+            rename($newfile, $tmpfile);
+            DLM_errorLog("Downloads: approval error: Snapshot finalization failed; main file restored to pending state.");
+            return false;
+        }
+
+        @chmod($newsnap, intval((string) $_DLM_CONF['filepermissions'], 8));
+        DLM_makeThumbnail($safesnap);
+    }
+
+    return is_file($newfile);
+}
+
+/**
+ * Restore finalized submission files back to the pending naming scheme.
+ *
+ * @param int    $date
+ * @param string $url
+ * @param string $logourl
+ * @param string $secret_id
+ * @return bool
+ */
+function DLM_restoreFinalizedSubmissionFiles($date, $url, $logourl, $secret_id)
+{
+    global $_DLM_CONF;
+
+    $pending_file = rtrim($_DLM_CONF['path_filestore'], "/\\") . DIRECTORY_SEPARATOR
+                  . DLM_createPendingFileName($date, $url, $secret_id);
+    $final_file = rtrim($_DLM_CONF['path_filestore'], "/\\") . DIRECTORY_SEPARATOR
+                . DLM_createSafeFileName($url, $secret_id);
+
+    if (is_file($final_file) && !is_file($pending_file)) {
+        if (!rename($final_file, $pending_file)) {
+            DLM_errorLog("Downloads: rollback error: Could not restore finalized download to pending state.");
+            return false;
+        }
+    }
+
+    if (!empty($logourl)) {
+        $safe_snap = DLM_createSafeFileName($logourl);
+        $pending_snap = rtrim($_DLM_CONF['path_snapstore'], "/\\") . DIRECTORY_SEPARATOR
+                      . DLM_createPendingFileName($date, $logourl, $secret_id);
+        $final_snap = rtrim($_DLM_CONF['path_snapstore'], "/\\") . DIRECTORY_SEPARATOR
+                    . $safe_snap;
+
+        if (is_file($final_snap) && !is_file($pending_snap)) {
+            if (!rename($final_snap, $pending_snap)) {
+                DLM_errorLog("Downloads: rollback warning: Could not restore finalized snapshot to pending state.");
+            }
+        }
+
+        $thumb = rtrim($_DLM_CONF['path_tnstore'], "/\\") . DIRECTORY_SEPARATOR
+               . DLM_changeFileExt($safe_snap, $_DLM_CONF['tnimage_format']);
+        DLM_unlink($thumb);
+    }
+
+    return is_file($pending_file);
 }
 
 // Approve the uploaded file (process after the approval)
 function DLM_approveNewDownload($id)
 {
-    global $_TABLES, $_CONF, $_DLM_CONF;
+    global $_TABLES, $_DLM_CONF;
 
-    $result = DB_query("SELECT url, logourl, date, secret_id "
+    $id = DB_escapeString($id);
+    $result = DB_query("SELECT url, logourl, date, secret_id, cid "
                      . "FROM {$_TABLES['downloads']} "
-                     . "WHERE lid = '" . DB_escapeString($id) . "'");
-    list($url, $logourl, $date, $secret_id) = DB_fetchArray($result);
+                     . "WHERE lid = '$id'");
 
-    $safename = DLM_encodeFileName($url);
-    $tmpfile = $_DLM_CONF['path_filestore'] . 'tmp' . date('YmdHis', $date) . $safename;
-    $newfile = $_DLM_CONF['path_filestore'] . $secret_id . '_' . $safename;
-    $success = DLM_moveNewFile($tmpfile, $newfile);
-
-    if ($success && !empty($logourl)) {
-        $safename = DLM_encodeFileName($logourl);
-        $tmpfile = $_DLM_CONF['path_snapstore'] . 'tmp' . date('YmdHis', $date) . $safename;
-        $newfile = $_DLM_CONF['path_snapstore'] . $safename;
-        $success = DLM_moveNewFile($tmpfile, $newfile);
-        if ($success) {
-            DLM_makeThumbnail($safename);
-        }
+    if (DB_numRows($result) != 1) {
+        DLM_errorLog("Downloads: approval error: Published moderation row not found for '$id'.");
+        return false;
     }
 
-    if ($success) {
-
-        // PLG_itemSaved($lid, 'downloads');
-
-        // COM_rdfUpToDateCheck('downloads', $cid, $lid);
-
-        // Send a email to submitter notifying them that file was approved
-        if ($_DLM_CONF['download_emailoption']) {
-            DLM_sendNotification($id);
+    $A = DB_fetchArray($result);
+    if (!DLM_finalizeSubmissionFiles(
+        (int) $A['date'],
+        $A['url'],
+        $A['logourl'],
+        $A['secret_id']
+    )) {
+        if (DB_count($_TABLES['downloadsubmission'], 'lid', $id) == 0) {
+            DB_query("INSERT INTO {$_TABLES['downloadsubmission']} "
+                   . "SELECT * FROM {$_TABLES['downloads']} WHERE lid = '$id'");
         }
+        DB_delete($_TABLES['downloads'], 'lid', $id);
+        DLM_errorLog("Downloads: moderation approval rolled back to pending state for '$id'.");
+        return false;
     }
+
+    DLM_recordSubmissionStatus($id, 'published', $id);
+    PLG_itemSaved($id, 'downloads');
+    COM_rdfUpToDateCheck('downloads', $A['cid'], $id);
+
+    if ($_DLM_CONF['download_emailoption']) {
+        DLM_sendNotification($id);
+    }
+
+    return true;
 }
 
 function DLM_unlink($path)
@@ -263,13 +417,28 @@ function DLM_delNewDownload($id)
 {
     global $_CONF, $_TABLES, $_DLM_CONF, $LANG_DLM;
 
-    $result = DB_query("SELECT url, logourl, date "
+    DLM_recordSubmissionStatus($id, 'rejected');
+
+    $result = DB_query("SELECT url, logourl, date, secret_id "
                      . "FROM {$_TABLES['downloadsubmission']} "
                      . "WHERE lid = '" . DB_escapeString($id) . "'");
-    list($url, $logourl, $date) = DB_fetchArray($result);
+    list($url, $logourl, $date, $secret_id) = DB_fetchArray($result);
     if (empty($url)) return;
-    $tmpfilename = $_DLM_CONF['path_filestore'] . 'tmp' . date('YmdHis', $date) . DLM_encodeFileName($url);
-    $tmpshotname = $_DLM_CONF['path_snapstore'] . 'tmp' . date('YmdHis', $date) . DLM_encodeFileName($logourl);
+    $tmpfilename = DLM_findPendingFile(
+        $_DLM_CONF['path_filestore'],
+        $date,
+        $url,
+        $secret_id
+    );
+    $tmpshotname = '';
+    if (!empty($logourl)) {
+        $tmpshotname = DLM_findPendingFile(
+            $_DLM_CONF['path_snapstore'],
+            $date,
+            $logourl,
+            $secret_id
+        );
+    }
     DLM_unlink($tmpfilename);
     DLM_unlink($tmpshotname);
     DB_delete($_TABLES['downloadsubmission'], 'lid', DB_escapeString($id));
@@ -292,68 +461,117 @@ function DLM_makeThumbnail($filename)
 {
     global $_DLM_CONF;
 
-    if (empty($filename)) return false;
+    if (empty($filename)) {
+        return false;
+    }
 
-    $src_path = $_DLM_CONF['path_snapstore'] . $filename;
-    if (!file_exists($src_path)) return false;
+    $src_path = rtrim($_DLM_CONF['path_snapstore'], "/\\")
+              . DIRECTORY_SEPARATOR . $filename;
+    if (!is_file($src_path)) {
+        return false;
+    }
+
+    if (!DLM_ensureDirectory($_DLM_CONF['path_tnstore'])) {
+        return false;
+    }
+
+    $dimensions = @getimagesize($src_path);
+    if ($dimensions === false || empty($dimensions[0]) || empty($dimensions[1])) {
+        DLM_errorLog("Downloads: thumbnail error: Invalid image source '" . $src_path . "'.");
+        return false;
+    }
+
     $src_parts = pathinfo($src_path);
-    $ext  = strtolower($src_parts['extension']);
+    $ext = isset($src_parts['extension']) ? strtolower($src_parts['extension']) : '';
     $name = $src_parts['filename'];
 
     switch ($_DLM_CONF['tnimage_format']) {
-        case 'jpg': $dst_path = $_DLM_CONF['path_tnstore'] . $name . '.jpg'; break;
-        case 'png': $dst_path = $_DLM_CONF['path_tnstore'] . $name . '.png'; break;
+    case 'jpg':
+        $dst_path = rtrim($_DLM_CONF['path_tnstore'], "/\\")
+                  . DIRECTORY_SEPARATOR . $name . '.jpg';
+        break;
+    case 'png':
+        $dst_path = rtrim($_DLM_CONF['path_tnstore'], "/\\")
+                  . DIRECTORY_SEPARATOR . $name . '.png';
+        break;
+    default:
+        DLM_errorLog("Downloads: thumbnail error: Unsupported thumbnail format.");
+        return false;
     }
 
-    // Get the size of an image
-    list($width, $height) = getimagesize($src_path);
-    $newwidth  = $_DLM_CONF['max_tnimage_width'];
-    $newheight = intval($height * $_DLM_CONF['max_tnimage_width'] / $width);
-
-    // Create a new image from file
     switch ($ext) {
-        case 'jepg': $source = imagecreatefromjpeg($src_path); break;
-        case 'jpg': $source = imagecreatefromjpeg($src_path); break;
-        case 'png': $source = imagecreatefrompng($src_path);  break;
-        case 'gif': $source = imagecreatefromgif($src_path);  break;
-        default: return false; break;
+    case 'jpeg':
+    case 'jpg':
+        $source = @imagecreatefromjpeg($src_path);
+        break;
+    case 'png':
+        $source = @imagecreatefrompng($src_path);
+        break;
+    case 'gif':
+        $source = @imagecreatefromgif($src_path);
+        break;
+    default:
+        return false;
     }
 
-	$thumb2 = '';
-    if (($width <= $_DLM_CONF['max_tnimage_width']) && ($height <= $_DLM_CONF['max_tnimage_height'])) {
-        // Create an image
-        $thumb = imagecreatetruecolor($width, $height);
-        // Copy
-        imagecopy($thumb, $source, 0, 0, 0, 0, $width, $height);
-    } else {
-        // Create an image
-        $thumb = imagecreatetruecolor($newwidth, $newheight);
-        // Resize
-        imagecopyresampled($thumb, $source, 0, 0, 0, 0, $newwidth, $newheight, $width, $height);
+    if ($source === false) {
+        DLM_errorLog("Downloads: thumbnail error: Could not decode source image.");
+        return false;
+    }
 
-        if ($newwidth < $newheight) {
-            // Create an image
-            $thumb2 = imagecreatetruecolor($newwidth, $newwidth);
-            // Trim
-            imagecopyresampled($thumb2, $thumb, 0, 0, 0, 0, $newwidth, $newwidth, $newwidth, $newwidth);
-            $thumb = $thumb2;
+    $width = (int) $dimensions[0];
+    $height = (int) $dimensions[1];
+    $max_width = max(1, (int) $_DLM_CONF['max_tnimage_width']);
+    $max_height = max(1, (int) $_DLM_CONF['max_tnimage_height']);
+
+    $scale = min(1, $max_width / $width, $max_height / $height);
+    $newwidth = max(1, (int) floor($width * $scale));
+    $newheight = max(1, (int) floor($height * $scale));
+
+    $thumb = imagecreatetruecolor($newwidth, $newheight);
+    if ($thumb === false) {
+        if (is_resource($source) || is_object($source)) {
+            imagedestroy($source);
         }
+        return false;
     }
 
-    // Output image to file
-    switch ($_DLM_CONF['tnimage_format']) {
-        case 'jpg': imagejpeg($thumb, $dst_path, 85); break;
-        case 'png': imagepng($thumb,  $dst_path);     break;
+    if (!imagecopyresampled(
+        $thumb,
+        $source,
+        0,
+        0,
+        0,
+        0,
+        $newwidth,
+        $newheight,
+        $width,
+        $height
+    )) {
+        imagedestroy($thumb);
+        if (is_resource($source) || is_object($source)) {
+            imagedestroy($source);
+        }
+        return false;
     }
 
-    // Frees any memory associated with image
+    if ($_DLM_CONF['tnimage_format'] === 'jpg') {
+        $success = imagejpeg($thumb, $dst_path, 85);
+    } else {
+        $success = imagepng($thumb, $dst_path);
+    }
+
     imagedestroy($thumb);
-    if (is_resource($source)) {
+    if (is_resource($source) || is_object($source)) {
         imagedestroy($source);
     }
-    if (is_resource($thumb2)) {
-        imagedestroy($thumb2);
+
+    if (!$success) {
+        DLM_errorLog("Downloads: thumbnail error: Could not write thumbnail.");
+        return false;
     }
+
+    @chmod($dst_path, intval((string) $_DLM_CONF['filepermissions'], 8));
     return true;
 }
 
@@ -362,8 +580,8 @@ function DLM_getImgSizeAttr($imgpath)
     global $_DLM_CONF;
 
     if (!file_exists($imgpath)) return '';
-    $dimensions = getimagesize($imgpath);
-    if (empty($dimensions[0]) || empty($dimensions[1])) return '';
+    $dimensions = @getimagesize($imgpath);
+    if ($dimensions === false || empty($dimensions[0]) || empty($dimensions[1])) return '';
     $snapwidth  = $dimensions[0];
     $snapheight = $dimensions[1];
     if ($dimensions[0] > $_DLM_CONF['max_tnimage_width']) {
@@ -445,16 +663,77 @@ function DLM_setDefaultTemplateVars(&$T)
 }
 
 
+/**
+ * Ensure a configured Downloads storage directory exists and is writable.
+ *
+ * @param  string $directory
+ * @return bool
+ */
+function DLM_ensureDirectory($directory)
+{
+    $directory = rtrim((string) $directory, "/\\") . DIRECTORY_SEPARATOR;
+
+    if (is_dir($directory)) {
+        return is_writable($directory);
+    }
+
+    if (!@mkdir($directory, 0755, true) && !is_dir($directory)) {
+        DLM_errorLog("Downloads: storage error: Could not create directory: '" . $directory . "'");
+        return false;
+    }
+
+    if (!is_writable($directory)) {
+        DLM_errorLog("Downloads: storage error: Directory is not writable: '" . $directory . "'");
+        return false;
+    }
+
+    return true;
+}
+
+/**
+ * Validate an uploaded image using the actual file content.
+ *
+ * @param  array $file
+ * @return bool
+ */
+function DLM_isUploadedImage($file)
+{
+    if (!is_array($file) || empty($file['tmp_name']) || !is_uploaded_file($file['tmp_name'])) {
+        return false;
+    }
+
+    $info = @getimagesize($file['tmp_name']);
+    if ($info === false || empty($info[2])) {
+        return false;
+    }
+
+    return in_array($info[2], array(IMAGETYPE_GIF, IMAGETYPE_JPEG, IMAGETYPE_PNG), true);
+}
+
 // Moves an uploaded file in temporary directory to data directory
 function DLM_uploadNewFile($newfile, $directory, $name = '')
 {
     global $_DLM_CONF;
 
+    if (!is_array($newfile) || empty($newfile['tmp_name'])) {
+        DLM_errorLog("Downloads: upload error: Invalid upload data.");
+        return false;
+    }
+
+    if (!DLM_ensureDirectory($directory)) {
+        DLM_showErrorMessage('1004');
+        return false;
+    }
+
     $tmp = $newfile['tmp_name'];
     if (empty($name)) {
-        $name = COM_applyFilter($newfile['name']);
-        if (empty($name)) return false;
+        $name = isset($newfile['name']) ? COM_applyFilter($newfile['name']) : '';
+        if (empty($name)) {
+            return false;
+        }
     }
+
+    $directory = rtrim($directory, "/\\") . DIRECTORY_SEPARATOR;
     $newfilepath = $directory . DLM_encodeFileName($name);
 
     if (!is_uploaded_file($tmp)) {
@@ -464,12 +743,13 @@ function DLM_uploadNewFile($newfile, $directory, $name = '')
     }
 
     if (file_exists($newfilepath)) {
-        DLM_errorLog("Downloads: warning: Added new filelisting for a file that already exists " . $newfilepath);
-        return true; // not uploaded. this OK? or upload and overwrite force.
+        DLM_errorLog("Downloads: upload error: Destination already exists: " . $newfilepath);
+        DLM_showErrorMessage('1004');
+        return false;
     }
 
     if (!move_uploaded_file($tmp, $newfilepath)) {
-        DLM_errorLog("Downloads: upload error: Could not move an uploaded file: " . $tmp . " to " . $name);
+        DLM_errorLog("Downloads: upload error: Could not move uploaded file to: '" . $newfilepath . "'");
         DLM_showErrorMessage('1004');
         return false;
     }
@@ -479,26 +759,179 @@ function DLM_uploadNewFile($newfile, $directory, $name = '')
 }
 
 
-// Send a email to submitter notifying them that file was approved
-function DLM_sendNotification($lid)
+/**
+ * Record a durable submission status transition.
+ *
+ * @param string $lid
+ * @param string $status pending|published|rejected
+ * @param string $public_lid
+ * @return bool
+ */
+function DLM_recordSubmissionStatus($lid, $status, $public_lid = '')
 {
-    global $_CONF, $_TABLES, $LANG_DLM, $LANG08;
+    global $_TABLES;
 
     $lid = DB_escapeString($lid);
-    $result = DB_query("SELECT username, email, b.url "
-                     . "FROM {$_TABLES['users']} a, {$_TABLES['downloads']} b "
-                     . "WHERE a.uid = b.owner_id AND b.lid = '$lid'");
-    list($username, $email, $url) = DB_fetchArray($result);
-    $body  = sprintf($LANG_DLM['hello'], $username). "\n\n"
-           . $LANG_DLM['weapproved'] . " " . $url . " \n"
-           . $LANG_DLM['thankssubmit'] . "\n\n"
-           . "{$_CONF['site_name']}\n"
-           . "{$_CONF['site_url']}\n"
-           . "\n------------------------------\n"
-           . "\n$LANG08[34]\n"
-           . "\n------------------------------\n";
+    $status = DB_escapeString($status);
+    $public_lid = DB_escapeString($public_lid);
+
+    $source = $_TABLES['downloadsubmission'];
+    if (DB_count($source, 'lid', $lid) != 1) {
+        $source = $_TABLES['downloads'];
+    }
+    if (DB_count($source, 'lid', $lid) != 1) {
+        DLM_errorLog("Downloads: submission history error: Source record not found for '$lid'.");
+        return false;
+    }
+
+    $result = DB_query("SELECT lid, owner_id, cid, title, date FROM $source WHERE lid='$lid'");
+    $A = DB_fetchArray($result);
+    $owner_id = (int) $A['owner_id'];
+    $cid = DB_escapeString($A['cid']);
+    $title = DB_escapeString($A['title']);
+    $submitted_date = (int) $A['date'];
+    $status_date = time();
+
+    $last = DB_query("SELECT status FROM {$_TABLES['downloadsubmissionhistory']} "
+                   . "WHERE lid='$lid' AND owner_id=$owner_id "
+                   . "ORDER BY history_id DESC LIMIT 1");
+    if (DB_numRows($last) == 1) {
+        list($last_status) = DB_fetchArray($last);
+        if ($last_status === $status) {
+            return true;
+        }
+    }
+
+    DB_query("INSERT INTO {$_TABLES['downloadsubmissionhistory']} "
+           . "(lid, owner_id, cid, title, submitted_date, status, status_date, public_lid) "
+           . "VALUES ('$lid', $owner_id, '$cid', '$title', $submitted_date, "
+           . "'$status', $status_date, '$public_lid')");
+
+    return !DB_error();
+}
+
+/**
+ * Render matching HTML and plaintext Downloads email templates.
+ *
+ * @param string $template
+ * @param array  $vars
+ * @return array
+ */
+function DLM_renderEmailTemplates($template, $vars)
+{
+    global $LANG31;
+
+    $T = COM_newTemplate(CTL_plugin_templatePath('downloads', 'emails'));
+    $T->set_file(array('email_html' => $template . '-html.thtml'));
+    $T->preprocess_fn = 'CTL_removeLineFeeds';
+    $T->set_file(array('email_plaintext' => $template . '-plaintext.thtml'));
+
+    $T->set_var('email_divider', $LANG31['email_divider']);
+    $T->set_var('email_divider_html', $LANG31['email_divider_html']);
+    $T->set_var('LB', LB);
+
+    foreach ($vars as $key => $value) {
+        $T->set_var($key, $value);
+    }
+
+    return array(
+        $T->parse('output', 'email_html'),
+        $T->parse('output', 'email_plaintext')
+    );
+}
+
+/**
+ * Notify the configured moderator address about a new submission.
+ *
+ * @param string $lid
+ * @return bool
+ */
+function DLM_sendSubmissionNotification($lid)
+{
+    global $_CONF, $_TABLES, $_DLM_CONF, $LANG_DLM;
+
+    if (empty($_DLM_CONF['notify_on_submission'])) {
+        return true;
+    }
+
+    $email = isset($_DLM_CONF['submission_notify_email'])
+        ? trim($_DLM_CONF['submission_notify_email']) : '';
+    if ($email === '') {
+        $email = isset($_CONF['site_mail']) ? trim($_CONF['site_mail']) : '';
+    }
+    if ($email === '') {
+        DLM_errorLog("Downloads: submission notification skipped: no recipient configured.");
+        return false;
+    }
+
+    $lid_sql = DB_escapeString($lid);
+    $result = DB_query("SELECT s.title, s.owner_id, u.username "
+                     . "FROM {$_TABLES['downloadsubmission']} s "
+                     . "LEFT JOIN {$_TABLES['users']} u ON u.uid=s.owner_id "
+                     . "WHERE s.lid='$lid_sql'");
+    if (DB_numRows($result) != 1) {
+        DLM_errorLog("Downloads: submission notification skipped: submission '$lid_sql' not found.");
+        return false;
+    }
+
+    $A = DB_fetchArray($result);
+    $subject = $_CONF['site_name'] . ' - ' . $LANG_DLM['submission_notification_subject'];
+    $moderation_url = $_CONF['site_admin_url'] . '/moderation.php';
+    $message = DLM_renderEmailTemplates('download_submission', array(
+        'notification_intro' => $LANG_DLM['submission_notification_intro'],
+        'lang_title' => $LANG_DLM['submission_notification_title'],
+        'submission_title' => DLM_htmlspecialchars($A['title']),
+        'lang_submitter' => $LANG_DLM['submission_notification_submitter'],
+        'submission_submitter' => DLM_htmlspecialchars(
+            COM_getDisplayName((int) $A['owner_id'], $A['username'])
+        ),
+        'lang_moderate' => $LANG_DLM['submission_notification_moderate'],
+        'moderation_url' => $moderation_url
+    ));
+
+    return COM_mail($email, $subject, $message, '', true);
+}
+
+/**
+ * Notify a submitter after their download is approved.
+ *
+ * @param string $lid
+ * @return bool
+ */
+function DLM_sendNotification($lid)
+{
+    global $_CONF, $_TABLES, $LANG_DLM;
+
+    $lid_sql = DB_escapeString($lid);
+    $result = DB_query("SELECT u.username, u.email, d.title "
+                     . "FROM {$_TABLES['users']} u "
+                     . "INNER JOIN {$_TABLES['downloads']} d ON u.uid=d.owner_id "
+                     . "WHERE d.lid='$lid_sql'");
+    if (DB_numRows($result) != 1) {
+        DLM_errorLog("Downloads: approval notification skipped: download '$lid_sql' not found.");
+        return false;
+    }
+
+    $A = DB_fetchArray($result);
+    if (empty($A['email'])) {
+        return false;
+    }
+
+    $download_url = COM_buildURL(
+        $_CONF['site_url'] . '/downloads/index.php?id=' . rawurlencode($lid)
+    );
+    $message = DLM_renderEmailTemplates('download_approved', array(
+        'greeting' => sprintf($LANG_DLM['hello'], DLM_htmlspecialchars($A['username'])),
+        'approval_text' => $LANG_DLM['weapproved'],
+        'download_title' => DLM_htmlspecialchars($A['title']),
+        'download_url' => $download_url,
+        'thanks_text' => $LANG_DLM['thankssubmit'],
+        'site_name' => DLM_htmlspecialchars($_CONF['site_name']),
+        'site_url' => $_CONF['site_url']
+    ));
+
     $subject = $_CONF['site_name'] . ' ' . $LANG_DLM['approved'];
-    COM_mail($email, $subject, $body);
+    return COM_mail($A['email'], $subject, $message, '', true);
 }
 
 function DLM_hasAccess_history()
