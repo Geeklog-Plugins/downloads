@@ -1658,7 +1658,16 @@ function plugin_getiteminfo_downloads($id, $what, $uid = 0, $options = array())
     $uid = (int) $uid;
 
     if ($id !== '*') {
-        return DLM_getInteropItem($id, $properties, $uid);
+        $item = DLM_getInteropItem($id, $properties, $uid);
+
+        // Geeklog's PLG_getItemInfo API expects a scalar when requesting one
+        // property (e.g. 'url' in the What's New comments block), whereas
+        // multi-property requests retain the ordered array contract.
+        if (count($properties) === 1) {
+            return isset($item[0]) ? $item[0] : '';
+        }
+
+        return $item;
     }
 
     // Preserve legacy collection behavior unless a subtype is explicitly requested.
