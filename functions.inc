@@ -1547,7 +1547,16 @@ function DLM_getInteropItem($id, $properties, $uid = 0)
  */
 function plugin_collectSitemapItems_downloads($uid = 1, $limit = 0)
 {
-    global $_CONF, $_TABLES;
+    global $_CONF, $_TABLES, $_PLUGINS;
+
+    /*
+     * XMLSitemap may rebuild during plugin state changes before Geeklog has
+     * refreshed the enabled plugin list. Avoid querying Downloads while its
+     * activation state is still transient.
+     */
+    if (!is_array($_PLUGINS) || !in_array('downloads', $_PLUGINS, true)) {
+        return array();
+    }
 
     $uid = (int) $uid;
     $limit = (int) $limit;
