@@ -45,6 +45,8 @@ The remaining sections below are the acceptance roadmap for the release.
 
 ## Release readiness
 
+Planned GitHub release tag: `v1.3.0` (create only after final acceptance).
+
 ### Validated on a real installation
 
 - [x] Fresh installation
@@ -58,7 +60,7 @@ The remaining sections below are the acceptance roadmap for the release.
 - [x] Add / edit / enable / disable a category
 - [x] Public search with matches and with no results
 - [x] Download image and lightbox
-- [ ] Comments and rating
+- [x] Comments and rating
 - [ ] User submission creates Pending state
 - [ ] Approval through Geeklog moderation creates Published state
 - [ ] Approval through Downloads administration
@@ -68,9 +70,9 @@ The remaining sections below are the acceptance roadmap for the release.
 - [ ] Missing physical file produces admin diagnostic and public 404
 - [x] IndexNow integration
 - [x] XMLSitemap downloads
-- [ ] XMLSitemap categories (implementation added; real regeneration test required)
+- [x] XMLSitemap categories (implementation added; real regeneration test required)
 - [x] Generic public 404 handling
-- [ ] Rich editor Preview reflects the intended public content
+- [x] Rich editor Preview reflects the intended public content
 - [ ] Oversized upload produces a controlled user-facing error
 
 ### Public UI direction
@@ -123,4 +125,4 @@ A full XMLSitemap regeneration is required after installing this build to remove
 - [x] Generic `ROOTID` constant replaced by `DLM_ROOTID`.
 - [x] Multilingual SQL helper accepts the category table alias.
 - [x] XMLSitemap/Item Info queries using alias `c` explicitly request `DLM_helper_getLangSQL('c')`.
-- [ ] Validate saving the configuration of another active plugin while Downloads is enabled.
+- [x] Validate saving the configuration of another active plugin while Downloads is enabled.
