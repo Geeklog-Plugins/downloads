@@ -1,6 +1,8 @@
 # Changelog
 
-## 1.3.0 — in development
+## 1.3.0 — 2026-10-08
+
+GitHub release tag: `v1.3.0` (planned; not yet published).
 
 ### Compatibility
 
