@@ -172,6 +172,28 @@ function DLM_errorLog($entry)
 }
 
 /**
+ * Detect requests discarded by PHP because CONTENT_LENGTH exceeds post_max_size.
+ * PHP empties both POST and FILES in this case, hiding the upload error code.
+ * Only use when processing a form submission; never trust the client size alone.
+ */
+function DLM_uploadRequestExceedsPostMax()
+{
+    if (empty($_SERVER['CONTENT_LENGTH']) || !empty($_POST) || !empty($_FILES)) {
+        return false;
+    }
+    $raw = trim((string) ini_get('post_max_size'));
+    if (!preg_match('/^([0-9]+)([KMG]?)$/i', $raw, $parts)) {
+        return false;
+    }
+    $limit = (float) $parts[1];
+    $unit = strtoupper($parts[2]);
+    if ($unit === 'K') $limit *= 1024;
+    if ($unit === 'M') $limit *= 1048576;
+    if ($unit === 'G') $limit *= 1073741824;
+    return $limit > 0 && (float) $_SERVER['CONTENT_LENGTH'] > $limit;
+}
+
+/**
 * Return new downloads for the What's New block
 *
 * @return   string  HTML list of new downloads
@@ -1336,6 +1358,10 @@ function plugin_savesubmission_downloads($A)
     global $_CONF;
 
     require_once $_CONF['path'] . 'plugins/downloads/include/functions.php';
+    if (DLM_uploadRequestExceedsPostMax()) {
+        DLM_errorLog('Downloads: submission rejected: HTTP request exceeds PHP post_max_size.');
+        return COM_showMessageText($GLOBALS['LANG_DLM']['1403']);
+    }
     require_once $_CONF['path'] . 'plugins/downloads/include/download.class.php';
     $dldl = new DLDownload();
     return $dldl->submitNewDownload($A);
