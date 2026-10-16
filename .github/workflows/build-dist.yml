@@ -70,7 +70,7 @@ jobs:
 
           (
             cd package
-            zip -r -9 ../dist/develop_1.3.2_2.1.2.zip downloads
+            zip -r -9 ../dist/downloads_1.3.2_2.1.2.zip downloads
           )
 
       - name: Verify distribution archive
@@ -78,7 +78,7 @@ jobs:
         run: |
           set -euo pipefail
 
-          archive='dist/develop_1.3.2_2.1.2.zip'
+          archive='dist/downloads_1.3.2_2.1.2.zip'
           test -s "$archive"
           unzip -t "$archive"
 
@@ -141,7 +141,7 @@ jobs:
         shell: bash
         run: |
           ls -lh dist/
-          sha256sum dist/develop_1.3.2_2.1.2.zip
+          sha256sum dist/downloads_1.3.2_2.1.2.zip
 
       - name: Commit distribution archive
         shell: bash
