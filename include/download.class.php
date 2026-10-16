@@ -1008,7 +1008,7 @@ class DLDownload
 
         $this->_secret_id = $this->_createSecretID();
         $this->_old_url   = $this->_url;
-        $this->_url       = $_FILES['newfile']['name'];
+        $this->_url       = isset($_FILES['newfile']['name']) ? $_FILES['newfile']['name'] : '';
         $this->_owner_id  = $_USER['uid'];
         if (empty($this->_lid)) $this->_lid = $this->_old_lid;
 
@@ -1719,7 +1719,7 @@ class DLDownload
         $this->_initVars();
         $this->_loadFromArgs($A);
         $this->_secret_id = $this->_createSecretID();
-        $this->_url     = $_FILES['newfile']['name'];
+        $this->_url     = isset($_FILES['newfile']['name']) ? $_FILES['newfile']['name'] : '';
 //        $this->_logourl = $_FILES['newfileshot']['name'];
         if (empty($this->_lid)) $this->_lid = $this->_old_lid;
 
