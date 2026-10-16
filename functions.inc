@@ -40,7 +40,7 @@ if (!defined ('UC_READONLY')) define('UC_READONLY', (XHTML == '') ? 'readonly' :
 if (!defined ('UC_DISABLED')) define('UC_DISABLED', (XHTML == '') ? 'disabled' : 'disabled="disabled"');
 
 define('DLM_ROOTID', 'root');
-define('DOWNLOADS_VERSION', '1.3.1');
+define('DOWNLOADS_VERSION', '1.3.2');
 
 /**
 * Include language file
