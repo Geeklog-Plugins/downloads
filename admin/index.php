@@ -87,6 +87,9 @@ function listDownloads()
         $menu_arr[] = array('url'  => $admin_url . '?op=listCategories',
                             'text' => $LANG_DLM['nav_categories']);
 
+        $menu_arr[] = array('url' => $admin_url . '?op=storageInventory',
+                            'text' => 'Storage inventory (read-only)');
+
         $menu_arr[] = array('url'  => $admin_url . '?op=newCategory',
                             'text' => $LANG_DLM['nav_addcategory']);
     }
@@ -890,6 +893,37 @@ switch ($op) {
         $DLM_CSRF_TOKEN = SEC_createToken();
         $display .= listCategories();
         $display = COM_createHTMLDocument($display, array('pagetitle' => $LANG_DLM['manager']));
+        break;
+
+    case "storageInventory":
+        if (!SEC_inGroup('Root')) {
+            $display = COM_showMessageText($MESSAGE[29], $MESSAGE[30]);
+            $display = COM_createHTMLDocument($display, array('pagetitle' => $MESSAGE[30]));
+            break;
+        }
+        require_once $_CONF['path'] . 'plugins/downloads/include/storage_inventory.php';
+        $inventory = DLM_storageInventory();
+        $display = '<h2>Downloads storage inventory (read-only)</h2>'
+                 . '<p>No files are modified. Unreferenced files are candidates only; '
+                 . 'review backups, legacy filenames and other references before any cleanup.</p>';
+        foreach ($inventory as $type => $report) {
+            $display .= '<h3>' . htmlspecialchars($type, ENT_QUOTES, 'UTF-8') . '</h3>';
+            if ($report['error'] !== '') {
+                $display .= '<p>' . htmlspecialchars($report['error'], ENT_QUOTES, 'UTF-8') . '</p>';
+                continue;
+            }
+            $display .= '<p>Files: ' . (int) $report['total']
+                     . ' | Referenced: ' . (int) $report['referenced']
+                     . ' | Unreferenced candidates: ' . (int) $report['candidates'] . '</p>';
+            if (!empty($report['examples'])) {
+                $display .= '<details><summary>Show up to 100 candidate filenames</summary><ul>';
+                foreach ($report['examples'] as $file) {
+                    $display .= '<li><code>' . htmlspecialchars($file, ENT_QUOTES, 'UTF-8') . '</code></li>';
+                }
+                $display .= '</ul></details>';
+            }
+        }
+        $display = COM_createHTMLDocument($display, array('pagetitle' => 'Downloads storage inventory'));
         break;
 
     case "listDownloads":
