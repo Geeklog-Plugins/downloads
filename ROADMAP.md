@@ -9,7 +9,8 @@
 ### 1.3.2 proposed priorities
 
 1. **P0 — Uploaded-file diagnostics and data integrity**
-   - [x] Avoid undefined `$_FILES['newfile']['name']` access when PHP drops a request (initial defensive correction, not a complete solution to #8).
+   - [x] Avoid undefined `$_FILES['newfile']['name']` access when PHP drops a request.
+   - [x] Detect a discarded HTTP POST exceeding `post_max_size` and display upload-size error in Downloads admin and submission callbacks (static implementation; browser-level regression still pending).
    - [ ] Investigate upstream [#8](https://github.com/Geeklog-Plugins/downloads/issues/8): enforce `upload_max_filesize`, `post_max_size`, `UPLOAD_ERR_*`, empty `$_POST` and server-size errors; display actionable, localized messages; clean failed partial uploads without touching published files.
    - [ ] Audit real delete/replace paths for orphaned ZIPs and thumbnails; distinguish shared snapshots and retained historical files.
    - [ ] Add an **audit-only** storage inventory that reports missing database references, orphan candidates, temporary files and duplicates; no automatic deletion in 1.3.2.
