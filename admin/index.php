@@ -694,6 +694,16 @@ function showMessage()
 
 // MAIN
 
+// When post_max_size is exceeded PHP silently empties POST and FILES,
+// including the requested admin action. Report the upload failure here.
+if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'POST'
+    && DLM_uploadRequestExceedsPostMax()) {
+    DLM_errorLog('Downloads: admin request rejected: HTTP request exceeds PHP post_max_size.');
+    $display = COM_showMessageText($LANG_DLM['1403']);
+    COM_output(COM_createHTMLDocument($display, array('pagetitle' => $LANG_DLM['main'])));
+    exit;
+}
+
 $op             = isset($_REQUEST['op'])            ? COM_applyFilter($_REQUEST['op'])              : '';
 $_page          = isset($_REQUEST['page'])          ? COM_applyFilter($_REQUEST['page'])            : '';
 $listing_cid    = isset($_REQUEST['listing_cid'])   ? COM_applyFilter($_REQUEST['listing_cid'])     : '';
