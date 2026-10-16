@@ -484,8 +484,27 @@ class DLDownload
         if ($mode == 'editsubmission') {
             $tempfileurl = $_CONF['site_url'] . '/admin/plugins/downloads/tmpfile.php?id=' . $this->_lid;
             $tempsnapurl = '';
-            if (!empty($this->_logourl)) {
-                $tempsnapurl = $_DLM_CONF['snapstore_url'] . '/tmp' . date('YmdHis', $this->_date) . DLM_createSafeFileName($this->_logourl);
+            // Resolve the real pending snapshot instead of rebuilding the
+            // obsolete, timezone-dependent temporary filename.
+            // The submission row is authoritative even after Preview POST
+            // filtering (which can truncate filenames containing commas).
+            $pending = DB_query("SELECT logourl, date, secret_id "
+                . "FROM {$_TABLES['downloadsubmission']} WHERE lid='"
+                . DB_escapeString($this->_lid) . "'");
+            if (DB_numRows($pending) == 1) {
+                $pending_row = DB_fetchArray($pending);
+                if (!empty($pending_row['logourl'])) {
+                    $snap_path = DLM_findPendingFile(
+                        $_DLM_CONF['path_snapstore'],
+                        (int) $pending_row['date'],
+                        $pending_row['logourl'],
+                        $pending_row['secret_id']
+                    );
+                    if (is_file($snap_path)) {
+                        $tempsnapurl = rtrim($_DLM_CONF['snapstore_url'], '/')
+                            . '/' . rawurlencode(basename($snap_path));
+                    }
+                }
             }
             $T->set_var('lang_tempfile', $LANG_DLM['tempfile']);
             $T->set_var('tempsnapurl', $tempsnapurl);
