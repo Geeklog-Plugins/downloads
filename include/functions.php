@@ -215,44 +215,61 @@ function DLM_reedit($function, $args = array())
 }
 
 /**
- * Build the pending storage filename used for new 1.3.0 submissions.
- *
- * @param int    $date
- * @param string $name
- * @param string $secret_id
- * @return string
+ * Pending filenames use an epoch timestamp instead of timezone-dependent local time.
+ * Historical v1.3.0 and earlier filenames are resolved by DLM_findPendingFile().
  */
 function DLM_createPendingFileName($date, $name, $secret_id)
 {
-    return 'tmp' . date('YmdHis', (int) $date)
-         . '_' . DLM_encodeFileName($secret_id)
-         . '_' . DLM_createSafeFileName($name);
+    return 'tmpu' . (int) $date . '_'
+         . DLM_encodeFileName($secret_id) . '_'
+         . DLM_createSafeFileName($name);
 }
 
 /**
- * Locate a pending file, accepting the pre-1.3.0 legacy naming scheme.
- *
- * @param string $directory
- * @param int    $date
- * @param string $name
- * @param string $secret_id
- * @return string
+ * Resolve pending uploads from current and historical naming schemes.
+ * Never guess which file to use if multiple legacy matches exist.
  */
 function DLM_findPendingFile($directory, $date, $name, $secret_id)
 {
     $directory = rtrim($directory, "/\\") . DIRECTORY_SEPARATOR;
-
     $current = $directory . DLM_createPendingFileName($date, $name, $secret_id);
     if (is_file($current)) {
         return $current;
     }
 
-    $legacy = $directory . 'tmp' . date('YmdHis', (int) $date)
-            . DLM_createSafeFileName($name);
-    if (is_file($legacy)) {
-        return $legacy;
+    $safe_name = DLM_createSafeFileName($name);
+    $secret = DLM_encodeFileName($secret_id);
+    $legacy_suffix = '_' . $secret . '_' . $safe_name;
+    $legacy_plain = $safe_name;
+    $matches = array();
+
+    if (!is_dir($directory) || !($handle = @opendir($directory))) {
+        DLM_errorLog("Downloads: pending file lookup: Cannot read directory: " . $directory);
+        return $current;
     }
 
+    while (($entry = readdir($handle)) !== false) {
+        // Versions 1.3.0: tmpYYYYMMDDHHMMSS_SECRET_FILENAME
+        // Before 1.3.0: tmpYYYYMMDDHHMMSSFILENAME
+        if (preg_match('/^tmp[0-9]{14}/', $entry) !== 1) {
+            continue;
+        }
+        $new_style = substr($entry, 17) === $legacy_suffix;
+        $old_style = substr($entry, 17) === $legacy_plain;
+        if (($new_style || $old_style) && is_file($directory . $entry)) {
+            $matches[] = $directory . $entry;
+        }
+    }
+    closedir($handle);
+
+    if (count($matches) === 1) {
+        return $matches[0];
+    }
+    if (count($matches) > 1) {
+        DLM_errorLog("Downloads: pending file lookup: Ambiguous legacy matches for " . $safe_name);
+    } else {
+        DLM_errorLog("Downloads: pending file lookup: Missing pending file " . $safe_name . " in " . $directory);
+    }
     return $current;
 }
 
