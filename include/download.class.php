@@ -1610,6 +1610,11 @@ class DLDownload
         }
 
         list($url, $logourl, $secret_id, $submission_date) = DB_fetchArray($result);
+        // File names belong to the persisted submission, not editable POST fields.
+        // COM_applyFilter() can truncate names containing commas (e.g. snapshots).
+        // Preserve the exact names used when the pending files were uploaded.
+        $this->_url = $url;
+        $this->_logourl = $logourl;
         $this->_secret_id = $secret_id;
 
         $success = DLM_finalizeSubmissionFiles(
