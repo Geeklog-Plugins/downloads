@@ -215,44 +215,61 @@ function DLM_reedit($function, $args = array())
 }
 
 /**
- * Build the pending storage filename used for new 1.3.0 submissions.
- *
- * @param int    $date
- * @param string $name
- * @param string $secret_id
- * @return string
+ * Pending filenames use an epoch timestamp instead of timezone-dependent local time.
+ * Historical v1.3.0 and earlier filenames are resolved by DLM_findPendingFile().
  */
 function DLM_createPendingFileName($date, $name, $secret_id)
 {
-    return 'tmp' . date('YmdHis', (int) $date)
-         . '_' . DLM_encodeFileName($secret_id)
-         . '_' . DLM_createSafeFileName($name);
+    return 'tmpu' . (int) $date . '_'
+         . DLM_encodeFileName($secret_id) . '_'
+         . DLM_createSafeFileName($name);
 }
 
 /**
- * Locate a pending file, accepting the pre-1.3.0 legacy naming scheme.
- *
- * @param string $directory
- * @param int    $date
- * @param string $name
- * @param string $secret_id
- * @return string
+ * Resolve pending uploads from current and historical naming schemes.
+ * Never guess which file to use if multiple legacy matches exist.
  */
 function DLM_findPendingFile($directory, $date, $name, $secret_id)
 {
     $directory = rtrim($directory, "/\\") . DIRECTORY_SEPARATOR;
-
     $current = $directory . DLM_createPendingFileName($date, $name, $secret_id);
     if (is_file($current)) {
         return $current;
     }
 
-    $legacy = $directory . 'tmp' . date('YmdHis', (int) $date)
-            . DLM_createSafeFileName($name);
-    if (is_file($legacy)) {
-        return $legacy;
+    $safe_name = DLM_createSafeFileName($name);
+    $secret = DLM_encodeFileName($secret_id);
+    $legacy_suffix = '_' . $secret . '_' . $safe_name;
+    $legacy_plain = $safe_name;
+    $matches = array();
+
+    if (!is_dir($directory) || !($handle = @opendir($directory))) {
+        DLM_errorLog("Downloads: pending file lookup: Cannot read directory: " . $directory);
+        return $current;
     }
 
+    while (($entry = readdir($handle)) !== false) {
+        // Versions 1.3.0: tmpYYYYMMDDHHMMSS_SECRET_FILENAME
+        // Before 1.3.0: tmpYYYYMMDDHHMMSSFILENAME
+        if (preg_match('/^tmp[0-9]{14}/', $entry) !== 1) {
+            continue;
+        }
+        $new_style = substr($entry, 17) === $legacy_suffix;
+        $old_style = substr($entry, 17) === $legacy_plain;
+        if (($new_style || $old_style) && is_file($directory . $entry)) {
+            $matches[] = $directory . $entry;
+        }
+    }
+    closedir($handle);
+
+    if (count($matches) === 1) {
+        return $matches[0];
+    }
+    if (count($matches) > 1) {
+        DLM_errorLog("Downloads: pending file lookup: Ambiguous legacy matches for " . $safe_name);
+    } else {
+        DLM_errorLog("Downloads: pending file lookup: Missing pending file " . $safe_name . " in " . $directory);
+    }
     return $current;
 }
 
@@ -304,14 +321,30 @@ function DLM_finalizeSubmissionFiles($date, $url, $logourl, $secret_id)
         $newsnap = rtrim($_DLM_CONF['path_snapstore'], "/\\") . DIRECTORY_SEPARATOR
                  . $safesnap;
 
-        if (!is_file($tmpsnap) || is_file($newsnap) || !rename($tmpsnap, $newsnap)) {
+        if (!is_file($tmpsnap)) {
             rename($newfile, $tmpfile);
-            DLM_errorLog("Downloads: approval error: Snapshot finalization failed; main file restored to pending state.");
+            DLM_errorLog("Downloads: approval error: Pending snapshot missing: " . $tmpsnap);
             return false;
         }
 
-        @chmod($newsnap, intval((string) $_DLM_CONF['filepermissions'], 8));
-        DLM_makeThumbnail($safesnap);
+        if (is_file($newsnap)) {
+            // The original name may be reused by multiple submissions.
+            // Only share a snapshot when the content really is identical.
+            // Keep the pending copy until the approval transaction succeeds.
+            if (md5_file($tmpsnap) !== md5_file($newsnap)) {
+                rename($newfile, $tmpfile);
+                DLM_errorLog("Downloads: approval error: Snapshot filename collision with different content: " . $newsnap);
+                return false;
+            }
+        } else {
+            if (!rename($tmpsnap, $newsnap)) {
+                rename($newfile, $tmpfile);
+                DLM_errorLog("Downloads: approval error: Cannot move snapshot from " . $tmpsnap . " to " . $newsnap);
+                return false;
+            }
+            @chmod($newsnap, intval((string) $_DLM_CONF['filepermissions'], 8));
+            DLM_makeThumbnail($safesnap);
+        }
     }
 
     return is_file($newfile);
@@ -349,18 +382,43 @@ function DLM_restoreFinalizedSubmissionFiles($date, $url, $logourl, $secret_id)
         $final_snap = rtrim($_DLM_CONF['path_snapstore'], "/\\") . DIRECTORY_SEPARATOR
                     . $safe_snap;
 
+        // If the pending copy still exists, the finalized snapshot is shared
+        // by another download. Never move or delete that shared image.
         if (is_file($final_snap) && !is_file($pending_snap)) {
             if (!rename($final_snap, $pending_snap)) {
                 DLM_errorLog("Downloads: rollback warning: Could not restore finalized snapshot to pending state.");
+            } else {
+                $thumb = rtrim($_DLM_CONF['path_tnstore'], "/\\") . DIRECTORY_SEPARATOR
+                       . DLM_changeFileExt($safe_snap, $_DLM_CONF['tnimage_format']);
+                DLM_unlink($thumb);
             }
         }
-
-        $thumb = rtrim($_DLM_CONF['path_tnstore'], "/\\") . DIRECTORY_SEPARATOR
-               . DLM_changeFileExt($safe_snap, $_DLM_CONF['tnimage_format']);
-        DLM_unlink($thumb);
     }
 
     return is_file($pending_file);
+}
+
+/**
+ * Remove an unused temporary snapshot after a successful approval.
+ * The published snapshot is retained and may be shared by other downloads.
+ */
+function DLM_cleanupApprovedPendingSnapshot($date, $logourl, $secret_id)
+{
+    global $_DLM_CONF;
+
+    if (empty($logourl)) {
+        return;
+    }
+
+    $pending = DLM_findPendingFile(
+        $_DLM_CONF['path_snapstore'], $date, $logourl, $secret_id
+    );
+    $published = rtrim($_DLM_CONF['path_snapstore'], "/\\") . DIRECTORY_SEPARATOR
+               . DLM_createSafeFileName($logourl);
+    if (is_file($pending) && is_file($published)
+        && md5_file($pending) === md5_file($published)) {
+        DLM_unlink($pending);
+    }
 }
 
 // Approve the uploaded file (process after the approval)
@@ -394,6 +452,7 @@ function DLM_approveNewDownload($id)
         return false;
     }
 
+    DLM_cleanupApprovedPendingSnapshot((int) $A['date'], $A['logourl'], $A['secret_id']);
     DLM_recordSubmissionStatus($id, 'published', $id);
     PLG_itemSaved($id, 'downloads');
     COM_rdfUpToDateCheck('downloads', $A['cid'], $id);

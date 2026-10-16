@@ -484,8 +484,27 @@ class DLDownload
         if ($mode == 'editsubmission') {
             $tempfileurl = $_CONF['site_url'] . '/admin/plugins/downloads/tmpfile.php?id=' . $this->_lid;
             $tempsnapurl = '';
-            if (!empty($this->_logourl)) {
-                $tempsnapurl = $_DLM_CONF['snapstore_url'] . '/tmp' . date('YmdHis', $this->_date) . DLM_createSafeFileName($this->_logourl);
+            // Resolve the real pending snapshot instead of rebuilding the
+            // obsolete, timezone-dependent temporary filename.
+            // The submission row is authoritative even after Preview POST
+            // filtering (which can truncate filenames containing commas).
+            $pending = DB_query("SELECT logourl, date, secret_id "
+                . "FROM {$_TABLES['downloadsubmission']} WHERE lid='"
+                . DB_escapeString($this->_lid) . "'");
+            if (DB_numRows($pending) == 1) {
+                $pending_row = DB_fetchArray($pending);
+                if (!empty($pending_row['logourl'])) {
+                    $snap_path = DLM_findPendingFile(
+                        $_DLM_CONF['path_snapstore'],
+                        (int) $pending_row['date'],
+                        $pending_row['logourl'],
+                        $pending_row['secret_id']
+                    );
+                    if (is_file($snap_path)) {
+                        $tempsnapurl = rtrim($_DLM_CONF['snapstore_url'], '/')
+                            . '/' . rawurlencode(basename($snap_path));
+                    }
+                }
             }
             $T->set_var('lang_tempfile', $LANG_DLM['tempfile']);
             $T->set_var('tempsnapurl', $tempsnapurl);
@@ -736,10 +755,6 @@ class DLDownload
         if ($mode == 'submit')         $blocktitle = $LANG_DLM['uploadtitle'];
 
         $retval .= $this->_showMessage();
-        $retval .= COM_startBlock($blocktitle, '', COM_getBlockTemplate ('_admin_block', 'header'));
-        $retval .= $T->finish($T->get_var('output'));
-        $retval .= COM_endBlock(COM_getBlockTemplate('_admin_block', 'footer'));
-
         if (!empty($file_description) || !empty($file_detail)) {
             // Display a representative preview of the public download card.
             $T2 = COM_newTemplate(CTL_plugin_templatePath('downloads'));
@@ -760,7 +775,7 @@ class DLDownload
             $preview_image = '';
             if ($mode === 'editsubmission' && !empty($tempsnapurl)) {
                 $preview_image = $tempsnapurl;
-            } elseif (!empty($this->_logourl)) {
+            } elseif ($mode !== 'editsubmission' && !empty($this->_logourl)) {
                 $preview_image = rtrim($_DLM_CONF['snapstore_url'], '/')
                                . '/' . DLM_createSafeFileName($this->_logourl);
             }
@@ -796,11 +811,15 @@ class DLDownload
             $T2->set_var('lang_detail',         $LANG_DLM['detail']);
 
             $T2->parse('output', 't_mod_preview');
-            $blocktitle = $LANG_DLM['preview'];
-            $retval .= COM_startBlock($blocktitle, '', COM_getBlockTemplate ('_admin_block', 'header'));
+            $preview_blocktitle = $LANG_DLM['preview'];
+            $retval .= COM_startBlock($preview_blocktitle, '', COM_getBlockTemplate ('_admin_block', 'header'));
             $retval .= $T2->finish($T2->get_var('output'));
             $retval .= COM_endBlock(COM_getBlockTemplate('_admin_block', 'footer'));
         }
+
+        $retval .= COM_startBlock($blocktitle, '', COM_getBlockTemplate ('_admin_block', 'header'));
+        $retval .= $T->finish($T->get_var('output'));
+        $retval .= COM_endBlock(COM_getBlockTemplate('_admin_block', 'footer'));
 
         if ($mode == 'edit') {
             // Display File Voting Information
@@ -1535,7 +1554,7 @@ class DLDownload
         $this->_unlinkTnImage($tmpsnapfile);
 
         if ($switch == true) {
-            $this->_page = COM_applyFilter($_POST['page']);
+            $this->_page = isset($_POST['page']) ? COM_applyFilter($_POST['page']) : '';
             if ($this->_page == 'flist') {
                 $url = "{$_CONF['site_url']}/downloads/index.php";
             } else {
@@ -1610,6 +1629,11 @@ class DLDownload
         }
 
         list($url, $logourl, $secret_id, $submission_date) = DB_fetchArray($result);
+        // File names belong to the persisted submission, not editable POST fields.
+        // COM_applyFilter() can truncate names containing commas (e.g. snapshots).
+        // Preserve the exact names used when the pending files were uploaded.
+        $this->_url = $url;
+        $this->_logourl = $logourl;
         $this->_secret_id = $secret_id;
 
         $success = DLM_finalizeSubmissionFiles(
@@ -1636,6 +1660,9 @@ class DLDownload
                 return PLG_afterSaveSwitch('admin', '', 'downloads', 108);
             }
 
+            DLM_cleanupApprovedPendingSnapshot(
+                (int) $submission_date, $logourl, $secret_id
+            );
             DLM_recordSubmissionStatus($this->_lid, 'published', $this->_lid);
             DB_delete($_TABLES['downloadsubmission'], "lid", DB_escapeString($this->_old_lid));
 
