@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.3.2 — in development
+
+- Strengthened comment visibility for released downloads in enabled, readable categories.
+- Handle oversized upload requests rejected by PHP `post_max_size` for administrator and user submissions.
+- Avoid missing `$_FILES` name warnings on rejected uploads.
+- Added PHP lint CI for the 1.3.2 development branch and a downloadable 1.3.2 development ZIP.
+
+
 ## 1.3.1 — in development
 
 - Fixed timezone-dependent pending upload filenames: new submissions use epoch-based names.
