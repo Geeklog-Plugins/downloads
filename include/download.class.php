@@ -1535,7 +1535,7 @@ class DLDownload
         $this->_unlinkTnImage($tmpsnapfile);
 
         if ($switch == true) {
-            $this->_page = COM_applyFilter($_POST['page']);
+            $this->_page = isset($_POST['page']) ? COM_applyFilter($_POST['page']) : '';
             if ($this->_page == 'flist') {
                 $url = "{$_CONF['site_url']}/downloads/index.php";
             } else {
