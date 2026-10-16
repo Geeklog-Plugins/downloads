@@ -321,14 +321,30 @@ function DLM_finalizeSubmissionFiles($date, $url, $logourl, $secret_id)
         $newsnap = rtrim($_DLM_CONF['path_snapstore'], "/\\") . DIRECTORY_SEPARATOR
                  . $safesnap;
 
-        if (!is_file($tmpsnap) || is_file($newsnap) || !rename($tmpsnap, $newsnap)) {
+        if (!is_file($tmpsnap)) {
             rename($newfile, $tmpfile);
-            DLM_errorLog("Downloads: approval error: Snapshot finalization failed; main file restored to pending state.");
+            DLM_errorLog("Downloads: approval error: Pending snapshot missing: " . $tmpsnap);
             return false;
         }
 
-        @chmod($newsnap, intval((string) $_DLM_CONF['filepermissions'], 8));
-        DLM_makeThumbnail($safesnap);
+        if (is_file($newsnap)) {
+            // The original name may be reused by multiple submissions.
+            // Only share a snapshot when the content really is identical.
+            // Keep the pending copy until the approval transaction succeeds.
+            if (md5_file($tmpsnap) !== md5_file($newsnap)) {
+                rename($newfile, $tmpfile);
+                DLM_errorLog("Downloads: approval error: Snapshot filename collision with different content: " . $newsnap);
+                return false;
+            }
+        } else {
+            if (!rename($tmpsnap, $newsnap)) {
+                rename($newfile, $tmpfile);
+                DLM_errorLog("Downloads: approval error: Cannot move snapshot from " . $tmpsnap . " to " . $newsnap);
+                return false;
+            }
+            @chmod($newsnap, intval((string) $_DLM_CONF['filepermissions'], 8));
+            DLM_makeThumbnail($safesnap);
+        }
     }
 
     return is_file($newfile);
@@ -366,18 +382,43 @@ function DLM_restoreFinalizedSubmissionFiles($date, $url, $logourl, $secret_id)
         $final_snap = rtrim($_DLM_CONF['path_snapstore'], "/\\") . DIRECTORY_SEPARATOR
                     . $safe_snap;
 
+        // If the pending copy still exists, the finalized snapshot is shared
+        // by another download. Never move or delete that shared image.
         if (is_file($final_snap) && !is_file($pending_snap)) {
             if (!rename($final_snap, $pending_snap)) {
                 DLM_errorLog("Downloads: rollback warning: Could not restore finalized snapshot to pending state.");
+            } else {
+                $thumb = rtrim($_DLM_CONF['path_tnstore'], "/\\") . DIRECTORY_SEPARATOR
+                       . DLM_changeFileExt($safe_snap, $_DLM_CONF['tnimage_format']);
+                DLM_unlink($thumb);
             }
         }
-
-        $thumb = rtrim($_DLM_CONF['path_tnstore'], "/\\") . DIRECTORY_SEPARATOR
-               . DLM_changeFileExt($safe_snap, $_DLM_CONF['tnimage_format']);
-        DLM_unlink($thumb);
     }
 
     return is_file($pending_file);
+}
+
+/**
+ * Remove an unused temporary snapshot after a successful approval.
+ * The published snapshot is retained and may be shared by other downloads.
+ */
+function DLM_cleanupApprovedPendingSnapshot($date, $logourl, $secret_id)
+{
+    global $_DLM_CONF;
+
+    if (empty($logourl)) {
+        return;
+    }
+
+    $pending = DLM_findPendingFile(
+        $_DLM_CONF['path_snapstore'], $date, $logourl, $secret_id
+    );
+    $published = rtrim($_DLM_CONF['path_snapstore'], "/\\") . DIRECTORY_SEPARATOR
+               . DLM_createSafeFileName($logourl);
+    if (is_file($pending) && is_file($published)
+        && md5_file($pending) === md5_file($published)) {
+        DLM_unlink($pending);
+    }
 }
 
 // Approve the uploaded file (process after the approval)
@@ -411,6 +452,7 @@ function DLM_approveNewDownload($id)
         return false;
     }
 
+    DLM_cleanupApprovedPendingSnapshot((int) $A['date'], $A['logourl'], $A['secret_id']);
     DLM_recordSubmissionStatus($id, 'published', $id);
     PLG_itemSaved($id, 'downloads');
     COM_rdfUpToDateCheck('downloads', $A['cid'], $id);
