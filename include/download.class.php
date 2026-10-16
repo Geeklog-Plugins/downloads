@@ -775,7 +775,7 @@ class DLDownload
             $preview_image = '';
             if ($mode === 'editsubmission' && !empty($tempsnapurl)) {
                 $preview_image = $tempsnapurl;
-            } elseif (!empty($this->_logourl)) {
+            } elseif ($mode !== 'editsubmission' && !empty($this->_logourl)) {
                 $preview_image = rtrim($_DLM_CONF['snapstore_url'], '/')
                                . '/' . DLM_createSafeFileName($this->_logourl);
             }
