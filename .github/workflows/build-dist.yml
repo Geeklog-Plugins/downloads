@@ -3,7 +3,7 @@ name: Build Downloads distribution
 on:
   push:
     branches:
-      - downloads_1.3.1
+      - develop_1.3.2
     paths-ignore:
       - 'dist/**'
   workflow_dispatch:
@@ -12,7 +12,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: downloads-1.3.1-dist
+  group: downloads-1.3.2-dist
   cancel-in-progress: true
 
 jobs:
@@ -24,7 +24,7 @@ jobs:
       - name: Checkout release branch
         uses: actions/checkout@v4
         with:
-          ref: downloads_1.3.1
+          ref: develop_1.3.2
           fetch-depth: 0
 
       - name: Prepare installable plugin tree
@@ -70,7 +70,7 @@ jobs:
 
           (
             cd package
-            zip -r -9 ../dist/downloads_1.3.1_2.1.2.zip downloads
+            zip -r -9 ../dist/develop_1.3.2_2.1.2.zip downloads
           )
 
       - name: Verify distribution archive
@@ -78,7 +78,7 @@ jobs:
         run: |
           set -euo pipefail
 
-          archive='dist/downloads_1.3.1_2.1.2.zip'
+          archive='dist/develop_1.3.2_2.1.2.zip'
           test -s "$archive"
           unzip -t "$archive"
 
@@ -126,7 +126,7 @@ jobs:
           grep -q 'if (!DLM_ensureDirectory($directory))' verify/downloads/include/functions.php
 
           # Asset cache versioning is part of the release contract.
-          grep -q "define('DOWNLOADS_VERSION', '1.3.1')" verify/downloads/functions.inc
+          grep -q "define('DOWNLOADS_VERSION', '1.3.2')" verify/downloads/functions.inc
           grep -q "DOWNLOADS_VERSION" verify/downloads/functions.inc
           grep -q "function DLM_getAssetVersion" verify/downloads/functions.inc
           grep -q "function DLM_getVersionedAssetUrl" verify/downloads/functions.inc
@@ -141,15 +141,15 @@ jobs:
         shell: bash
         run: |
           ls -lh dist/
-          sha256sum dist/downloads_1.3.1_2.1.2.zip
+          sha256sum dist/develop_1.3.2_2.1.2.zip
 
       - name: Commit distribution archive
         shell: bash
         run: |
           set -euo pipefail
 
-          git fetch origin downloads_1.3.1
-          REMOTE_HEAD="$(git rev-parse origin/downloads_1.3.1)"
+          git fetch origin develop_1.3.2
+          REMOTE_HEAD="$(git rev-parse origin/develop_1.3.2)"
           if [ "$REMOTE_HEAD" != "$GITHUB_SHA" ]; then
             echo "Branch advanced from $GITHUB_SHA to $REMOTE_HEAD; skipping stale dist commit."
             exit 0
@@ -165,5 +165,5 @@ jobs:
             exit 0
           fi
 
-          git commit -m "build: refresh Downloads 1.3.1 distribution"
-          git push origin HEAD:downloads_1.3.1
+          git commit -m "build: refresh Downloads 1.3.2 distribution"
+          git push origin HEAD:develop_1.3.2
