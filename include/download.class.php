@@ -1660,6 +1660,9 @@ class DLDownload
                 return PLG_afterSaveSwitch('admin', '', 'downloads', 108);
             }
 
+            DLM_cleanupApprovedPendingSnapshot(
+                (int) $submission_date, $logourl, $secret_id
+            );
             DLM_recordSubmissionStatus($this->_lid, 'published', $this->_lid);
             DB_delete($_TABLES['downloadsubmission'], "lid", DB_escapeString($this->_old_lid));
 
