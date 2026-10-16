@@ -640,10 +640,13 @@ function plugin_commentenabled_downloads($id, $uid = 0)
     $commentCode = COMMENT_CODE_DISABLED;
 
 	// Grab comment code from download file and rest of permission from downlaod category (since download file only has owner and no other permission settings)
-    $sql = "SELECT a.commentcode, b.owner_id, group_id, perm_owner, perm_group, perm_members, perm_anon "
-                     . "FROM {$_TABLES['downloads']} a "
-                     . "LEFT JOIN {$_TABLES['downloadcategories']} b ON b.cid=a.cid "
-                     . "WHERE lid = '" . DB_escapeString($id) . "'" . COM_getPermSQL('AND', $uid, 2, 'b');					 
+    $sql = "SELECT a.commentcode, b.owner_id, b.group_id, b.perm_owner, "
+         . "b.perm_group, b.perm_members, b.perm_anon "
+         . "FROM {$_TABLES['downloads']} a "
+         . "INNER JOIN {$_TABLES['downloadcategories']} b ON b.cid=a.cid "
+         . "WHERE a.lid = '" . DB_escapeString($id) . "' "
+         . "AND a.is_released = 1 AND b.is_enabled = 1"
+         . COM_getPermSQL('AND', $uid, 2, 'b');					 
 					 
     $result = DB_query($sql);
     $A = DB_fetchArray($result);
