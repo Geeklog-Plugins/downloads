@@ -1,4 +1,67 @@
-## Current 1.3.0 implementation status
+# Downloads development roadmap
+
+## Next maintenance cycle: 1.3.2
+
+**Status:** planning only. This branch records priorities and acceptance criteria; it does not implement the features listed below.
+
+**Baseline:** Downloads 1.3.1, including successful manual tests of regular-user submission, Preview, approval through moderation and Downloads administration, email notifications, and identical shared snapshots on Geeklog 2.2.2. PHP 5.6/8.1/8.3 syntax CI passed; this does **not** constitute full functional verification of older Geeklog installations.
+
+### 1.3.2 proposed priorities
+
+1. **P0 — Uploaded-file diagnostics and data integrity**
+   - [ ] Investigate upstream [#8](https://github.com/Geeklog-Plugins/downloads/issues/8): enforce `upload_max_filesize`, `post_max_size`, `UPLOAD_ERR_*`, empty `$_POST` and server-size errors; display actionable, localized messages; clean failed partial uploads without touching published files.
+   - [ ] Audit real delete/replace paths for orphaned ZIPs and thumbnails; distinguish shared snapshots and retained historical files.
+   - [ ] Add an **audit-only** storage inventory that reports missing database references, orphan candidates, temporary files and duplicates; no automatic deletion in 1.3.2.
+   - [ ] Confirm [#3](https://github.com/Geeklog-Plugins/downloads/issues/3) is fixed for **legacy** submissions on geeklog.net before requesting closure. 1.3.1 addresses timezone-dependent names and shared snapshots; do not assume every old upload format has been tested.
+2. **P1 — Authorization and moderation correctness**
+   - [ ] Re-audit [#22](https://github.com/Geeklog-Plugins/downloads/issues/22): `plugin_commentenabled_downloads()` must apply effective item **and category** visibility and avoid leaking comment availability to unauthorized readers. Add anonymous/member/owner tests.
+   - [ ] Re-check approval failure feedback and Geeklog's global moderation “Approved N items” counter: core reports an attempted approval even when Downloads has rolled the file back. Document core/plugin integration options; avoid misleading success claims.
+   - [ ] Regression-test [#25](https://github.com/Geeklog-Plugins/downloads/issues/25) Preview ACL fix (addressed in 1.3.0, issue still open), including new, existing and pending downloads.
+3. **P2 — Metadata and presentation**
+   - [ ] Re-test [#24](https://github.com/Geeklog-Plugins/downloads/issues/24) on current XMLSitemap/IndexNow with create/edit/delete; diagnose the origin of any empty URL events before closing.
+   - [ ] Verify [#19](https://github.com/Geeklog-Plugins/downloads/issues/19) real 404 handling for invalid file/category IDs and pagination on public routes (implemented in 1.3.0, issue still open).
+   - [ ] Verify [#21](https://github.com/Geeklog-Plugins/downloads/issues/21) HTML/plaintext template notifications (implemented in 1.3.0, issue still open).
+   - [ ] Verify [#1](https://github.com/Geeklog-Plugins/downloads/issues/1) admin new-submission email option (implemented in 1.3.0, issue still open).
+   - [ ] Record design proposal for [#9](https://github.com/Geeklog-Plugins/downloads/issues/9) optional default image; keep existing public layout.
+   - [ ] Triage [#15](https://github.com/Geeklog-Plugins/downloads/issues/15) File Manager migration leftovers as legacy housekeeping, separate from any deletion feature.
+
+### Issue inventory (upstream, checked 2026-10-16)
+
+Ten open issues on `Geeklog-Plugins/downloads`: **#25, #24, #22, #21, #19, #15, #9, #8, #3, #1**. “Open” is a GitHub state, **not proof a defect remains**. Issues #1, #19, #21, #25 and substantial parts of #3 have corresponding changes in 1.3.0/1.3.1; validate on current deployments, then propose closing with test evidence. Do not close upstream issues without confirmation from maintainers.
+
+### Release acceptance for 1.3.2
+
+- [ ] Reproduce and document each targeted bug before making a behavioral change.
+- [ ] Test create/edit/replacement/deletion, admin and regular-user moderation, identical/different snapshot name collisions, rollback and old pending uploads.
+- [ ] Test files with spaces, punctuation and non-ASCII names; verify broken and unavailable snapshots are handled gracefully.
+- [ ] Test errors for empty upload, PHP size limit, permissions and disk write failures.
+- [ ] Validate with Geeklog 2.2.2 and PHP 8.1, run PHP 5.6/8.1/8.3 syntax checks, and explicitly note untested historical installations.
+- [ ] Produce release ZIP via Actions and inspect manifest; keep version/package metadata aligned before PR.
+- [ ] Obtain maintainer review prior to release.
+
+## Planned feature cycle: 1.4.0 — GitHub Releases importer
+
+**Not part of 1.3.2 implementation.** Provide a manually triggered **Import from GitHub Release** action in Downloads administration.
+
+- [ ] Accept a validated public `github.com/OWNER/REPO/releases/tag/TAG` URL and resolve it via the official GitHub Releases API.
+- [ ] Retrieve release title, `tag_name`, Markdown release notes, publication timestamp, project URL, and ZIP asset(s). Let administrator select among multiple assets.
+- [ ] Prefill an editable Downloads draft; map title/version/description/project URL/file size, with category, owner, permissions and optional image reviewed manually.
+- [ ] Fetch and store the selected asset **locally** through the normal Downloads upload/finalization pipeline, not merely hotlink GitHub. Validate HTTP status, redirect destination, extensions, actual bytes, max size and checksum when provided.
+- [ ] Protect against SSRF, unexpected redirects, oversized/slow transfers, malicious markup/HTML, file path traversal and archive filename collisions. Enforce admin ACL + CSRF; show safe errors and rollback partial imports.
+- [ ] Convert/sanitize Markdown release notes to the site's allowed content format; preserve links and headings without permitting raw unsafe HTML.
+- [ ] Store GitHub repository and release identifiers to detect repeated imports and offer **update existing entry** instead of duplicates.
+- [ ] Distinguish a persistent software **project listing** from its successive releases/versions to retain stable permalink, counters, metadata and historical links. Define migration strategy before implementing this data model.
+- [ ] Add audit logging and tests with multiple assets, prereleases, missing ZIP assets, rate limits and network failures.
+- [ ] V2 (future): optional “Check for new releases” review queue. No automatic publication or cron in V1.
+- [ ] V3 (future): pluggable external release providers beyond GitHub.
+
+### Deliberate non-goals
+
+No automatic filesystem deletion and no unattended external release publication. The 1.3.2 release should remain a focused corrective release.
+
+---
+
+## Historical 1.3.0 implementation status
 
 Implemented in the development branch:
 
