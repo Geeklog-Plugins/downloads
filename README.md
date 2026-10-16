@@ -4,7 +4,7 @@ The Downloads plugin provides a categorized file-download area for Geeklog.
 
 ## Compatibility
 
-Downloads 1.3.0 targets:
+Downloads 1.3.1 targets:
 
 - Geeklog 2.1.2 through 2.2.2
 - PHP 5.6 through PHP 8.1 as the maintained baseline
