@@ -736,10 +736,6 @@ class DLDownload
         if ($mode == 'submit')         $blocktitle = $LANG_DLM['uploadtitle'];
 
         $retval .= $this->_showMessage();
-        $retval .= COM_startBlock($blocktitle, '', COM_getBlockTemplate ('_admin_block', 'header'));
-        $retval .= $T->finish($T->get_var('output'));
-        $retval .= COM_endBlock(COM_getBlockTemplate('_admin_block', 'footer'));
-
         if (!empty($file_description) || !empty($file_detail)) {
             // Display a representative preview of the public download card.
             $T2 = COM_newTemplate(CTL_plugin_templatePath('downloads'));
@@ -796,11 +792,15 @@ class DLDownload
             $T2->set_var('lang_detail',         $LANG_DLM['detail']);
 
             $T2->parse('output', 't_mod_preview');
-            $blocktitle = $LANG_DLM['preview'];
-            $retval .= COM_startBlock($blocktitle, '', COM_getBlockTemplate ('_admin_block', 'header'));
+            $preview_blocktitle = $LANG_DLM['preview'];
+            $retval .= COM_startBlock($preview_blocktitle, '', COM_getBlockTemplate ('_admin_block', 'header'));
             $retval .= $T2->finish($T2->get_var('output'));
             $retval .= COM_endBlock(COM_getBlockTemplate('_admin_block', 'footer'));
         }
+
+        $retval .= COM_startBlock($blocktitle, '', COM_getBlockTemplate ('_admin_block', 'header'));
+        $retval .= $T->finish($T->get_var('output'));
+        $retval .= COM_endBlock(COM_getBlockTemplate('_admin_block', 'footer'));
 
         if ($mode == 'edit') {
             // Display File Voting Information
