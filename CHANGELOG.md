@@ -2,6 +2,8 @@
 
 ## 1.3.2 — in development
 
+- Added a Root-only, read-only storage inventory for published downloads, pending uploads, snapshots and thumbnails. Lists potential orphan candidates without deleting files.
+
 - Strengthened comment visibility for released downloads in enabled, readable categories.
 - Handle oversized upload requests rejected by PHP `post_max_size` for administrator and user submissions.
 - Avoid missing `$_FILES` name warnings on rejected uploads.
