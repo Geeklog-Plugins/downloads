@@ -878,6 +878,12 @@ switch ($op) {
                          . '</strong> (' . (int) $selectedAsset['size']
                          . ' bytes). The archive is not yet downloaded; upload it manually in the editor.</p>'
                          . $dldl->showEditor('create', $githubDetails);
+                // Add trusted selection as hidden fields inside the existing
+                // Downloads editor form. Server always checks the GitHub API again.
+                $githubFields = '<input type="hidden" name="gh_release_url" value="'
+                    . htmlspecialchars($_POST['gh_release_url'], ENT_QUOTES, 'UTF-8') . '">'
+                    . '<input type="hidden" name="gh_asset_id" value="' . (int) $selectedAsset['id'] . '">';
+                $display = str_replace('</form>', $githubFields . '</form>', $display);
             }
         }
         break;
