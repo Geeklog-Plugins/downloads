@@ -840,6 +840,9 @@ class DLDownload
         }
 
         if ($mode != 'submit' || $this->_retry == true) {
+            if (function_exists('DLM_adminSectionNav')) {
+                $retval = DLM_adminSectionNav('files') . $retval;
+            }
             $retval = COM_createHTMLDocument($retval, array('pagetitle' => $blocktitle));
         }
 
