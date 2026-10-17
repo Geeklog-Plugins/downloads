@@ -2,6 +2,8 @@
 
 ## 1.3.2 — in development
 
+- Read-only inventory now reports missing referenced files and accounts for legacy pending filenames.
+
 - Display the existing blank-image fallback and disable snapshot/lightbox links when the original snapshot or its thumbnail is missing.
 
 - Added a Root-only, read-only storage inventory for published downloads, pending uploads, snapshots and thumbnails. Lists potential orphan candidates without deleting files.
