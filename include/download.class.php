@@ -327,7 +327,7 @@ class DLDownload
     /**
     * Show the downloads editor
     */
-    function showEditor($mode='edit')
+    function showEditor($mode='edit', $githubDraft = null)
     {
         global $_CONF, $_TABLES, $_USER, $_GROUPS, $_SCRIPTS, $LANG01, $LANG12, $LANG24,
                $MESSAGE, $_DLM_CONF, $LANG_DLM, $LANG_ACCESS;
@@ -368,6 +368,18 @@ class DLDownload
                 $this->_initVars();
                 $homepage = DB_getItem($_TABLES['users'], 'homepage', "uid = '" . DB_escapeString($this->_owner_id) . "'");
                 $this->_homepage = DLM_htmlspecialchars(stripslashes($homepage));
+                // GitHub metadata is untrusted: only prefill text fields on a fresh,
+                // unpublished editor form. The administrator must upload and approve
+                // the ZIP using the ordinary Downloads workflow.
+                if ($mode === 'create' && is_array($githubDraft)) {
+                    $this->_title = COM_checkHTML(COM_checkWords(strip_tags($githubDraft['name'])));
+                    $this->_version = COM_applyFilter($githubDraft['tag']);
+                    $this->_project = COM_checkHTML(COM_checkWords(strip_tags($githubDraft['repository'])));
+                    $this->_homepage = DLM_htmlspecialchars($githubDraft['url']);
+                    $this->_description = COM_checkHTML(COM_checkWords(strip_tags(substr($githubDraft['notes'], 0, 2000))));
+                    $this->_detail = COM_checkHTML(COM_checkWords(strip_tags(substr($githubDraft['notes'], 0, 10000))));
+                    $this->_is_released = 0;
+                }
             }
         }
 
