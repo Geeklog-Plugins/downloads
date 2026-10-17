@@ -39,13 +39,12 @@ function DLM_storageInventory()
             }
             $dir = rtrim($groups[$group]['dir'], "/\\") . DIRECTORY_SEPARATOR;
             $name = DLM_createPendingFileName((int) $row['date'], $row[$field], $row['secret_id']);
-            $groups[$group]['references'][$name] = true;
             // Historical pending filenames are resolved by the same helper as approval.
+            // Count only the actual resolved file, or the expected current filename
+            // if no file exists. Otherwise old submissions generate false missing counts.
             $found = DLM_findPendingFile($groups[$group]['dir'], (int) $row['date'],
                                          $row[$field], $row['secret_id']);
-            if (is_file($found)) {
-                $groups[$group]['references'][basename($found)] = true;
-            }
+            $groups[$group]['references'][is_file($found) ? basename($found) : $name] = true;
         }
     }
 
