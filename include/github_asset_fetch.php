@@ -66,7 +66,7 @@ function DLM_githubFetchReleaseZip($repository, $asset, $destination, $limitByte
     if ($check) {
         fclose($check);
     }
-    if ($signature !== "PK\\x03\\x04" && $signature !== "PK\\x05\\x06") {
+    if ($signature !== "PK\x03\x04" && $signature !== "PK\x05\x06") {
         @unlink($destination);
         $error = 'Downloaded content is not a ZIP archive.';
         return false;
