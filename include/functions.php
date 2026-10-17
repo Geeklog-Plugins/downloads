@@ -769,6 +769,69 @@ function DLM_isUploadedImage($file)
     return in_array($info[2], array(IMAGETYPE_GIF, IMAGETYPE_JPEG, IMAGETYPE_PNG), true);
 }
 
+/**
+ * Move an already verified server-fetched archive into Downloads storage.
+ *
+ * This is intentionally separate from browser uploads: never relax the
+ * is_uploaded_file() check in DLM_uploadNewFile().
+ * The staging directory must be private and outside webroot, and the caller
+ * must own and clean up its newly created staging file on failure.
+ *
+ * @return bool
+ */
+function DLM_storeFetchedArchive($source, $directory, $safeName)
+{
+    global $_DLM_CONF;
+
+    if (!is_string($source) || !is_string($safeName) ||
+        !preg_match('/^[A-Za-z0-9][A-Za-z0-9_.-]{0,199}$/D', $safeName) ||
+        !is_file($source) || is_link($source) || filesize($source) < 4 ||
+        !DLM_ensureDirectory($directory)) {
+        return false;
+    }
+    $directory = rtrim($directory, "/\\\\") . DIRECTORY_SEPARATOR;
+    $target = $directory . DLM_encodeFileName($safeName);
+    if (file_exists($target) || is_link($target)) {
+        return false;
+    }
+    // Exclusive create ensures no existing published archive is overwritten.
+    $input = @fopen($source, 'rb');
+    $output = @fopen($target, 'xb');
+    if ($input === false || $output === false) {
+        if ($input !== false) fclose($input);
+        if ($output !== false) fclose($output);
+        return false;
+    }
+    $success = true;
+    while (!feof($input)) {
+        $chunk = fread($input, 65536);
+        if ($chunk === false || ($chunk === '' && !feof($input))) {
+            $success = false;
+            break;
+        }
+        $offset = 0;
+        $length = strlen($chunk);
+        while ($offset < $length) {
+            $written = fwrite($output, substr($chunk, $offset));
+            if ($written === false || $written === 0) {
+                $success = false;
+                break 2;
+            }
+            $offset += $written;
+        }
+    }
+    fclose($input);
+    if (!fflush($output)) $success = false;
+    fclose($output);
+    if (!$success || filesize($target) !== filesize($source) ||
+        hash_file('sha256', $target) !== hash_file('sha256', $source)) {
+        @unlink($target);
+        return false;
+    }
+    @chmod($target, intval((string) $_DLM_CONF['filepermissions'], 8));
+    return true;
+}
+
 // Moves an uploaded file in temporary directory to data directory
 function DLM_uploadNewFile($newfile, $directory, $name = '')
 {
