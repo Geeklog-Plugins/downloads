@@ -1046,6 +1046,10 @@ class DLDownload
             $githubImport = false;
         }
 
+        if ($githubImport) {
+            $this->_is_released = 0;
+            $this->_is_listing = 0;
+        }
         $this->_secret_id = $this->_createSecretID();
         $this->_old_url   = $this->_url;
         $this->_url       = $githubImport ? $githubAsset['name'] : (isset($_FILES['newfile']['name']) ? $_FILES['newfile']['name'] : '');
