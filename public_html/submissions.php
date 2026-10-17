@@ -79,6 +79,10 @@ $menu_arr = array(
     array(
         'url' => $_CONF['site_url'] . '/submit.php?type=downloads',
         'text' => $LANG_DLM['submit_new_download']
+    ),
+    array(
+        'url' => $_CONF['site_url'] . '/downloads/github-submit.php',
+        'text' => 'Preview GitHub Release (experimental)'
     )
 );
 
