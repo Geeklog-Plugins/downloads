@@ -12,7 +12,8 @@ function DLM_githubFetchReleaseZip($repository, $asset, $destination, $limitByte
         !preg_match('/^[^\\\/\x00-\x1f]+\\.zip$/iD', (string) $asset['name']) ||
         !isset($asset['size']) || (int) $asset['size'] < 1 ||
         (int) $asset['size'] > $limitBytes || $limitBytes < 1 ||
-        file_exists($destination) ||\n        !function_exists('curl_init')) {
+        file_exists($destination) ||
+        !function_exists('curl_init')) {
         $error = 'Invalid ZIP selection, size, or empty staging destination.';
         return false;
     }
@@ -51,7 +52,8 @@ function DLM_githubFetchReleaseZip($repository, $asset, $destination, $limitByte
         return false;
     }
     $url = trim($location[1]);
-    // Resolve names immediately before transfer, and never overwrite existing files.\n    $fp = @fopen($destination, 'xb');
+    // Resolve names immediately before transfer, and never overwrite existing files.
+    $fp = @fopen($destination, 'xb');
     if (!$fp) {
         $error = 'Unable to write temporary archive.';
         return false;
@@ -62,7 +64,8 @@ function DLM_githubFetchReleaseZip($repository, $asset, $destination, $limitByte
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, false);
     curl_setopt($ch, CURLOPT_FOLLOWLOCATION, false);
     curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5);
-    curl_setopt($ch, CURLOPT_TIMEOUT, 90);\n    curl_setopt($ch, CURLOPT_MAXREDIRS, 0);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 90);
+    curl_setopt($ch, CURLOPT_MAXREDIRS, 0);
     curl_setopt($ch, CURLOPT_USERAGENT, 'Geeklog-Downloads/1.3.2');
     curl_setopt($ch, CURLOPT_HTTPHEADER, array('Accept: application/octet-stream'));
     curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
