@@ -269,6 +269,9 @@ class DLCategory
         $T->parse('output', 't_modcategory');
         $retval .= $T->finish($T->get_var('output'));
         $retval .= COM_endBlock(COM_getBlockTemplate('_admin_block', 'footer'));
+        if (function_exists('DLM_adminSectionNav')) {
+            $retval = DLM_adminSectionNav('categories') . $retval;
+        }
         $retval = COM_createHTMLDocument($retval, array('pagetitle' => $blocktitle));
 
         return $retval;
