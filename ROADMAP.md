@@ -51,6 +51,25 @@ Ten open issues on `Geeklog-Plugins/downloads`: **#25, #24, #22, #21, #19, #15, 
 
 **Explicitly deferred to 1.4.0:** scheduled update checks, automatic publication, multi-provider imports, and a broader project/release history data-model migration. A stable project listing remains a design requirement for subsequent versions; 1.3.2 must not silently alter existing URLs or counters.
 
+### P0 — Community GitHub Release proposals (Geeklog.net)
+
+**Decision (2026-10-18): add a second, community-facing GitHub pathway to 1.3.2.** Preserve the Root-only administrative importer as a separate operation. Ordinary authenticated members may propose a public GitHub release, but may not use the privileged importer or publish a download.
+
+#### Community workflow and ACL
+- [ ] Provide a **Submit from GitHub** action alongside normal Downloads submission; require login and Downloads' normal submit permissions/eligibility. Do not expose Root-only admin routes.
+- [ ] Display a bounded, rate-limited public-release metadata preview (repository, release, tag, notes and selectable ZIP asset); allow the member to review/edit title, description, project, category and relevant metadata.
+- [ ] Persist a distinct **pending GitHub proposal** owned by the submitting user, including canonical repo/release/asset numeric IDs, source URL, timestamps and selected metadata. Use a dedicated schema or explicit separate state; never encode a remote URL as a fake local ZIP in downloadsubmission.
+- [ ] Require a Geeklog CSRF token for every state-changing request. Apply input length limits, safe text/HTML handling, category permissions and per-user submission quotas.
+- [ ] Do **not download the ZIP at member-submission time**. Preserve a reviewable pending proposal and notify authorized moderators through the existing moderation/notification conventions.
+- [ ] Add a Root/moderator review path with approve/reject and actionable feedback. On approval, re-fetch the release and asset by immutable IDs, revalidate ownership and checksum where offered, apply existing bounded/private staging and transactional file finalization, then publish only after successful persistence.
+- [ ] Failed validation, GitHub outages, changes/deletion of an asset, oversized ZIPs and failed storage writes must leave the proposal pending and **never** publish a broken Downloads entry.
+- [ ] Block duplicate proposals and imports by stable provider IDs with concurrency-safe uniqueness rules; record review history and permit the submitting user to see pending, rejected and published status in My Downloads.
+- [ ] Ensure existing native file-upload submission, approval, rejection and historical submissions work unchanged.
+- [ ] Provide localized labels, guidance, empty/error states and accessibility consistent with Memorandum administration/public UI instructions.
+- [ ] Test with anonymous, ordinary member, Downloads editor, moderator and Root users, including spoofed POSTs, replayed CSRF, network failure and multiple assets.
+
+**Non-goals for 1.3.2:** automatic polling or updates, trust based solely on a GitHub URL as proof of repository ownership, arbitrary provider URLs or unattended publication. Those remain part of 1.4.0 planning.
+
 ### Release acceptance for 1.3.2
 
 - [ ] Reproduce and document each targeted bug before making a behavioral change.
