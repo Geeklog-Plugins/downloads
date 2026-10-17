@@ -35,6 +35,22 @@
 
 Ten open issues on `Geeklog-Plugins/downloads`: **#25, #24, #22, #21, #19, #15, #9, #8, #3, #1**. “Open” is a GitHub state, **not proof a defect remains**. Issues #1, #19, #21, #25 and substantial parts of #3 have corresponding changes in 1.3.0/1.3.1; validate on current deployments, then propose closing with test evidence. Do not close upstream issues without confirmation from maintainers.
 
+### P0 — GitHub Releases importer (moved from 1.4.0)
+
+**Required for 1.3.2 acceptance; implementation and functional tests pending.** This is a deliberately bounded, manually triggered administrative workflow, not unattended synchronization.
+
+- [ ] Accept a public GitHub release URL (`https://github.com/OWNER/REPO/releases/tag/TAG`); validate owner, repository and tag before API calls.
+- [ ] Read release metadata via GitHub's official Releases API: title, tag, published timestamp, release notes, project/release URL, and available downloadable ZIP assets.
+- [ ] Allow an administrator to choose one ZIP asset and prefill an **editable, unpublished** Downloads form, including title, version, description, source URL and category. Never auto-publish.
+- [ ] Download the selected release asset through a bounded, validated server-side transfer to **temporary** local storage. Validate scheme/host and redirects against SSRF, HTTP status, content size, extension, resulting bytes, collisions, and optional checksums; use the regular Downloads finalization flow after confirmation.
+- [ ] Enforce Downloads administrative permission and Geeklog CSRF tokens on fetch, import and confirmation; sanitize imported Markdown/HTML to the site's permitted content subset.
+- [ ] Preserve existing entries and files on import failures; clean only the new temporary files and provide actionable errors for missing assets, failed network requests, rate limits and invalid responses.
+- [ ] Detect already-imported releases before confirmation (stable GitHub repository/release identifiers or a documented equivalent), and offer a reviewable update path instead of silently creating duplicates.
+- [ ] Add tests for multiple assets, no ZIP assets, prereleases, oversized responses, redirects, network timeouts, duplicate releases and failure rollback; include PHP 5.6 / 8.1 / 8.3 compatibility checks.
+- [ ] Verify the workflow on g2, review package manifest and documentation, and obtain maintainer review before any tag.
+
+**Explicitly deferred to 1.4.0:** scheduled update checks, automatic publication, multi-provider imports, and a broader project/release history data-model migration. A stable project listing remains a design requirement for subsequent versions; 1.3.2 must not silently alter existing URLs or counters.
+
 ### Release acceptance for 1.3.2
 
 - [ ] Reproduce and document each targeted bug before making a behavioral change.
@@ -45,25 +61,13 @@ Ten open issues on `Geeklog-Plugins/downloads`: **#25, #24, #22, #21, #19, #15, 
 - [ ] Produce release ZIP via Actions and inspect manifest; keep version/package metadata aligned before PR.
 - [ ] Obtain maintainer review prior to release.
 
-## Planned feature cycle: 1.4.0 — GitHub Releases importer
+## Planned feature cycle: 1.4.0 — release synchronization and project history
 
-**Not part of 1.3.2 implementation.** Provide a manually triggered **Import from GitHub Release** action in Downloads administration.
-
-- [ ] Accept a validated public `github.com/OWNER/REPO/releases/tag/TAG` URL and resolve it via the official GitHub Releases API.
-- [ ] Retrieve release title, `tag_name`, Markdown release notes, publication timestamp, project URL, and ZIP asset(s). Let administrator select among multiple assets.
-- [ ] Prefill an editable Downloads draft; map title/version/description/project URL/file size, with category, owner, permissions and optional image reviewed manually.
-- [ ] Fetch and store the selected asset **locally** through the normal Downloads upload/finalization pipeline, not merely hotlink GitHub. Validate HTTP status, redirect destination, extensions, actual bytes, max size and checksum when provided.
-- [ ] Protect against SSRF, unexpected redirects, oversized/slow transfers, malicious markup/HTML, file path traversal and archive filename collisions. Enforce admin ACL + CSRF; show safe errors and rollback partial imports.
-- [ ] Convert/sanitize Markdown release notes to the site's allowed content format; preserve links and headings without permitting raw unsafe HTML.
-- [ ] Store GitHub repository and release identifiers to detect repeated imports and offer **update existing entry** instead of duplicates.
-- [ ] Distinguish a persistent software **project listing** from its successive releases/versions to retain stable permalink, counters, metadata and historical links. Define migration strategy before implementing this data model.
-- [ ] Add audit logging and tests with multiple assets, prereleases, missing ZIP assets, rate limits and network failures.
-- [ ] V2 (future): optional “Check for new releases” review queue. No automatic publication or cron in V1.
-- [ ] V3 (future): pluggable external release providers beyond GitHub.
+The manual GitHub Releases importer is now a **1.3.2 release requirement** (see P0 above). Version 1.4.0 is reserved for opt-in review queues for newer releases, durable project-to-release history, and possible additional release providers. No unattended publication.
 
 ### Deliberate non-goals
 
-No automatic filesystem deletion and no unattended external release publication. The 1.3.2 release should remain a focused corrective release.
+No automatic filesystem deletion, no unattended external release publication, and no automatic replacement of existing downloads. The 1.3.2 release should remain a focused corrective release.
 
 ---
 
