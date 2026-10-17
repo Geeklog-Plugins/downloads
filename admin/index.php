@@ -819,6 +819,14 @@ switch ($op) {
                     $display .= '</ul><form method="post" action="'
                         . htmlspecialchars($_CONF['site_admin_url'], ENT_QUOTES, 'UTF-8')
                         . '/plugins/downloads/index.php">'
+                        . '<label for="gh_asset_id">Archive ZIP to import later</label> '
+                        . '<select id="gh_asset_id" name="gh_asset_id" required>';
+                    foreach ($details['assets'] as $asset) {
+                        $display .= '<option value="' . (int) $asset['id'] . '">'
+                                  . htmlspecialchars($asset['name'], ENT_QUOTES, 'UTF-8')
+                                  . ' (' . (int) $asset['size'] . ' bytes)</option>';
+                    }
+                    $display .= '</select>'
                         . '<input type="hidden" name="op" value="githubDraft">'
                         . '<input type="hidden" name="gh_release_url" value="'
                         . htmlspecialchars(isset($_POST['gh_release_url']) ? $_POST['gh_release_url'] : '', ENT_QUOTES, 'UTF-8') . '">'
@@ -849,7 +857,28 @@ switch ($op) {
                 array('pagetitle' => 'GitHub Release preview')
             );
         } else {
-            $display = $dldl->showEditor('create', $githubDetails);
+            $selectedAsset = null;
+            $requestedAssetId = isset($_POST['gh_asset_id']) ? (string) $_POST['gh_asset_id'] : '';
+            if (ctype_digit($requestedAssetId)) {
+                foreach ($githubDetails['assets'] as $asset) {
+                    if ((string) $asset['id'] === $requestedAssetId) {
+                        $selectedAsset = $asset;
+                        break;
+                    }
+                }
+            }
+            if ($selectedAsset === null) {
+                $display = COM_createHTMLDocument(
+                    COM_showMessageText('Select a ZIP asset from the verified release.'),
+                    array('pagetitle' => 'GitHub Release preview')
+                );
+            } else {
+                $display = '<p>Selected GitHub archive: <strong>'
+                         . htmlspecialchars($selectedAsset['name'], ENT_QUOTES, 'UTF-8')
+                         . '</strong> (' . (int) $selectedAsset['size']
+                         . ' bytes). The archive is not yet downloaded; upload it manually in the editor.</p>'
+                         . $dldl->showEditor('create', $githubDetails);
+            }
         }
         break;
 
