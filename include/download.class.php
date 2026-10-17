@@ -1049,6 +1049,13 @@ class DLDownload
         if ($githubImport) {
             $this->_is_released = 0;
             $this->_is_listing = 0;
+            $sameUrl = DB_escapeString($githubDetails['url']);
+            $sameTag = DB_escapeString($githubDetails['tag']);
+            $prior = DB_query("SELECT lid FROM {$_TABLES['downloads']} WHERE homepage = '$sameUrl' AND version = '$sameTag' LIMIT 1");
+            if ($prior && DB_numRows($prior) > 0) {
+                DLM_errorLog('Downloads: repeated GitHub release import rejected.');
+                return PLG_afterSaveSwitch('admin', '', 'downloads', 108);
+            }
         }
         $this->_secret_id = $this->_createSecretID();
         $this->_old_url   = $this->_url;
