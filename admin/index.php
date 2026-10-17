@@ -117,19 +117,10 @@ function listDownloads()
 
     $defsort_arr  = array('field' => 'date', 'direction' => 'desc');
 
+    // Local actions only: persistent sections live in DLM_adminSectionNav().
     $menu_arr = array();
     if ($is_root_user) {
-        $menu_arr[] = array('url' => $admin_url . '?op=githubRelease',
-                            'text' => 'Import GitHub Release (preview)');
-    }
-    if ($is_root_user) {
-        $menu_arr[] = array('url'  => $admin_url . '?op=listCategories',
-                            'text' => $LANG_DLM['nav_categories']);
-
-        $menu_arr[] = array('url' => $admin_url . '?op=storageInventory',
-                            'text' => 'Storage inventory (read-only)');
-
-        $menu_arr[] = array('url'  => $admin_url . '?op=newCategory',
+        $menu_arr[] = array('url' => $admin_url . '?op=newCategory',
                             'text' => $LANG_DLM['nav_addcategory']);
     }
 
@@ -540,27 +531,14 @@ function listCategories()
 
     $defsort_arr = array('field' => 'corder', 'direction' => 'asc');
 
-    $menu_arr = array (
-                    array('url'  => $_CONF['site_admin_url'] . '/plugins/downloads/index.php',
-                          'text' => $LANG_DLM['nav_files']),
-
-                    array('url'  => $_CONF['site_admin_url'] . '/plugins/downloads/index.php?op=newCategory',
-                          'text' => $LANG_DLM['nav_addcategory']),
+    // Category-specific actions; cross-section destinations are in shared navigation.
+    $menu_arr = array(
+        array('url' => $_CONF['site_admin_url'] . '/plugins/downloads/index.php?op=newCategory',
+              'text' => $LANG_DLM['nav_addcategory']),
+        array('url' => $_CONF['site_admin_url'],
+              'text' => $LANG_ADMIN['admin_home'])
     );
 
-    $sql = "SELECT COUNT(*) FROM {$_TABLES['downloadcategories']} WHERE cid != ''";
-    list($count) = DB_fetchArray(DB_query($sql));
-    if ($count > 0) {
-        $menu_arr = array_merge($menu_arr, array(
-                        array('url'  => $_CONF['site_admin_url'] . '/plugins/downloads/index.php?op=uploadFile',
-                              'text' => $LANG_DLM['nav_addfile']),
-        ));
-    }
-    $menu_arr = array_merge($menu_arr, array(
-                    array('url'  => $_CONF['site_admin_url'],
-                          'text' => $LANG_ADMIN['admin_home'])
-    ));
-	
     if ($_DLM_CONF['lang_id'] == 'ja') {
         $readme_url = $_CONF['site_admin_url'] . '/plugins/downloads/readme_ja.html';
     } else {
