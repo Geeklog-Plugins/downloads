@@ -56,7 +56,7 @@ Ten open issues on `Geeklog-Plugins/downloads`: **#25, #24, #22, #21, #19, #15, 
 **Decision (2026-10-18): add a second, community-facing GitHub pathway to 1.3.2.** Preserve the Root-only administrative importer as a separate operation. Ordinary authenticated members may propose a public GitHub release, but may not use the privileged importer or publish a download.
 
 #### Community workflow and ACL
-- [ ] Provide a **Submit from GitHub** action alongside normal Downloads submission; require login and Downloads' normal submit permissions/eligibility. Do not expose Root-only admin routes.
+- [x] Add a login-only, read-only public GitHub Release metadata preview linked from My Downloads (experimental initial screen; not a real submission yet).\n- [ ] Provide a **Submit from GitHub** action alongside normal Downloads submission; require login and Downloads' normal submit permissions/eligibility. Do not expose Root-only admin routes.
 - [ ] Display a bounded, rate-limited public-release metadata preview (repository, release, tag, notes and selectable ZIP asset); allow the member to review/edit title, description, project, category and relevant metadata.
 - [ ] Persist a distinct **pending GitHub proposal** owned by the submitting user, including canonical repo/release/asset numeric IDs, source URL, timestamps and selected metadata. Use a dedicated schema or explicit separate state; never encode a remote URL as a fake local ZIP in downloadsubmission.
 - [ ] Require a Geeklog CSRF token for every state-changing request. Apply input length limits, safe text/HTML handling, category permissions and per-user submission quotas.
