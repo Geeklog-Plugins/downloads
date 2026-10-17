@@ -358,7 +358,13 @@ function dlformat(&$T, &$A, $isListing=false, $cid=DLM_ROOTID)
         $T->set_var('snapshot', '');
         $T->set_var('snaplinkicon', '');
 
-    } elseif (!empty($A['logourl'])) {
+    } elseif (!empty($A['logourl']) && is_file(
+        rtrim($_DLM_CONF['path_snapstore'], '/\\') . DIRECTORY_SEPARATOR
+        . DLM_createSafeFileName($A['logourl'])
+    ) && is_file(DLM_modTNPath(
+        rtrim($_DLM_CONF['path_tnstore'], '/\\') . DIRECTORY_SEPARATOR
+        . DLM_createSafeFileName($A['logourl'])
+    ))) {
 
         $safename = DLM_createSafeFileName($A['logourl']);
         $imgpath = $_DLM_CONF['path_tnstore'] . $safename;
