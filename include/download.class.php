@@ -1109,17 +1109,20 @@ class DLDownload
                 require_once $_CONF['path'] . 'plugins/downloads/include/github_asset_fetch.php';
                 // Dedicated private staging file; never re-use a browser upload.
                 $tempDir = rtrim(sys_get_temp_dir(), "/\\\\");
-                $staged = @tempnam($tempDir, 'dlm-gh-');
+                $privateDir = $tempDir . DIRECTORY_SEPARATOR . 'dlm-gh-' . bin2hex(openssl_random_pseudo_bytes(12));
                 $success = false;
-                if ($staged !== false) {
-                    @unlink($staged); // fetcher creates with exclusive mode
+                if (@mkdir($privateDir, 0700)) {
+                    $staged = $privateDir . DIRECTORY_SEPARATOR . 'release.zip';
                     $transferError = '';
                     $maximum = 50 * 1024 * 1024;
                     if (DLM_githubFetchReleaseZip($githubDetails['repository'], $githubAsset,
                                                   $staged, $maximum, $transferError)) {
                         $success = DLM_storeFetchedArchive($staged, $_DLM_CONF['path_filestore'], $safename);
                     }
-                    @unlink($staged);
+                    if (is_file($staged)) {
+                        @unlink($staged);
+                    }
+                    @rmdir($privateDir);
                 }
                 if (!$success) {
                     DLM_errorLog('Downloads: GitHub ZIP transfer/storage failed.');
