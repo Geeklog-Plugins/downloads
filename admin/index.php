@@ -816,11 +816,41 @@ switch ($op) {
                         $display .= '<li>' . htmlspecialchars($asset['name'], ENT_QUOTES, 'UTF-8')
                                   . ' (' . (int) $asset['size'] . ' bytes)</li>';
                     }
-                    $display .= '</ul><p>Import confirmation and local archive transfer are not implemented yet.</p>';
+                    $display .= '</ul><form method="post" action="'
+                        . htmlspecialchars($_CONF['site_admin_url'], ENT_QUOTES, 'UTF-8')
+                        . '/plugins/downloads/index.php">'
+                        . '<input type="hidden" name="op" value="githubDraft">'
+                        . '<input type="hidden" name="gh_release_url" value="'
+                        . htmlspecialchars(isset($_POST['gh_release_url']) ? $_POST['gh_release_url'] : '', ENT_QUOTES, 'UTF-8') . '">'
+                        . '<input type="hidden" name="' . CSRF_TOKEN . '" value="' . SEC_createToken() . '">'
+                        . '<button type="submit">Open editable Downloads draft</button></form>'
+                        . '<p>No ZIP is transferred automatically. Upload the selected archive manually before saving.</p>';
                 }
             }
         }
         $display = COM_createHTMLDocument($display, array('pagetitle' => 'GitHub Release preview'));
+        break;
+
+    case "githubDraft":
+        if (!SEC_inGroup('Root') || !isset($_SERVER['REQUEST_METHOD'])
+            || $_SERVER['REQUEST_METHOD'] !== 'POST' || !SEC_checkToken()) {
+            $display = COM_showMessageText($MESSAGE[29], $MESSAGE[30]);
+            $display = COM_createHTMLDocument($display, array('pagetitle' => $MESSAGE[30]));
+            break;
+        }
+        require_once $_CONF['path'] . 'plugins/downloads/include/github_release.php';
+        $githubError = '';
+        $githubDetails = DLM_githubReleaseDetails(
+            isset($_POST['gh_release_url']) ? $_POST['gh_release_url'] : '', $githubError
+        );
+        if ($githubDetails === false) {
+            $display = COM_createHTMLDocument(
+                COM_showMessageText(htmlspecialchars($githubError, ENT_QUOTES, 'UTF-8')),
+                array('pagetitle' => 'GitHub Release preview')
+            );
+        } else {
+            $display = $dldl->showEditor('create', $githubDetails);
+        }
         break;
 
     case "uploadFile":
