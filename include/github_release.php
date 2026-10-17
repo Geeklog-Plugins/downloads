@@ -24,7 +24,18 @@ function DLM_githubReleaseDetails($releaseUrl, &$error)
     $api = 'https://api.github.com/repos/' . rawurlencode($m[1]) . '/' . rawurlencode($m[2])
          . '/releases/tags/' . rawurlencode($tag);
     $ch = curl_init($api);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    // Bound API responses during transfer, not after buffering them in memory.
+    $body = '';
+    $tooLarge = false;
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, false);
+    curl_setopt($ch, CURLOPT_WRITEFUNCTION, function ($curl, $chunk) use (&$body, &$tooLarge) {
+        if (strlen($body) + strlen($chunk) > 1048576) {
+            $tooLarge = true;
+            return 0;
+        }
+        $body .= $chunk;
+        return strlen($chunk);
+    });
     curl_setopt($ch, CURLOPT_FOLLOWLOCATION, false);
     curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5);
     curl_setopt($ch, CURLOPT_TIMEOUT, 12);
@@ -33,13 +44,13 @@ function DLM_githubReleaseDetails($releaseUrl, &$error)
     curl_setopt($ch, CURLOPT_HTTPHEADER, array('Accept: application/vnd.github+json'));
     curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
     curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
-    $body = curl_exec($ch);
+    $received = curl_exec($ch);
     $status = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
     $networkError = curl_error($ch);
     curl_close($ch);
-    if ($body === false || $status !== 200 || strlen($body) > 1048576) {
-        $error = $status === 403 ? 'GitHub API rate limit or access denied.' :
-                 ($status === 404 ? 'Release not found or repository is private.' : 'GitHub API request failed.');
+    if ($received === false || $status !== 200 || $tooLarge) {
+        $error = $tooLarge ? 'GitHub API response is too large.' : ($status === 403 ? 'GitHub API rate limit or access denied.' :
+                 ($status === 404 ? 'Release not found or repository is private.' : 'GitHub API request failed.'));
         if ($networkError !== '') {
             $error = 'GitHub API network error.';
         }
