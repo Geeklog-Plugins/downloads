@@ -991,3 +991,15 @@ a.dlbtn-green:active {
     .plugin-admin-nav__item, .plugin-admin-nav__form,
     .plugin-admin-nav__form .plugin-admin-nav__item { width: 100%; box-sizing: border-box; }
 }
+
+/* Keep button-like navigation links free of theme hover underlines. */
+.plugin-admin-nav a.plugin-admin-nav__item:link,
+.plugin-admin-nav a.plugin-admin-nav__item:visited,
+.plugin-admin-nav a.plugin-admin-nav__item:hover,
+.plugin-admin-nav a.plugin-admin-nav__item:focus,
+.plugin-admin-nav a.plugin-admin-nav__item:active,
+.plugin-admin-nav .plugin-admin-nav__item:hover,
+.plugin-admin-nav .plugin-admin-nav__item:focus-visible {
+    text-decoration: none;
+    text-decoration-line: none;
+}
