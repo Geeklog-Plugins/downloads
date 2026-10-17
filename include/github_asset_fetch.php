@@ -12,7 +12,7 @@ function DLM_githubFetchReleaseZip($repository, $asset, $destination, $limitByte
         !preg_match('/^[^\\\/\x00-\x1f]+\\.zip$/iD', (string) $asset['name']) ||
         !isset($asset['size']) || (int) $asset['size'] < 1 ||
         (int) $asset['size'] > $limitBytes || $limitBytes < 1 ||
-        !is_file($destination) || filesize($destination) !== 0) {
+        file_exists($destination) ||\n        !function_exists('curl_init')) {
         $error = 'Invalid ZIP selection, size, or empty staging destination.';
         return false;
     }
@@ -51,7 +51,7 @@ function DLM_githubFetchReleaseZip($repository, $asset, $destination, $limitByte
         return false;
     }
     $url = trim($location[1]);
-    $fp = @fopen($destination, 'wb');
+    // Resolve names immediately before transfer, and never overwrite existing files.\n    $fp = @fopen($destination, 'xb');
     if (!$fp) {
         $error = 'Unable to write temporary archive.';
         return false;
@@ -62,7 +62,7 @@ function DLM_githubFetchReleaseZip($repository, $asset, $destination, $limitByte
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, false);
     curl_setopt($ch, CURLOPT_FOLLOWLOCATION, false);
     curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5);
-    curl_setopt($ch, CURLOPT_TIMEOUT, 90);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 90);\n    curl_setopt($ch, CURLOPT_MAXREDIRS, 0);
     curl_setopt($ch, CURLOPT_USERAGENT, 'Geeklog-Downloads/1.3.2');
     curl_setopt($ch, CURLOPT_HTTPHEADER, array('Accept: application/octet-stream'));
     curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
@@ -102,6 +102,16 @@ function DLM_githubFetchReleaseZip($repository, $asset, $destination, $limitByte
         @unlink($destination);
         $error = 'Downloaded content is not a ZIP archive.';
         return false;
+    }
+    // Optional published GitHub digest (sha256:HEX) is compared by the
+    // caller after metadata validation; this helper never trusts URL hashes.
+    if (!empty($asset['digest'])) {
+        if (!preg_match('/^sha256:([a-f0-9]{64})$/iD', $asset['digest'], $match) ||
+            !hash_equals(strtolower($match[1]), strtolower(hash_file('sha256', $destination)))) {
+            @unlink($destination);
+            $error = 'ZIP SHA-256 digest does not match GitHub release metadata.';
+            return false;
+        }
     }
     return true;
 }
