@@ -26,6 +26,7 @@
    - [ ] Verify [#19](https://github.com/Geeklog-Plugins/downloads/issues/19) real 404 handling for invalid file/category IDs and pagination on public routes (implemented in 1.3.0, issue still open).
    - [ ] Verify [#21](https://github.com/Geeklog-Plugins/downloads/issues/21) HTML/plaintext template notifications (implemented in 1.3.0, issue still open).
    - [ ] Verify [#1](https://github.com/Geeklog-Plugins/downloads/issues/1) admin new-submission email option (implemented in 1.3.0, issue still open).
+   - [x] Preserve blank-image fallback without lightbox when a snapshot or thumbnail is physically missing (initial #9 robustness fix).
    - [ ] Record design proposal for [#9](https://github.com/Geeklog-Plugins/downloads/issues/9) optional default image; keep existing public layout.
    - [ ] Triage [#15](https://github.com/Geeklog-Plugins/downloads/issues/15) File Manager migration leftovers as legacy housekeeping, separate from any deletion feature.
 
