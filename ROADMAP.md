@@ -39,8 +39,8 @@ Ten open issues on `Geeklog-Plugins/downloads`: **#25, #24, #22, #21, #19, #15, 
 
 **Required for 1.3.2 acceptance; implementation and functional tests pending.** This is a deliberately bounded, manually triggered administrative workflow, not unattended synchronization.
 
-- [ ] Accept a public GitHub release URL (`https://github.com/OWNER/REPO/releases/tag/TAG`); validate owner, repository and tag before API calls.
-- [ ] Read release metadata via GitHub's official Releases API: title, tag, published timestamp, release notes, project/release URL, and available downloadable ZIP assets.
+- [x] Validate the public GitHub release URL (`https://github.com/OWNER/REPO/releases/tag/TAG`) before metadata API calls, with redirects disabled (implementation pending tests).
+- [x] Add PHP 5.6-compatible GitHub Releases API metadata reader and Root-only, CSRF-protected read-only preview of title, tag, date, notes and ZIP assets (implementation pending CI and browser test). No archive transfer or publication yet.
 - [ ] Allow an administrator to choose one ZIP asset and prefill an **editable, unpublished** Downloads form, including title, version, description, source URL and category. Never auto-publish.
 - [ ] Download the selected release asset through a bounded, validated server-side transfer to **temporary** local storage. Validate scheme/host and redirects against SSRF, HTTP status, content size, extension, resulting bytes, collisions, and optional checksums; use the regular Downloads finalization flow after confirmation.
 - [ ] Enforce Downloads administrative permission and Geeklog CSRF tokens on fetch, import and confirmation; sanitize imported Markdown/HTML to the site's permitted content subset.
