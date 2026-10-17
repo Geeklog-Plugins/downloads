@@ -55,7 +55,7 @@ function DLM_githubReleaseDetails($releaseUrl, &$error)
         if (!empty($asset['name']) && preg_match('/\\.zip$/i', $asset['name']) &&
             isset($asset['size']) && !empty($asset['id'])) {
             $assets[] = array('id' => (int) $asset['id'], 'name' => (string) $asset['name'],
-                              'size' => (int) $asset['size']);
+                              'size' => (int) $asset['size'],\n                              'digest' => isset($asset['digest']) ? (string) $asset['digest'] : '');
         }
     }
     return array('repository' => $m[1] . '/' . $m[2], 'id' => (int) $json['id'],
