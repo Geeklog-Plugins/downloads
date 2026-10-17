@@ -27,6 +27,8 @@ function DLM_githubFetchReleaseZip($repository, $asset, $destination, $limitByte
     curl_setopt($probe, CURLOPT_HEADER, true);
     curl_setopt($probe, CURLOPT_NOBODY, true);
     curl_setopt($probe, CURLOPT_FOLLOWLOCATION, false);
+    curl_setopt($probe, CURLOPT_PROTOCOLS, CURLPROTO_HTTPS);
+    curl_setopt($probe, CURLOPT_REDIR_PROTOCOLS, CURLPROTO_HTTPS);
     curl_setopt($probe, CURLOPT_CONNECTTIMEOUT, 5);
     curl_setopt($probe, CURLOPT_TIMEOUT, 12);
     curl_setopt($probe, CURLOPT_USERAGENT, 'Geeklog-Downloads/1.3.2');
@@ -63,6 +65,8 @@ function DLM_githubFetchReleaseZip($repository, $asset, $destination, $limitByte
     $ch = curl_init($url);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, false);
     curl_setopt($ch, CURLOPT_FOLLOWLOCATION, false);
+    curl_setopt($ch, CURLOPT_PROTOCOLS, CURLPROTO_HTTPS);
+    curl_setopt($ch, CURLOPT_REDIR_PROTOCOLS, CURLPROTO_HTTPS);
     curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5);
     curl_setopt($ch, CURLOPT_TIMEOUT, 90);
     curl_setopt($ch, CURLOPT_MAXREDIRS, 0);
