@@ -33,6 +33,10 @@
 global $LANG_postmodes;
 
 $LANG_DLM = array(
+    'nav_administration' => 'Downloads administration',
+    'nav_github_import' => 'GitHub Releases',
+    'nav_storage_inventory' => 'Storage inventory',
+    'nav_configuration' => 'Configuration',
     'nav_addfile'       => 'Add File',
     'nav_addcategory'   => 'Add Category',
     'nav_categories'    => 'List Categories',
