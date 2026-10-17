@@ -14,7 +14,8 @@
    - [ ] Investigate upstream [#8](https://github.com/Geeklog-Plugins/downloads/issues/8): enforce `upload_max_filesize`, `post_max_size`, `UPLOAD_ERR_*`, empty `$_POST` and server-size errors; display actionable, localized messages; clean failed partial uploads without touching published files.
    - [ ] Audit real delete/replace paths for orphaned ZIPs and thumbnails; distinguish shared snapshots and retained historical files.
    - [x] Add a **read-only** Root-admin storage inventory showing references to published and pending files, image files and thumbnails, and up to 100 unreferenced candidates per directory (initial version; no deletion).
-   - [ ] Extend inventory with explicit missing-reference counts, duplicate-content detection and manual cross-checks of old upload formats.
+   - [x] Report missing references and up to 100 missing filenames per storage folder, with legacy pending filenames resolved without false missing counts.
+   - [ ] Add duplicate-content detection and manual cross-checks of old upload formats.
    - [ ] Confirm [#3](https://github.com/Geeklog-Plugins/downloads/issues/3) is fixed for **legacy** submissions on geeklog.net before requesting closure. 1.3.1 addresses timezone-dependent names and shared snapshots; do not assume every old upload format has been tested.
 2. **P1 — Authorization and moderation correctness**
    - [x] Tighten `plugin_commentenabled_downloads()` to require a published download and enabled category; retain SQL read-permission filtering (initial correction for #22; end-to-end permission tests still pending).
