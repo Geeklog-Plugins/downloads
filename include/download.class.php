@@ -1018,14 +1018,44 @@ class DLDownload
             $this->_loadFromArgs($_POST);
         }
 
+        // Import is allowed only to Root, and all selections are revalidated
+        // against the GitHub API; never trust a posted file path or asset name.
+        $githubImport = SEC_inGroup('Root') &&
+            isset($_POST['gh_release_url'], $_POST['gh_asset_id']) &&
+            (string) $_POST['gh_release_url'] !== '' &&
+            ctype_digit((string) $_POST['gh_asset_id']);
+        $githubAsset = null;
+        $githubDetails = null;
+        if ($githubImport && empty($_FILES['newfile']['name'])) {
+            require_once $_CONF['path'] . 'plugins/downloads/include/github_release.php';
+            $githubError = '';
+            $githubDetails = DLM_githubReleaseDetails($_POST['gh_release_url'], $githubError);
+            if (is_array($githubDetails)) {
+                foreach ($githubDetails['assets'] as $candidate) {
+                    if ((string) $candidate['id'] === (string) $_POST['gh_asset_id']) {
+                        $githubAsset = $candidate;
+                        break;
+                    }
+                }
+            }
+            if ($githubAsset === null) {
+                $this->_errno[] = '1404';
+                $githubImport = false;
+            }
+        } else {
+            $githubImport = false;
+        }
+
         $this->_secret_id = $this->_createSecretID();
         $this->_old_url   = $this->_url;
-        $this->_url       = isset($_FILES['newfile']['name']) ? $_FILES['newfile']['name'] : '';
+        $this->_url       = $githubImport ? $githubAsset['name'] : (isset($_FILES['newfile']['name']) ? $_FILES['newfile']['name'] : '');
         $this->_owner_id  = $_USER['uid'];
         if (empty($this->_lid)) $this->_lid = $this->_old_lid;
 
         // Validate the input values ----------------------->
-        if (!isset($_FILES['newfile']['error']) || !is_int($_FILES['newfile']['error'])) {
+        if ($githubImport) {
+            // The remote archive follows its own size/transfer validation.
+        } else if (!isset($_FILES['newfile']['error']) || !is_int($_FILES['newfile']['error'])) {
             $this->_errno[] = '1401';
         } else {
             switch ($_FILES['newfile']['error']) {
@@ -1075,7 +1105,28 @@ class DLDownload
         $success = false;
         if (!empty($this->_url)) {
             $safename = DLM_createSafeFileName($this->_url, $this->_secret_id);
-            $success = DLM_uploadNewFile($_FILES['newfile'], $_DLM_CONF['path_filestore'], $safename);
+            if ($githubImport) {
+                require_once $_CONF['path'] . 'plugins/downloads/include/github_asset_fetch.php';
+                // Dedicated private staging file; never re-use a browser upload.
+                $tempDir = rtrim(sys_get_temp_dir(), "/\\\\");
+                $staged = @tempnam($tempDir, 'dlm-gh-');
+                $success = false;
+                if ($staged !== false) {
+                    @unlink($staged); // fetcher creates with exclusive mode
+                    $transferError = '';
+                    $maximum = 50 * 1024 * 1024;
+                    if (DLM_githubFetchReleaseZip($githubDetails['repository'], $githubAsset,
+                                                  $staged, $maximum, $transferError)) {
+                        $success = DLM_storeFetchedArchive($staged, $_DLM_CONF['path_filestore'], $safename);
+                    }
+                    @unlink($staged);
+                }
+                if (!$success) {
+                    DLM_errorLog('Downloads: GitHub ZIP transfer/storage failed.');
+                }
+            } else {
+                $success = DLM_uploadNewFile($_FILES['newfile'], $_DLM_CONF['path_filestore'], $safename);
+            }
         } else if (!empty($this->_old_url)) {
             $old_secret_id = DB_getItem($_TABLES['downloads'], 'secret_id', "lid = '" . DB_escapeString($this->_old_lid) . "'");
             $old_safeurl = DLM_createSafeFileName($this->_old_url, $old_secret_id);
