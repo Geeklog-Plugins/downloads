@@ -1003,3 +1003,12 @@ a.dlbtn-green:active {
     text-decoration: none;
     text-decoration-line: none;
 }
+
+/* Stable label contrast on navigation hover, including Eclipse theme overrides. */
+.plugin-admin-nav a.plugin-admin-nav__item:hover,
+.plugin-admin-nav a.plugin-admin-nav__item:focus,
+.plugin-admin-nav .plugin-admin-nav__form button.plugin-admin-nav__item:hover,
+.plugin-admin-nav .plugin-admin-nav__form button.plugin-admin-nav__item:focus {
+    color: inherit;
+    background-color: transparent;
+}
