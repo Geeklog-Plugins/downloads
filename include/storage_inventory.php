@@ -52,12 +52,21 @@ function DLM_storageInventory()
     $output = array();
     foreach ($groups as $type => $group) {
         $stat = array('total' => 0, 'referenced' => 0, 'candidates' => 0,
-                      'examples' => array(), 'error' => '');
+                      'examples' => array(), 'missing' => 0, 'missing_examples' => array(), 'error' => '');
         $dir = $group['dir'];
         if (!is_dir($dir) || !is_readable($dir) || ($handle = @opendir($dir)) === false) {
             $stat['error'] = 'Storage directory unavailable or unreadable';
             $output[$type] = $stat;
             continue;
+        }
+        // Count referenced filenames not found on disk separately from orphan candidates.
+        foreach ($group['references'] as $referenced_name => $unused) {
+            if (!is_file(rtrim($dir, "/\\") . DIRECTORY_SEPARATOR . $referenced_name)) {
+                $stat['missing']++;
+                if (count($stat['missing_examples']) < 100) {
+                    $stat['missing_examples'][] = $referenced_name;
+                }
+            }
         }
         while (($name = readdir($handle)) !== false) {
             if ($name === '.' || $name === '..' || !is_file(rtrim($dir, "/\\") . DIRECTORY_SEPARATOR . $name)) {
@@ -75,6 +84,7 @@ function DLM_storageInventory()
         }
         closedir($handle);
         sort($stat['examples'], SORT_STRING);
+        sort($stat['missing_examples'], SORT_STRING);
         $output[$type] = $stat;
     }
     return $output;
