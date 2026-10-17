@@ -52,6 +52,41 @@ if (version_compare($installed_version, plugin_chkVersion_downloads()) < 0) {
     exit;
 }
 
+/**
+ * Persistent administration section navigation (Memorandum contract).
+ * ACL-protected, theme-neutral; actions remain in native ADMIN_createMenu.
+ */
+function DLM_adminSectionNav($section)
+{
+    global $_CONF, $LANG_DLM;
+    $base = $_CONF['site_admin_url'] . '/plugins/downloads/index.php';
+    $sections = array(
+        'files' => array($LANG_DLM['nav_files'], $base),
+        'categories' => array($LANG_DLM['nav_categories'], $base . '?op=listCategories')
+    );
+    if (SEC_inGroup('Root')) {
+        $sections['github'] = array($LANG_DLM['nav_github_import'], $base . '?op=githubRelease');
+        $sections['storage'] = array($LANG_DLM['nav_storage_inventory'], $base . '?op=storageInventory');
+    }
+    $html = '<nav class="plugin-admin-nav" aria-label="' .
+            htmlspecialchars($LANG_DLM['nav_administration'], ENT_QUOTES, 'UTF-8') .
+            '"><div class="plugin-admin-nav__primary">';
+    foreach ($sections as $key => $entry) {
+        $current = $section === $key;
+        $html .= '<a class="plugin-admin-nav__item' . ($current ? ' is-active' : '') .
+                 '"' . ($current ? ' aria-current="page"' : '') . ' href="' .
+                 htmlspecialchars($entry[1], ENT_QUOTES, 'UTF-8') . '">' .
+                 htmlspecialchars($entry[0], ENT_QUOTES, 'UTF-8') . '</a>';
+    }
+    $html .= '<form class="plugin-admin-nav__form" method="post" action="' .
+             htmlspecialchars($_CONF['site_admin_url'] . '/configuration.php', ENT_QUOTES, 'UTF-8') .
+             '"><input type="hidden" name="conf_group" value="downloads">' .
+             '<button class="plugin-admin-nav__item" type="submit">' .
+             htmlspecialchars($LANG_DLM['nav_configuration'], ENT_QUOTES, 'UTF-8') .
+             '</button></form></div></nav>';
+    return $html;
+}
+
 function listDownloads()
 {
     global $_CONF, $_TABLES, $LANG_ADMIN, $LANG_DLM, $_DLM_CONF;
@@ -122,6 +157,7 @@ function listDownloads()
         $readme_url = $_CONF['site_admin_url'] . '/plugins/downloads/readme.html';
     }						
 
+    $retval .= DLM_adminSectionNav('files');
     $retval .= COM_startBlock($LANG_DLM['manager'], $readme_url, COM_getBlockTemplate('_admin_block', 'header'));
 
     $retval .= ADMIN_createMenu($menu_arr, 
@@ -531,6 +567,7 @@ function listCategories()
         $readme_url = $_CONF['site_admin_url'] . '/plugins/downloads/readme.html';
     }	
 
+    $retval .= DLM_adminSectionNav('categories');
     $retval .= COM_startBlock($LANG_DLM['manager'], $readme_url, COM_getBlockTemplate('_admin_block', 'header'));
 
     $retval .= ADMIN_createMenu($menu_arr, $LANG_DLM['instructions'], plugin_geticon_downloads());
@@ -785,7 +822,7 @@ switch ($op) {
             $display = COM_createHTMLDocument($display, array('pagetitle' => $MESSAGE[30]));
             break;
         }
-        $display = '<h2>GitHub Release — metadata preview</h2>'
+        $display = DLM_adminSectionNav('github') . '<h2>GitHub Release — metadata preview</h2>'
                  . '<p>This preview does not download files or publish a Downloads entry.</p>'
                  . '<form method="post" action="' . htmlspecialchars($_CONF['site_admin_url'], ENT_QUOTES, 'UTF-8')
                  . '/plugins/downloads/index.php">'
@@ -1016,7 +1053,7 @@ switch ($op) {
         }
         require_once $_CONF['path'] . 'plugins/downloads/include/storage_inventory.php';
         $inventory = DLM_storageInventory();
-        $display = '<h2>Downloads storage inventory (read-only)</h2>'
+        $display = DLM_adminSectionNav('storage') . '<h2>Downloads storage inventory (read-only)</h2>'
                  . '<p>No files are modified. Unreferenced files are candidates only; '
                  . 'review backups, legacy filenames and other references before any cleanup.</p>';
         foreach ($inventory as $type => $report) {
