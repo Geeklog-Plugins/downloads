@@ -972,3 +972,22 @@ a.dlbtn-green:active {
         grid-column: 1;
     }
 }
+
+
+/* Memorandum: persistent, theme-neutral plugin administration sections. */
+.plugin-admin-nav { margin: 0 0 1.25rem; }
+.plugin-admin-nav__primary { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
+.plugin-admin-nav__item {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-height: 2.4rem; padding: .5rem .8rem; border: 1px solid currentColor;
+    border-radius: .35rem; background: transparent; color: inherit;
+    font: inherit; text-decoration: none; cursor: pointer;
+}
+.plugin-admin-nav__item.is-active { font-weight: 700; box-shadow: inset 0 -2px 0 currentColor; }
+.plugin-admin-nav__form { display: inline-block; margin: 0; }
+.plugin-admin-nav__item:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
+@media (max-width: 640px) {
+    .plugin-admin-nav__primary { align-items: stretch; flex-direction: column; }
+    .plugin-admin-nav__item, .plugin-admin-nav__form,
+    .plugin-admin-nav__form .plugin-admin-nav__item { width: 100%; box-sizing: border-box; }
+}
