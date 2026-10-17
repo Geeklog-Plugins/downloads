@@ -84,6 +84,10 @@ function listDownloads()
 
     $menu_arr = array();
     if ($is_root_user) {
+        $menu_arr[] = array('url' => $admin_url . '?op=githubRelease',
+                            'text' => 'Import GitHub Release (preview)');
+    }
+    if ($is_root_user) {
         $menu_arr[] = array('url'  => $admin_url . '?op=listCategories',
                             'text' => $LANG_DLM['nav_categories']);
 
@@ -775,6 +779,50 @@ if (in_array($op, array('uploadFile', 'modify', 'clone', 'editsubmission', 'add'
 }
 
 switch ($op) {
+    case "githubRelease":
+        if (!SEC_inGroup('Root')) {
+            $display = COM_showMessageText($MESSAGE[29], $MESSAGE[30]);
+            $display = COM_createHTMLDocument($display, array('pagetitle' => $MESSAGE[30]));
+            break;
+        }
+        $display = '<h2>GitHub Release — metadata preview</h2>'
+                 . '<p>This preview does not download files or publish a Downloads entry.</p>'
+                 . '<form method="post" action="' . htmlspecialchars($_CONF['site_admin_url'], ENT_QUOTES, 'UTF-8')
+                 . '/plugins/downloads/index.php">'
+                 . '<label for="gh_release_url">Public GitHub Release URL</label> '
+                 . '<input type="url" size="75" id="gh_release_url" name="gh_release_url" required'
+                 . ' placeholder="https://github.com/owner/repo/releases/tag/v1.0.0">'
+                 . '<input type="hidden" name="op" value="githubRelease">'
+                 . '<input type="hidden" name="'. CSRF_TOKEN . '" value="' . SEC_createToken() . '">'
+                 . '<button type="submit">Fetch release metadata</button></form>';
+        if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'POST') {
+            if (!SEC_checkToken()) {
+                $display .= '<p>Security token invalid. Please reload the page.</p>';
+            } else {
+                require_once $_CONF['path'] . 'plugins/downloads/include/github_release.php';
+                $error = '';
+                $details = DLM_githubReleaseDetails(isset($_POST['gh_release_url']) ? $_POST['gh_release_url'] : '', $error);
+                if ($details === false) {
+                    $display .= '<p>' . htmlspecialchars($error, ENT_QUOTES, 'UTF-8') . '</p>';
+                } else {
+                    foreach (array('repository', 'name', 'tag', 'published_at', 'url') as $field) {
+                        $display .= '<p><strong>' . htmlspecialchars($field, ENT_QUOTES, 'UTF-8') . ':</strong> '
+                                  . htmlspecialchars($details[$field], ENT_QUOTES, 'UTF-8') . '</p>';
+                    }
+                    $display .= '<h3>Release notes (plain-text preview)</h3><pre>'
+                              . htmlspecialchars(substr($details['notes'], 0, 10000), ENT_QUOTES, 'UTF-8')
+                              . '</pre><h3>ZIP assets</h3><ul>';
+                    foreach ($details['assets'] as $asset) {
+                        $display .= '<li>' . htmlspecialchars($asset['name'], ENT_QUOTES, 'UTF-8')
+                                  . ' (' . (int) $asset['size'] . ' bytes)</li>';
+                    }
+                    $display .= '</ul><p>Import confirmation and local archive transfer are not implemented yet.</p>';
+                }
+            }
+        }
+        $display = COM_createHTMLDocument($display, array('pagetitle' => 'GitHub Release preview'));
+        break;
+
     case "uploadFile":
         $display = $dldl->showEditor('create');
         break;
