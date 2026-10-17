@@ -914,7 +914,15 @@ switch ($op) {
             }
             $display .= '<p>Files: ' . (int) $report['total']
                      . ' | Referenced: ' . (int) $report['referenced']
-                     . ' | Unreferenced candidates: ' . (int) $report['candidates'] . '</p>';
+                     . ' | Unreferenced candidates: ' . (int) $report['candidates']
+                     . ' | Missing references: ' . (int) $report['missing'] . '</p>';
+            if (!empty($report['missing_examples'])) {
+                $display .= '<details><summary>Show up to 100 missing referenced filenames</summary><ul>';
+                foreach ($report['missing_examples'] as $file) {
+                    $display .= '<li><code>' . htmlspecialchars($file, ENT_QUOTES, 'UTF-8') . '</code></li>';
+                }
+                $display .= '</ul></details>';
+            }
             if (!empty($report['examples'])) {
                 $display .= '<details><summary>Show up to 100 candidate filenames</summary><ul>';
                 foreach ($report['examples'] as $file) {
