@@ -19,6 +19,38 @@ function DLM_githubFetchReleaseZip($repository, $asset, $destination, $limitByte
     $parts = explode('/', $repository);
     $url = 'https://api.github.com/repos/' . rawurlencode($parts[0]) . '/'
          . rawurlencode($parts[1]) . '/releases/assets/' . (int) $asset['id'];
+    // GitHub's release asset API can redirect to GitHub-controlled CDN hosts.
+    // Resolve the redirect explicitly, never allowing arbitrary destination URLs.
+    $probe = curl_init($url);
+    curl_setopt($probe, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($probe, CURLOPT_HEADER, true);
+    curl_setopt($probe, CURLOPT_NOBODY, true);
+    curl_setopt($probe, CURLOPT_FOLLOWLOCATION, false);
+    curl_setopt($probe, CURLOPT_CONNECTTIMEOUT, 5);
+    curl_setopt($probe, CURLOPT_TIMEOUT, 12);
+    curl_setopt($probe, CURLOPT_USERAGENT, 'Geeklog-Downloads/1.3.2');
+    curl_setopt($probe, CURLOPT_HTTPHEADER, array('Accept: application/octet-stream'));
+    curl_setopt($probe, CURLOPT_SSL_VERIFYPEER, true);
+    curl_setopt($probe, CURLOPT_SSL_VERIFYHOST, 2);
+    $headers = curl_exec($probe);
+    $probeStatus = (int) curl_getinfo($probe, CURLINFO_HTTP_CODE);
+    curl_close($probe);
+    if ($headers === false || $probeStatus < 300 || $probeStatus >= 400 ||
+        !preg_match('/^Location:\\s*(\\S+)\\s*$/im', $headers, $location)) {
+        $error = 'Unable to resolve GitHub asset location safely.';
+        return false;
+    }
+    $target = parse_url(trim($location[1]));
+    $allowedHosts = array('release-assets.githubusercontent.com', 'objects.githubusercontent.com');
+    if (!is_array($target) || !isset($target['scheme'], $target['host']) ||
+        strtolower($target['scheme']) !== 'https' ||
+        !in_array(strtolower($target['host']), $allowedHosts, true) ||
+        isset($target['user']) || isset($target['pass']) ||
+        (isset($target['port']) && (int) $target['port'] !== 443)) {
+        $error = 'GitHub asset redirect destination is not allowed.';
+        return false;
+    }
+    $url = trim($location[1]);
     $fp = @fopen($destination, 'wb');
     if (!$fp) {
         $error = 'Unable to write temporary archive.';
