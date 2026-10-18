@@ -253,8 +253,11 @@ function dlformat(&$T, &$A, $isListing=false, $cid=DLM_ROOTID)
     // as Markdown; classic Downloads keep their configured GLText postmode.
     if (!empty($A['lid']) && !empty($_TABLES['downloadgithubproposals'])) {
         $githubId = DB_escapeString($A['lid']);
+        // Presence in the public Downloads table is the publication authority.
+        // Metadata status can lag after an earlier approval or an interrupted
+        // status update; do not show raw Markdown in that case.
         $githubRow = DB_query("SELECT lid FROM {$_TABLES['downloadgithubproposals']} " .
-                              "WHERE lid='$githubId' AND status='published'");
+                              "WHERE lid='$githubId'");
         if ($githubRow && DB_numRows($githubRow) === 1) {
             require_once $_CONF['path'] . 'plugins/downloads/include/github_markdown.php';
             $A['description'] = DLM_renderGithubMarkdown($githubMarkdownSource);
