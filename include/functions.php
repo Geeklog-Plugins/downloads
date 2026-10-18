@@ -436,7 +436,11 @@ function DLM_prepareGithubSubmission($lid)
     $meta = DB_fetchArray($query);
     $result = DB_query("SELECT url,date,secret_id FROM {$_TABLES['downloadsubmission']} WHERE lid='$id'");
     if (!$result || DB_numRows($result) !== 1) {
-        return false;
+        // Core moderation may already have copied this row to public downloads.
+        $result = DB_query("SELECT url,date,secret_id FROM {$_TABLES['downloads']} WHERE lid='$id'");
+        if (!$result || DB_numRows($result) !== 1) {
+            return false;
+        }
     }
     $entry = DB_fetchArray($result);
     require_once $_CONF['path'] . 'plugins/downloads/include/github_release.php';
@@ -494,6 +498,15 @@ function DLM_approveNewDownload($id)
     }
 
     $A = DB_fetchArray($result);
+    $githubQ = DB_query("SELECT lid FROM {$_TABLES['downloadgithubproposals']} WHERE lid='$id' AND status='pending'");
+    if ($githubQ && DB_numRows($githubQ) > 0 && !DLM_prepareGithubSubmission($id)) {
+        if (DB_count($_TABLES['downloadsubmission'], 'lid', $id) == 0) {
+            DB_query("INSERT INTO {$_TABLES['downloadsubmission']} SELECT * FROM {$_TABLES['downloads']} WHERE lid='$id'");
+        }
+        DB_delete($_TABLES['downloads'], 'lid', $id);
+        DLM_errorLog("Downloads: GitHub release could not be fetched; approval reverted.");
+        return false;
+    }
     if (!DLM_finalizeSubmissionFiles(
         (int) $A['date'],
         $A['url'],
@@ -511,6 +524,7 @@ function DLM_approveNewDownload($id)
 
     DLM_cleanupApprovedPendingSnapshot((int) $A['date'], $A['logourl'], $A['secret_id']);
     DLM_recordSubmissionStatus($id, 'published', $id);
+    DB_query("UPDATE {$_TABLES['downloadgithubproposals']} SET status='published',updated_at=" . time() . " WHERE lid='$id' AND status='pending'");
     PLG_itemSaved($id, 'downloads');
     COM_rdfUpToDateCheck('downloads', $A['cid'], $id);
 
