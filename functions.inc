@@ -65,6 +65,7 @@ $_TABLES['downloadvotes']      = $_DB_table_prefix . 'downloadvotes';
 $_TABLES['downloadhistories']  = $_DB_table_prefix . 'downloadhistories';
 $_TABLES['downloadsubmission'] = $_DB_table_prefix . 'downloadsubmission';
 $_TABLES['downloadsubmissionhistory'] = $_DB_table_prefix . 'downloadsubmissionhistory';
+$_TABLES['downloadgithubproposals'] = $_DB_table_prefix . 'downloadgithubproposals';
 
 
 /**
