@@ -76,7 +76,7 @@ Ten open issues on `Geeklog-Plugins/downloads`: **#25, #24, #22, #21, #19, #15, 
 - [x] Native Geeklog approval and Downloads admin approval now both attempt bounded GitHub archive transfer at moderation time using the existing private staging and normal pending-file finalization. Failed transfers must not result in a published item; core approval rollback is implemented but **needs live verification**.
 - [x] Rejection updates GitHub provider metadata; successful approval updates status, size and checksum.
 - [x] Removed the duplicate My Downloads proposals list in favor of the ordinary submission history.
-- [ ] Confirm MySQL migration and uninstall safety, idempotency and failed-transfer recovery on g2 before installing.
+- [x] Correct GitHub-specific approval visibility in Core moderation and Downloads admin approval; ensure failed Core finalization removes newly staged pending ZIP to permit a clean retry (code paths only, functional tests pending).\n- [ ] Confirm MySQL migration and uninstall safety, idempotency and failed-transfer recovery on g2 before installing.
 - [ ] Test GitHub release CDN redirects, successful ZIP download, approval/rejection from both moderation screens, user-owned history, no-file submissions, duplicates and missing metadata; verify that failed imports stay pending.
 - [ ] Revisit whether existing abandoned `downloadgithubproposals` rows from intermediate unreleased builds need one-off migration; do not drop user records silently.
 - [ ] Localize form labels and make category/project editing consistent with the native submission editor.
