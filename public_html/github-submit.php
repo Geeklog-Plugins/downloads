@@ -203,7 +203,14 @@ $display = '<div class="dlm-github-submit"><h2>Propose a GitHub Release</h2>'
          . '<input type="hidden" name="github_action" value="preview">'
          . '<button type="submit">Preview release</button></form>';
 
-$display .= $postContent;
+// A successful submission must be acknowledged before the preview form.
+if ($proposalSaved) {
+    $display = '<div class="dlm-github-submit">' . $postContent . $display;
+    // Remove the duplicate outer wrapper opened by the original page header.
+    $display = str_replace('<div class="dlm-github-submit"><div class="dlm-github-submit">', '<div class="dlm-github-submit">', $display);
+} else {
+    $display .= $postContent;
+}
 $display .= '<p><a href="' . $escape($_CONF['site_url'] . '/submit.php?type=downloads') .
             '">Standard Downloads submission</a></p></div>';
 COM_output(COM_createHTMLDocument($display, array('pagetitle' => 'GitHub Release proposal')));
