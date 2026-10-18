@@ -54,6 +54,9 @@ jobs:
           test -f package/downloads/include/functions.php
           test -f package/downloads/include/download.class.php
           test -f package/downloads/admin/index.php
+          test -f package/downloads/public_html/github-submit.php
+          test -f package/downloads/include/github_release.php
+          test -f package/downloads/include/github_asset_fetch.php
           test -f package/downloads/public_html/index.php
           test -f package/downloads/sql/mysql_install.php
 
@@ -90,6 +93,9 @@ jobs:
             downloads/include/functions.php \
             downloads/include/download.class.php \
             downloads/public_html/index.php \
+            downloads/public_html/github-submit.php \
+            downloads/include/github_release.php \
+            downloads/include/github_asset_fetch.php \
             downloads/public_html/editor.js \
             downloads/public_html/lightbox.js \
             downloads/public_html/adveditor.js \
