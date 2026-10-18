@@ -830,6 +830,7 @@ class DLDownload
             $T2->set_var('preview_homepage',    $preview_homepage);
             $T2->set_var('preview_image',       $preview_image);
             $T2->set_var('preview_image_style', $preview_image === '' ? 'display:none;' : '');
+            $T2->set_var('preview_layout_class', $preview_image === '' ? ' dlm-preview-no-image' : '');
             $T2->set_var('file_description',    $file_description);
             $T2->set_var('file_detail',         $file_detail);
 

@@ -1,5 +1,11 @@
 # Downloads development roadmap
 
+## Planned after 1.3.2 — GitHub release metadata consistency
+
+- [ ] Look up existing Downloads project names and offer the canonical existing Project Name when importing a GitHub release, so all versions stay grouped (e.g. `Media Gallery Plugin`).
+- [ ] Suggest a consistent, SEO-friendly File ID based on the preceding version (e.g. `file_mediagallery_plugin-1.8.0`), without overwriting administrator-supplied IDs or changing existing URLs.
+- [ ] Normalize proposed release titles consistently with prior versions, while preserving explicit administrator edits and collision handling.
+
 ## Next maintenance cycle: 1.3.2
 
 **Status (2026-10-18):** GitHub submission, approval, ZIP fetch, publication and tested failure/rollback path reported successful on g2 (Geeklog 2.2.2/PHP 8.1). PHP 5.6/8.1/8.3 CI green. PR preparation in progress; functional g2 acceptance passed. Multisite storage reorganization is documented as a future enhancement and is **not a 1.3.2 PR blocker**.
