@@ -507,6 +507,7 @@ function DLM_approveNewDownload($id)
         DLM_errorLog("Downloads: GitHub release could not be fetched; approval reverted.");
         return false;
     }
+    $isGithub = $githubQ && DB_numRows($githubQ) > 0;
     if (!DLM_finalizeSubmissionFiles(
         (int) $A['date'],
         $A['url'],
@@ -518,6 +519,11 @@ function DLM_approveNewDownload($id)
                    . "SELECT * FROM {$_TABLES['downloads']} WHERE lid = '$id'");
         }
         DB_delete($_TABLES['downloads'], 'lid', $id);
+        if ($isGithub) {
+            $pendingArchive = rtrim($_DLM_CONF['path_filestore'], "/\\\\") . DIRECTORY_SEPARATOR .
+                              DLM_createPendingFileName($A['date'], $A['url'], $A['secret_id']);
+            if (is_file($pendingArchive)) @unlink($pendingArchive);
+        }
         DLM_errorLog("Downloads: moderation approval rolled back to pending state for '$id'.");
         return false;
     }
@@ -529,6 +535,9 @@ function DLM_approveNewDownload($id)
                  ", md5='" . DB_escapeString(md5_file($finalFile)) . "' WHERE lid='$id'");
     }
 
+    if ($isGithub) {
+        DB_query("UPDATE {$_TABLES['downloads']} SET is_released=1,is_listing=1 WHERE lid='$id'");
+    }
     DLM_cleanupApprovedPendingSnapshot((int) $A['date'], $A['logourl'], $A['secret_id']);
     DLM_recordSubmissionStatus($id, 'published', $id);
     DB_query("UPDATE {$_TABLES['downloadgithubproposals']} SET status='published',updated_at=" . time() . " WHERE lid='$id' AND status='pending'");
