@@ -9,7 +9,7 @@ function DLM_githubFetchReleaseZip($repository, $asset, $destination, $limitByte
     $error = '';
     if (!is_array($asset) || empty($asset['id']) || empty($asset['name']) ||
         !preg_match('/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/D', (string) $repository) ||
-        !preg_match('/^[^\\\/\x00-\x1f]+\\.zip$/iD', (string) $asset['name']) ||
+        !preg_match('~^[^/\\\\\x00-\x1f]+\.zip$~iD', (string) $asset['name']) ||
         !isset($asset['size']) || (int) $asset['size'] < 1 ||
         (int) $asset['size'] > $limitBytes || $limitBytes < 1 ||
         file_exists($destination) ||
