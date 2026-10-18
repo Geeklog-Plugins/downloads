@@ -18,6 +18,7 @@ $escape = function ($value) {
 };
 $pageUrl = $_CONF['site_url'] . '/downloads/github-submit.php';
 $postContent = '';
+$proposalSaved = false;
 
 if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!SEC_checkToken()) {
@@ -104,7 +105,11 @@ if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'POST') 
                                 if (DB_query($meta, 1)) {
                                     require_once $_CONF['path'] . 'plugins/downloads/include/functions.php';
                                     DLM_recordSubmissionStatus($lid, 'pending');
-                                    $postContent .= '<p>Submitted to the normal Geeklog moderation queue. No ZIP was downloaded.</p>';
+                                    $proposalSaved = true;
+                                    $postContent .= '<div class="dlm-github-success" role="status"><h3>Proposal submitted</h3>' .
+                                        '<p>Your GitHub release has been sent to the Downloads moderation queue. ' .
+                                        'The archive will be downloaded only if a moderator approves it.</p>' .
+                                        '<p><a href="' . $escape($_CONF['site_url'] . '/downloads/submissions.php') . '">View my submissions</a></p></div>';
                                 } else {
                                     DB_delete($_TABLES['downloadsubmission'], 'lid', $safeLid);
                                     $postContent .= '<p>Could not save GitHub metadata. No submission was created.</p>';
@@ -116,6 +121,7 @@ if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'POST') 
                         }
                     }
                 }
+                if (!$proposalSaved) {
                 $postContent .= '<section class="dlm-github-preview"><h3>' . $escape($release['name'] !== '' ? $release['name'] : $release['tag']) . '</h3>'
                          . '<p>Repository: ' . $escape($release['repository']) .
                            ' — Tag: ' . $escape($release['tag']) . '</p>'
@@ -154,6 +160,7 @@ if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'POST') 
                     }
                 }
                 $postContent .= '</section>';
+                }
             }
         }
     }
