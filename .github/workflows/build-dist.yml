@@ -94,6 +94,7 @@ jobs:
             downloads/include/download.class.php \
             downloads/public_html/index.php \
             downloads/public_html/github-submit.php \
+            downloads/templates/default/filelisting_placeholder.thtml \
             downloads/include/github_release.php \
             downloads/include/github_asset_fetch.php \
             downloads/public_html/editor.js \
