@@ -8,7 +8,7 @@ function DLM_githubReleaseDetails($releaseUrl, &$error)
 {
     $error = '';
     $url = trim((string) $releaseUrl);
-    if (!preg_match('~^https://github\\.com/([A-Za-z0-9_.-]+)/([A-Za-z0-9_.-]+)/releases/tag/([^/?#]+)$~D', $url, $m)) {
+    if (!preg_match('~^https://github\.com/([A-Za-z0-9_.-]+)/([A-Za-z0-9_.-]+)/releases/tag/([^/?#]+)$~D', $url, $m)) {
         $error = 'Enter a public GitHub release URL in the form https://github.com/owner/repo/releases/tag/tag';
         return false;
     }
@@ -17,7 +17,7 @@ function DLM_githubReleaseDetails($releaseUrl, &$error)
         return false;
     }
     $tag = rawurldecode($m[3]);
-    if ($tag === '' || strlen($tag) > 200 || strpos($tag, '/') !== false || strpos($tag, '\\') !== false || preg_match('/[\\x00-\\x1F\\x7F]/', $tag)) {
+    if ($tag === '' || strlen($tag) > 200 || strpos($tag, '/') !== false || strpos($tag, '\\') !== false || preg_match('/[\x00-\x1F\x7F]/', $tag)) {
         $error = 'Invalid release tag.';
         return false;
     }
@@ -63,7 +63,7 @@ function DLM_githubReleaseDetails($releaseUrl, &$error)
     }
     $assets = array();
     foreach (isset($json['assets']) && is_array($json['assets']) ? $json['assets'] : array() as $asset) {
-        if (!empty($asset['name']) && preg_match('/\\.zip$/i', $asset['name']) &&
+        if (!empty($asset['name']) && preg_match('/\.zip$/i', $asset['name']) &&
             isset($asset['size']) && !empty($asset['id'])) {
             $assets[] = array('id' => (int) $asset['id'], 'name' => (string) $asset['name'],
                               'size' => (int) $asset['size'],
