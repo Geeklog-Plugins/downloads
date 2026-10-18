@@ -39,6 +39,7 @@ $renderReleaseNotes = function ($markdown) use ($escape) {
 $pageUrl = $_CONF['site_url'] . '/downloads/github-submit.php';
 $postContent = '';
 $proposalSaved = false;
+$proposalDuplicate = false;
 $submittedUrl = '';
 
 
@@ -110,7 +111,9 @@ if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'POST') 
                         $previous = DB_query("SELECT lid FROM {$_TABLES['downloadgithubproposals']} " .
                            "WHERE repository='$repository' AND release_id=$releaseId AND asset_id=$selectedId");
                         if ($previous && DB_numRows($previous) > 0) {
-                            $postContent .= '<p>This release asset has already been submitted.</p>';
+                            $proposalDuplicate = true;
+                            $postContent .= '<div class="dlm-github-success" role="status"><p><strong>This release asset has already been submitted.</strong></p>' .
+                                '<p><a href="' . $escape($_CONF['site_url'] . '/downloads/submissions.php') . '">View my submissions</a></p></div>';
                         } else {
                             // This record is incomplete by design until approval transfers its ZIP.
                             $native = "INSERT INTO {$_TABLES['downloadsubmission']} " .
@@ -144,7 +147,7 @@ if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'POST') 
                         }
                     }
                 }
-                if (!$proposalSaved) {
+                if (!$proposalSaved && !$proposalDuplicate) {
                 $postContent .= '<section class="dlm-github-preview"><h3>' . $escape($release['name'] !== '' ? $release['name'] : $release['tag']) . '</h3>'
                          . '<p>Repository: ' . $escape($release['repository']) .
                            ' — Tag: ' . $escape($release['tag']) . '</p>'
@@ -192,7 +195,7 @@ if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'POST') 
 }
 // Important: verify submitted token before issuing a new token for this URL.
 // SEC_createToken() revokes older page tokens for this authenticated user.
-$display = '<div class="dlm-github-submit">' . ($proposalSaved ? $postContent : '')
+$display = '<div class="dlm-github-submit">' . (($proposalSaved || $proposalDuplicate) ? $postContent : '')
          . '<h2>Propose a GitHub Release</h2>'
          . '<p>Preview a public release before proposing it to the Downloads moderators. '
          . 'This page does not submit or publish an item, and no archive is downloaded.</p>'
@@ -204,7 +207,7 @@ $display = '<div class="dlm-github-submit">' . ($proposalSaved ? $postContent : 
          . '<input type="hidden" name="github_action" value="preview">'
          . '<button type="submit">Preview release</button></form>';
 
-if (!$proposalSaved) {
+if (!$proposalSaved && !$proposalDuplicate) {
     $display .= $postContent;
 }
 $display .= '<p><a href="' . $escape($_CONF['site_url'] . '/submit.php?type=downloads') .
