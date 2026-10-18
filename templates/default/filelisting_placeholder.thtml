@@ -1,0 +1,4 @@
+<!-- Non-interactive fallback when no valid snapshot image exists. -->
+<div class="dlm_snap_tn dlm_snap_placeholder">
+    <img src="{thumbnail_url}" alt="" aria-hidden="true"{xhtml}>
+</div>
