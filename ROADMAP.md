@@ -70,6 +70,18 @@ Ten open issues on `Geeklog-Plugins/downloads`: **#25, #24, #22, #21, #19, #15, 
 
 **Non-goals for 1.3.2:** automatic polling or updates, trust based solely on a GitHub URL as proof of repository ownership, arbitrary provider URLs or unattended publication. Those remain part of 1.4.0 planning.
 
+### Architecture correction — reuse native Geeklog Downloads moderation (2026-10-18)
+
+- [x] Member GitHub proposals are now inserted into `downloadsubmission` and appear in native Geeklog moderation and the existing My Downloads submission history. The `downloadgithubproposals` table is retained **only as a provider-metadata sidecar**, keyed by the native `lid`, for immutable release/asset identity and processing status.
+- [x] Native Geeklog approval and Downloads admin approval now both attempt bounded GitHub archive transfer at moderation time using the existing private staging and normal pending-file finalization. Failed transfers must not result in a published item; core approval rollback is implemented but **needs live verification**.
+- [x] Rejection updates GitHub provider metadata; successful approval updates status, size and checksum.
+- [x] Removed the duplicate My Downloads proposals list in favor of the ordinary submission history.
+- [ ] Confirm MySQL migration and uninstall safety, idempotency and failed-transfer recovery on g2 before installing.
+- [ ] Test GitHub release CDN redirects, successful ZIP download, approval/rejection from both moderation screens, user-owned history, no-file submissions, duplicates and missing metadata; verify that failed imports stay pending.
+- [ ] Revisit whether existing abandoned `downloadgithubproposals` rows from intermediate unreleased builds need one-off migration; do not drop user records silently.
+- [ ] Localize form labels and make category/project editing consistent with the native submission editor.
+- [ ] Do not release until browser acceptance and integration tests confirm the full transaction.
+
 ### Release acceptance for 1.3.2
 
 - [ ] Reproduce and document each targeted bug before making a behavioral change.
