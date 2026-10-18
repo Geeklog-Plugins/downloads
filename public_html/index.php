@@ -237,6 +237,7 @@ function dlformat(&$T, &$A, $isListing=false, $cid=DLM_ROOTID)
 
     $A['datetime'] = strftime($_DLM_CONF['date_format'], $A['date']);
 
+    $githubMarkdownSource = $A['description'];
     if (version_compare(VERSION, '2.1.0') >= 0) {
         require_once $_CONF['path_system'] . 'classes/gltext.class.php';
         $A['description'] = GLText::getDisplayText($A['description'], $A['postmode'], 2);
@@ -256,12 +257,7 @@ function dlformat(&$T, &$A, $isListing=false, $cid=DLM_ROOTID)
                               "WHERE lid='$githubId' AND status='published'");
         if ($githubRow && DB_numRows($githubRow) === 1) {
             require_once $_CONF['path'] . 'plugins/downloads/include/github_markdown.php';
-            // Preserve the original source from the listing row via the renderer.
-            $sourceQ = DB_query("SELECT description FROM {$_TABLES['downloads']} WHERE lid='$githubId'");
-            if ($sourceQ && DB_numRows($sourceQ) === 1) {
-                $sourceRow = DB_fetchArray($sourceQ);
-                $A['description'] = DLM_renderGithubMarkdown($sourceRow['description']);
-            }
+            $A['description'] = DLM_renderGithubMarkdown($githubMarkdownSource);
         }
     }
 
