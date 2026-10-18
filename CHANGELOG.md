@@ -2,6 +2,9 @@
 
 ## 1.3.2 — in development
 
+- Fix admin preview with no image taking up only the left grid column; description and details can use full width.
+- Prevent admin fieldsets from overflowing and restore compact, inline publication date selectors (including Japanese locale).
+
 - Added authenticated GitHub Release submission with URL preview (direct tag links and release-page anchors), selectable ZIP asset, native moderation queue, duplicate detection and pending-submission history.
 - Fetch GitHub archives only on approval with bounded transfer, ZIP validation, controlled staging and failure rollback; both admin and core moderation paths supported.
 - Preserve original GitHub notes as Markdown and render descriptions and details as restricted, escaped HTML on published GitHub Downloads pages.
