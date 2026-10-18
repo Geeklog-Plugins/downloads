@@ -8,14 +8,15 @@
 
 ### Proposed multisite directory convention (2026-10-18)
 
-**Decision for design review (not yet implemented):** place public Downloads images alongside other Geeklog images and physically separate persistent archives for each site.
+**Updated design decision (not implemented): reuse Geeklog's existing site-specific image paths.** In the confirmed g2 multisite installation, `$_CONF['path_images']` is `/home/vmrp0021/g2.pascalburnet.com/images/g2/` and `$_CONF['images_url']` is `https://g2.pascalburnet.com/images/g2`.
 
-- Public images: `$_CONF['path_html']/images/downloads/<site-id>/{snaps,category_snaps,tn}/`, with URLs under `$_CONF['site_url']/images/downloads/<site-id>/`.
-- Public-root ZIP fallback: `$_CONF['path_html']/downloads_data/<site-id>/files/`; preferred stronger option is a private directory outside the document root.
-- Derive `<site-id>` from an explicit, stable, validated administrator configuration, not unsanitized `HTTP_HOST` or installation order.
-- A directory name alone does not restrict direct HTTP access. If storing ZIPs inside the public root, enforce web-server-level deny rules and verify that the controlled download handler still works (Apache/LiteSpeed and Nginx deployments).
-- Keep existing configured paths unchanged on upgrades. Existing installations require opt-in migration, backups, dry-run, collision and reference checks, URL/cache changes, and rollback.
-- Confirm Geeklog's existing image directory layout, thumbnail generation and storage consumers before adopting these as installation defaults.
+- Public Downloads images: `rtrim($_CONF['path_images'], '/\\\\') . '/downloads/{snaps,category_snaps,tn}/'`.
+- Corresponding image URLs: `rtrim($_CONF['images_url'], '/') . '/downloads/{snaps,category_snaps,tn}'`.
+- Do **not** append another site identifier to the image path: Geeklog has already isolated images by site.
+- Download archives: prefer an explicitly configured per-site private path outside the document root, with controlled serving. If a shared public root is retained, use a stable validated per-site subdirectory such as `downloads_data/<site-id>/files/` and deny direct HTTP access.
+- Do not infer a storage path from untrusted HTTP_HOST. Use the site's validated configuration and ensure private file directories are actually separate between sites.
+- Existing installs keep configured values; new-install defaults and an opt-in migration require file/URL compatibility tests, backups, collision checks and rollback.
+- Audit download delivery, thumbnail creation and cached URLs before changing the defaults. No silent relocation during a plugin update.
 
 ### Multisite storage separation — review before release (2026-10-18)
 
