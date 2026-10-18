@@ -13,12 +13,23 @@ function DLM_githubReleaseDetails($releaseUrl, &$error)
     $url = str_replace('\\/', '/', $url);
     $parts = parse_url($url);
     $path = isset($parts['path']) ? rtrim($parts['path'], '/') : '';
+    // GitHub's releases index uses anchors like #release-v1.2.3.
+    // Resolve these to the same tag-based API lookup as direct release links.
+    $releaseMatch = preg_match('~^/([A-Za-z0-9_.-]+)/([A-Za-z0-9_.-]+)/releases/tag/([^/?#]+)$~D', $path, $m);
+    if (!$releaseMatch && preg_match('~^/([A-Za-z0-9_.-]+)/([A-Za-z0-9_.-]+)/releases$~D', $path, $indexMatch) &&
+        isset($parts['fragment']) && strpos($parts['fragment'], 'release-') === 0) {
+        $anchorTag = substr($parts['fragment'], strlen('release-'));
+        if ($anchorTag !== '') {
+            $m = array('', $indexMatch[1], $indexMatch[2], $anchorTag);
+            $releaseMatch = true;
+        }
+    }
     if (!is_array($parts) || !isset($parts['scheme'], $parts['host']) ||
         strtolower($parts['scheme']) !== 'https' ||
         !in_array(strtolower($parts['host']), array('github.com', 'www.github.com'), true) ||
         isset($parts['user']) || isset($parts['pass']) ||
         (isset($parts['port']) && (int) $parts['port'] !== 443) ||
-        !preg_match('~^/([A-Za-z0-9_.-]+)/([A-Za-z0-9_.-]+)/releases/tag/([^/?#]+)$~D', $path, $m)) {
+        !$releaseMatch) {
         // Show only the parsed host and path; never echo query strings,
         // credentials, fragments or other potentially sensitive URL parts.
         $receivedHost = is_array($parts) && isset($parts['host']) ? $parts['host'] : '(none)';
