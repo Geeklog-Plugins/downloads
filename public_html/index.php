@@ -392,7 +392,8 @@ function dlformat(&$T, &$A, $isListing=false, $cid=DLM_ROOTID)
         $T->set_var('snapshot_sizeattr',    'width="200" height="200" ');
         $T->set_var('show_snapshoticon',    'none');
         $T->set_var('show_snapshoticon_na', '');
-        $T->parse('snapshot', 'tsnapshot');
+        // There is no actual image to open: render an inert grey placeholder.
+        $T->parse('snapshot', 'tplaceholder');
         $T->set_var('snaplinkicon', '');
         $T->set_var('mg_autotag',   '');
     }
@@ -669,6 +670,7 @@ $T->set_file(array(
     'filedetail'      => 'filedetail.thtml',
     'records'         => 'filelisting_record.thtml',
     'tsnapshot'       => 'filelisting_snapshot.thtml',
+    'tplaceholder'    => 'filelisting_placeholder.thtml',
     'tsnaplinkicon'   => 'filelisting_snaplinkicon.thtml',
     'filedetail_notn' => 'filedetail_no_tn.thtml',
     'records_notn'    => 'filelisting_record_no_tn.thtml',
