@@ -38,6 +38,9 @@ jobs:
           set -euo pipefail
           find . -type f \( -name '*.php' -o -name '*.inc' \)             ! -path './.git/*'             ! -path './dist/*'             -print0           | xargs -0 -n1 php -l
 
+      - name: Test safe GitHub Markdown rendering
+        run: php tests/github_markdown.php
+
       - name: Check forbidden dot-prefixed distributable paths
         shell: bash
         run: |
