@@ -2,11 +2,11 @@
 
 ## Next maintenance cycle: 1.3.2
 
-**Status (2026-10-18):** GitHub submission, approval, ZIP fetch, publication and tested failure/rollback path reported successful on g2 (Geeklog 2.2.2/PHP 8.1). PHP 5.6/8.1/8.3 CI green. PR review remains pending; multisite storage isolation, migration strategy and wider regression testing remain open.
+**Status (2026-10-18):** GitHub submission, approval, ZIP fetch, publication and tested failure/rollback path reported successful on g2 (Geeklog 2.2.2/PHP 8.1). PHP 5.6/8.1/8.3 CI green. PR preparation in progress; functional g2 acceptance passed. Multisite storage reorganization is documented as a future enhancement and is **not a 1.3.2 PR blocker**.
 
 **Baseline:** Downloads 1.3.1, including successful manual tests of regular-user submission, Preview, approval through moderation and Downloads administration, email notifications, and identical shared snapshots on Geeklog 2.2.2. PHP 5.6/8.1/8.3 syntax CI passed; this does **not** constitute full functional verification of older Geeklog installations.
 
-### Proposed multisite directory convention (2026-10-18)
+### Deferred after 1.3.2 — multisite image and archive directory convention (2026-10-18)
 
 **Updated design decision (not implemented): use Geeklog's native `path_images` for filesystem placement, but never require `images_url`.** In the confirmed g2 multisite installation, `$_CONF['path_images']` is `/home/vmrp0021/g2.pascalburnet.com/images/g2/` and `$_CONF['images_url']` is `https://g2.pascalburnet.com/images/g2`.
 
@@ -18,7 +18,7 @@
 - Existing installs keep configured values; new-install defaults and an opt-in migration require file/URL compatibility tests, backups, collision checks and rollback.
 - Audit download delivery, thumbnail creation and cached URLs before changing the defaults. No silent relocation during a plugin update. The stock Geeklog code references `path_images`, but a search of the official core repository found no `images_url` key; site-specific use must remain optional.
 
-### Multisite storage separation — review before release (2026-10-18)
+### Deferred after 1.3.2 — multisite storage separation (2026-10-18)
 
 - [x] Audit current defaults: `path_filestore`, `path_snapstore`, `path_snapcat` and `path_tnstore` are rooted in `$_CONF['path_html']/downloads_data/`; image URLs are based on `$_CONF['site_url']`. Values are installation settings, not automatically host-specific folders.
 - [ ] Define a documented per-site storage identity (site configuration or explicit directory settings) that never mixes files between sites sharing a Geeklog tree; check multisite database/config mapping and file permissions.
@@ -26,7 +26,7 @@
 - [ ] Keep public snapshot and thumbnail URL mappings working with site-specific directories; audit direct HTTP access/ACL implications separately.
 - [ ] Build an **opt-in**, backup-first migration utility with dry-run, collision detection, counts/hashes and rollback guidance for existing installations. Never silently relocate live files on upgrade.
 - [ ] Verify two independent Geeklog sites with distinct hostnames, configurations and storage roots; test submission, approval, download, snapshot rendering, cleanup and backup/restore on each.
-- [ ] Decide whether storage isolation becomes a 1.3.2 blocker or is explicitly documented for a subsequent release before opening a merge-ready PR.
+- [x] Decision: defer storage isolation and migration to a later version; 1.3.2 preserves existing paths and documents the multisite caveat.
 
 ### Manual acceptance confirmed on g2 (2026-10-18)
 
