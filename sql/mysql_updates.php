@@ -40,6 +40,7 @@ $_UPDATES = array(
     '1.3.1' => array(
         "CREATE TABLE {$_TABLES['downloadgithubproposals']} (
   proposal_id int(11) unsigned NOT NULL auto_increment,
+  lid varchar(40) NOT NULL,
   owner_id mediumint(8) unsigned NOT NULL,
   repository varchar(180) NOT NULL,
   release_id bigint(20) unsigned NOT NULL,
@@ -53,6 +54,7 @@ $_UPDATES = array(
   created_at int(10) unsigned NOT NULL,
   updated_at int(10) unsigned NOT NULL,
   PRIMARY KEY (proposal_id),
+  UNIQUE KEY submission_lid (lid),
   UNIQUE KEY release_asset (repository, release_id, asset_id),
   KEY owner_status (owner_id, status)
 ) ENGINE=InnoDB"
