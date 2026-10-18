@@ -508,6 +508,13 @@ function DLM_approveNewDownload($id)
         if (DB_count($_TABLES['downloadsubmission'], 'lid', $id) == 0) {
             DB_query("INSERT INTO {$_TABLES['downloadsubmission']} SELECT * FROM {$_TABLES['downloads']} WHERE lid='$id'");
         }
+        if (DB_count($_TABLES['downloadsubmission'], 'lid', $id) != 1) {
+            // Never discard the only database copy of the submission.
+            // Keep the moved row explicitly unpublished pending repair.
+            DB_query("UPDATE {$_TABLES['downloads']} SET is_released=0,is_listing=0 WHERE lid='$id'");
+            DLM_errorLog("Downloads: CRITICAL: Could not restore GitHub submission after fetch failure.");
+            return false;
+        }
         DB_delete($_TABLES['downloads'], 'lid', $id);
         DLM_errorLog("Downloads: GitHub release could not be fetched; approval reverted.");
         return false;
@@ -522,6 +529,11 @@ function DLM_approveNewDownload($id)
         if (DB_count($_TABLES['downloadsubmission'], 'lid', $id) == 0) {
             DB_query("INSERT INTO {$_TABLES['downloadsubmission']} "
                    . "SELECT * FROM {$_TABLES['downloads']} WHERE lid = '$id'");
+        }
+        if (DB_count($_TABLES['downloadsubmission'], 'lid', $id) != 1) {
+            DB_query("UPDATE {$_TABLES['downloads']} SET is_released=0,is_listing=0 WHERE lid='$id'");
+            DLM_errorLog("Downloads: CRITICAL: Could not restore submission after finalization failure.");
+            return false;
         }
         DB_delete($_TABLES['downloads'], 'lid', $id);
         if ($isGithub) {
