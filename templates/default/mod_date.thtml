@@ -1,7 +1,7 @@
 
 <!-- start mod_date.thtml -->
       <dt>{lang_release_date}</dt>
-      <dd><span dir="ltr">
+      <dd><span dir="ltr" class="dlm-release-date">
             <select name="release_year">
               {year_options}
             </select>&nbsp;-
