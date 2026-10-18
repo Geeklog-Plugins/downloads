@@ -16,9 +16,31 @@ if (COM_isAnonUser()) {
 $escape = function ($value) {
     return htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8');
 };
+$renderReleaseNotes = function ($markdown) use ($escape) {
+    // Render a safe, deliberately limited Markdown subset. No raw HTML is
+    // interpreted, and URLs may only use http or https.
+    $lines = preg_split('/\\r\\n|\\r|\\n/', substr((string) $markdown, 0, 8000));
+    $out = '';
+    foreach ($lines as $line) {
+        $line = $escape($line);
+        $line = preg_replace('/\\*\\*(.+?)\\*\\*/', '<strong>$1</strong>', $line);
+        $line = preg_replace('/\\*(.+?)\\*/', '<em>$1</em>', $line);
+        if (preg_match('/^(#{1,4})\\s+(.+)$/', $line, $head)) {
+            $level = min(6, strlen($head[1]) + 2);
+            $out .= '<h' . $level . '>' . $head[2] . '</h' . $level . '>';
+        } elseif (preg_match('/^\\s*[-*]\\s+(.+)$/', $line, $item)) {
+            $out .= '<p class="dlm-gh-bullet">&#8226; ' . $item[1] . '</p>';
+        } elseif (trim($line) !== '') {
+            $out .= '<p>' . $line . '</p>';
+        }
+    }
+    return $out;
+};
 $pageUrl = $_CONF['site_url'] . '/downloads/github-submit.php';
 $postContent = '';
 $proposalSaved = false;
+$submittedUrl = '';
+
 
 if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!SEC_checkToken()) {
@@ -26,14 +48,15 @@ if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'POST') 
     } else {
         $url = isset($_POST['release_url']) && is_string($_POST['release_url'])
              ? trim($_POST['release_url']) : '';
-        if (strlen($url) > 500) {
-            $postContent .= '<p>The GitHub Release URL is too long.</p>';
+        $submittedUrl = $url;
+        if ($url === '' || strlen($url) > 500) {
+            $postContent .= '<p>Enter a valid GitHub Release URL (maximum 500 characters).</p>';
         } else {
             require_once $_CONF['path'] . 'plugins/downloads/include/github_release.php';
             $error = '';
             $release = DLM_githubReleaseDetails($url, $error);
             if ($release === false) {
-                $postContent .= '<p>' . $escape($error) . '</p>';
+                $postContent .= '<p>Unable to preview this release: ' . $escape($error) . '</p>';
             } else {
                 $action = isset($_POST['github_action']) && is_string($_POST['github_action'])
                         ? $_POST['github_action'] : 'preview';
@@ -156,6 +179,8 @@ if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'POST') 
                             . '<p><label for="proposal_description">Description</label></p>'
                             . '<textarea id="proposal_description" name="description" required rows="7" maxlength="4000">'
                             . $escape($defaultDescription) . '</textarea>'
+                            . '<details class="dlm-gh-rendered-notes"><summary>Preview formatted release notes (Markdown)</summary>'
+                            . '<div class="dlm-gh-markdown">' . $renderReleaseNotes($defaultDescription) . '</div></details>'
                             . '<p><button type="submit">Submit proposal for moderation</button></p></form>';
                     }
                 }
@@ -172,9 +197,10 @@ $display = '<div class="dlm-github-submit"><h2>Propose a GitHub Release</h2>'
          . 'This page does not submit or publish an item, and no archive is downloaded.</p>'
          . '<form action="' . $escape($pageUrl) . '" method="post">'
          . '<label for="release_url">Public GitHub Release URL</label> '
-         . '<input id="release_url" name="release_url" type="url" maxlength="500" required '
+         . '<input id="release_url" name="release_url" type="url" maxlength="500" value="' . $escape($submittedUrl) . '" required '
          . 'placeholder="https://github.com/owner/repository/releases/tag/v1.0.0">'
          . '<input type="hidden" name="' . CSRF_TOKEN . '" value="' . $escape(SEC_createToken()) . '">'
+         . '<input type="hidden" name="github_action" value="preview">'
          . '<button type="submit">Preview release</button></form>';
 
 $display .= $postContent;
