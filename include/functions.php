@@ -460,6 +460,11 @@ function DLM_prepareGithubSubmission($lid)
         }
     }
     if ($asset === null) {
+        DLM_errorLog('Downloads: GitHub moderation: selected asset no longer matches the release.');
+        return false;
+    }
+    if ((int) $asset['size'] <= 0 || (int) $asset['size'] > 52428800) {
+        DLM_errorLog('Downloads: GitHub moderation: selected archive exceeds the configured 50 MiB limit.');
         return false;
     }
     $pendingName = DLM_createPendingFileName($entry['date'], $entry['url'], $entry['secret_id']);
