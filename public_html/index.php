@@ -248,6 +248,23 @@ function dlformat(&$T, &$A, $isListing=false, $cid=DLM_ROOTID)
         $A['detail']      = $gltext->getDisplayText($A['detail'],      $A['postmode']);
     }
 
+    // Only GitHub-backed public entries interpret their stored description
+    // as Markdown; classic Downloads keep their configured GLText postmode.
+    if (!empty($A['lid']) && !empty($_TABLES['downloadgithubproposals'])) {
+        $githubId = DB_escapeString($A['lid']);
+        $githubRow = DB_query("SELECT lid FROM {$_TABLES['downloadgithubproposals']} " .
+                              "WHERE lid='$githubId' AND status='published'");
+        if ($githubRow && DB_numRows($githubRow) === 1) {
+            require_once $_CONF['path'] . 'plugins/downloads/include/github_markdown.php';
+            // Preserve the original source from the listing row via the renderer.
+            $sourceQ = DB_query("SELECT description FROM {$_TABLES['downloads']} WHERE lid='$githubId'");
+            if ($sourceQ && DB_numRows($sourceQ) === 1) {
+                $sourceRow = DB_fetchArray($sourceQ);
+                $A['description'] = DLM_renderGithubMarkdown($sourceRow['description']);
+            }
+        }
+    }
+
     $filedetail_url = COM_buildURL($_CONF['site_url'] . '/downloads/index.php?id=' . $A['lid']);
     $visitfile_url  = COM_buildURL($_CONF['site_url'] . '/downloads/visit.php?id=' . $A['lid']);
 
