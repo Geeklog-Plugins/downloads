@@ -522,6 +522,13 @@ function DLM_approveNewDownload($id)
         return false;
     }
 
+    $finalFile = rtrim($_DLM_CONF['path_filestore'], "/\\\\") . DIRECTORY_SEPARATOR .
+                 DLM_createSafeFileName($A['url'], $A['secret_id']);
+    if (is_file($finalFile)) {
+        DB_query("UPDATE {$_TABLES['downloads']} SET size=" . (int) filesize($finalFile) .
+                 ", md5='" . DB_escapeString(md5_file($finalFile)) . "' WHERE lid='$id'");
+    }
+
     DLM_cleanupApprovedPendingSnapshot((int) $A['date'], $A['logourl'], $A['secret_id']);
     DLM_recordSubmissionStatus($id, 'published', $id);
     DB_query("UPDATE {$_TABLES['downloadgithubproposals']} SET status='published',updated_at=" . time() . " WHERE lid='$id' AND status='pending'");
