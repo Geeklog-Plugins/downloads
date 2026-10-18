@@ -61,22 +61,7 @@ while ($A = DB_fetchArray($result)) {
     );
 }
 
-// Include GitHub proposals in the member's private submission overview.
-$proposalQuery = DB_query(
-    "SELECT proposal_id,title,repository,tag,status,created_at " .
-    "FROM {$_TABLES['downloadgithubproposals']} WHERE owner_id=$uid " .
-    "ORDER BY created_at DESC LIMIT 100"
-);
-if ($proposalQuery) {
-    while ($proposal = DB_fetchArray($proposalQuery)) {
-        $rows[] = array(
-            'title' => DLM_htmlspecialchars($proposal['title']),
-            'category' => DLM_htmlspecialchars($proposal['repository'] . ' / ' . $proposal['tag']),
-            'date' => strftime($_DLM_CONF['date_format'], (int) $proposal['created_at']),
-            'state' => DLM_htmlspecialchars($proposal['status'])
-        );
-    }
-}
+// GitHub proposals are included via native submission history.
 
 $header_arr = array(
     array('text' => $LANG_DLM['title'], 'field' => 'title'),
