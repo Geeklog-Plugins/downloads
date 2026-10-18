@@ -8,15 +8,15 @@
 
 ### Proposed multisite directory convention (2026-10-18)
 
-**Updated design decision (not implemented): reuse Geeklog's existing site-specific image paths.** In the confirmed g2 multisite installation, `$_CONF['path_images']` is `/home/vmrp0021/g2.pascalburnet.com/images/g2/` and `$_CONF['images_url']` is `https://g2.pascalburnet.com/images/g2`.
+**Updated design decision (not implemented): use Geeklog's native `path_images` for filesystem placement, but never require `images_url`.** In the confirmed g2 multisite installation, `$_CONF['path_images']` is `/home/vmrp0021/g2.pascalburnet.com/images/g2/` and `$_CONF['images_url']` is `https://g2.pascalburnet.com/images/g2`.
 
 - Public Downloads images: `rtrim($_CONF['path_images'], '/\\\\') . '/downloads/{snaps,category_snaps,tn}/'`.
-- Corresponding image URLs: `rtrim($_CONF['images_url'], '/') . '/downloads/{snaps,category_snaps,tn}'`.
-- Do **not** append another site identifier to the image path: Geeklog has already isolated images by site.
+- Corresponding URLs: retain separately configurable `snapstore_url`, `snapcat_url`, and `tnstore_url`; `$_CONF['images_url']` is an optional site customization, **not a Geeklog 2.2.2 core configuration guarantee**. Do not derive a public URL from `path_images` unless the web mapping is explicitly known.
+- Do **not** append another site identifier when a given installation's configured `path_images` is already site-specific. Other installations may not use that layout; verify isolation before choosing new defaults.
 - Download archives: prefer an explicitly configured per-site private path outside the document root, with controlled serving. If a shared public root is retained, use a stable validated per-site subdirectory such as `downloads_data/<site-id>/files/` and deny direct HTTP access.
 - Do not infer a storage path from untrusted HTTP_HOST. Use the site's validated configuration and ensure private file directories are actually separate between sites.
 - Existing installs keep configured values; new-install defaults and an opt-in migration require file/URL compatibility tests, backups, collision checks and rollback.
-- Audit download delivery, thumbnail creation and cached URLs before changing the defaults. No silent relocation during a plugin update.
+- Audit download delivery, thumbnail creation and cached URLs before changing the defaults. No silent relocation during a plugin update. The stock Geeklog code references `path_images`, but a search of the official core repository found no `images_url` key; site-specific use must remain optional.
 
 ### Multisite storage separation — review before release (2026-10-18)
 
