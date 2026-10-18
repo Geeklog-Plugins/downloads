@@ -71,6 +71,15 @@ if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'POST') 
                         $selectedId = (int) $selected['id'];
                         $now = time();
                         $secretId = bin2hex(openssl_random_pseudo_bytes(16));
+                        // Root is a virtual tree node, not an editable category.
+                        // Select a real enabled category for native moderation.
+                        $catQ = DB_query("SELECT cid FROM {$_TABLES['downloadcategories']} " .
+                            "WHERE cid <> '" . DB_escapeString(DLM_ROOTID) . "' AND is_enabled=1 ORDER BY corder,cid LIMIT 1");
+                        $catRow = ($catQ && DB_numRows($catQ) > 0) ? DB_fetchArray($catQ) : null;
+                        if (!$catRow) {
+                            $postContent .= '<p>No enabled Downloads category is available. Contact an administrator.</p>';
+                        } else {
+                        $proposalCid = DB_escapeString($catRow['cid']);
                         // Native Downloads submission is the authoritative moderation item.
                         $lid = 'gh' . substr(hash('sha256', $repository . '/' . $releaseId . '/' . $selectedId), 0, 30);
                         $safeLid = DB_escapeString($lid);
@@ -83,7 +92,7 @@ if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'POST') 
                             $native = "INSERT INTO {$_TABLES['downloadsubmission']} " .
                                 "(lid,cid,title,url,homepage,version,description,detail,date,createddate,owner_id,secret_id," .
                                 "is_released,is_listing,postmode) VALUES " .
-                                "('$safeLid','" . DB_escapeString(DLM_ROOTID) . "','$safeTitle','$assetName'," .
+                                "('$safeLid','" . $proposalCid . "','$safeTitle','$assetName'," .
                                 "'','" . DB_escapeString(substr($release['tag'], 0, 10)) . "'," .
                                 "'$safeDescription',''," . $now . ",NOW(),$uid,'$secretId',0,0,'plaintext')";
                             $meta = "INSERT INTO {$_TABLES['downloadgithubproposals']} " .
@@ -103,6 +112,7 @@ if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'POST') 
                             } else {
                                 $postContent .= '<p>Could not create native Downloads submission.</p>';
                             }
+                        }
                         }
                     }
                 }
