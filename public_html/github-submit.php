@@ -78,19 +78,38 @@ if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'POST') 
                         $releaseId = (int) $release['id'];
                         $selectedId = (int) $selected['id'];
                         $now = time();
-                        $sql = "INSERT INTO {$_TABLES['downloadgithubproposals']} " .
-                               "(owner_id,repository,release_id,asset_id,release_url,tag,asset_name," .
-                               "title,description,status,created_at,updated_at) VALUES " .
-                               "($uid,'$repository',$releaseId,$selectedId,'$releaseUrl','$tag'," .
-                               "'$assetName','$safeTitle','$safeDescription','pending',$now,$now)";
-                        $previous = DB_query("SELECT proposal_id FROM {$_TABLES['downloadgithubproposals']} " .
+                        // Native Downloads submission is the authoritative moderation item.
+                        $lid = 'gh' . substr(hash('sha256', $repository . '/' . $releaseId . '/' . $selectedId), 0, 30);
+                        $safeLid = DB_escapeString($lid);
+                        $previous = DB_query("SELECT lid FROM {$_TABLES['downloadgithubproposals']} " .
                            "WHERE repository='$repository' AND release_id=$releaseId AND asset_id=$selectedId");
                         if ($previous && DB_numRows($previous) > 0) {
-                            $display .= '<p>This GitHub release asset has already been proposed.</p>';
-                        } elseif (DB_query($sql, 1)) {
-                            $display .= '<p>Proposal recorded for review. No archive was downloaded or published.</p>';
+                            $display .= '<p>This release asset has already been submitted.</p>';
                         } else {
-                            $display .= '<p>Could not save this proposal. Please contact the site administrator.</p>';
+                            // This record is incomplete by design until approval transfers its ZIP.
+                            $native = "INSERT INTO {$_TABLES['downloadsubmission']} " .
+                                "(lid,cid,title,url,homepage,version,description,detail,date,createddate,owner_id," .
+                                "is_released,is_listing,postmode) VALUES " .
+                                "('$safeLid','" . DB_escapeString(DLM_ROOTID) . "','$safeTitle','$assetName'," .
+                                "'','" . DB_escapeString(substr($release['tag'], 0, 10)) . "'," .
+                                "'$safeDescription',''," . $now . ",NOW(),$uid,0,0,'plaintext')";
+                            $meta = "INSERT INTO {$_TABLES['downloadgithubproposals']} " .
+                                "(lid,owner_id,repository,release_id,asset_id,release_url,tag,asset_name," .
+                                "title,description,status,created_at,updated_at) VALUES " .
+                                "('$safeLid',$uid,'$repository',$releaseId,$selectedId,'$releaseUrl','$tag'," .
+                                "'$assetName','$safeTitle','$safeDescription','pending',$now,$now)";
+                            if (DB_query($native, 1)) {
+                                if (DB_query($meta, 1)) {
+                                    require_once $_CONF['path'] . 'plugins/downloads/include/functions.php';
+                                    DLM_recordSubmissionStatus($lid, 'pending');
+                                    $display .= '<p>Submitted to the normal Geeklog moderation queue. No ZIP was downloaded.</p>';
+                                } else {
+                                    DB_delete($_TABLES['downloadsubmission'], 'lid', $safeLid);
+                                    $display .= '<p>Could not save GitHub metadata. No submission was created.</p>';
+                                }
+                            } else {
+                                $display .= '<p>Could not create native Downloads submission.</p>';
+                            }
                         }
                     }
                 }
