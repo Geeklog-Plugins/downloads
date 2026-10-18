@@ -1739,6 +1739,12 @@ class DLDownload
         }
 
         if ($success) {
+            $approvedFile = rtrim($_DLM_CONF['path_filestore'], "/\\\\") . DIRECTORY_SEPARATOR .
+                            DLM_createSafeFileName($url, $secret_id);
+            if (is_file($approvedFile)) {
+                $this->_size = filesize($approvedFile);
+                $this->_md5 = md5_file($approvedFile);
+            }
             if (!$this->_addToDatabase()) {
                 DLM_restoreFinalizedSubmissionFiles(
                     (int) $submission_date,
