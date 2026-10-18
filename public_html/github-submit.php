@@ -192,7 +192,8 @@ if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'POST') 
 }
 // Important: verify submitted token before issuing a new token for this URL.
 // SEC_createToken() revokes older page tokens for this authenticated user.
-$display = '<div class="dlm-github-submit"><h2>Propose a GitHub Release</h2>'
+$display = '<div class="dlm-github-submit">' . ($proposalSaved ? $postContent : '')
+         . '<h2>Propose a GitHub Release</h2>'
          . '<p>Preview a public release before proposing it to the Downloads moderators. '
          . 'This page does not submit or publish an item, and no archive is downloaded.</p>'
          . '<form action="' . $escape($pageUrl) . '" method="post">'
@@ -203,12 +204,7 @@ $display = '<div class="dlm-github-submit"><h2>Propose a GitHub Release</h2>'
          . '<input type="hidden" name="github_action" value="preview">'
          . '<button type="submit">Preview release</button></form>';
 
-// A successful submission must be acknowledged before the preview form.
-if ($proposalSaved) {
-    $display = '<div class="dlm-github-submit">' . $postContent . $display;
-    // Remove the duplicate outer wrapper opened by the original page header.
-    $display = str_replace('<div class="dlm-github-submit"><div class="dlm-github-submit">', '<div class="dlm-github-submit">', $display);
-} else {
+if (!$proposalSaved) {
     $display .= $postContent;
 }
 $display .= '<p><a href="' . $escape($_CONF['site_url'] . '/submit.php?type=downloads') .
