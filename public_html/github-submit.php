@@ -106,12 +106,10 @@ if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'POST') 
                         }
                     }
                 }
-                $postContent .= '<h3>' . $escape($release['name'] !== '' ? $release['name'] : $release['tag']) . '</h3>'
+                $postContent .= '<section class="dlm-github-preview"><h3>' . $escape($release['name'] !== '' ? $release['name'] : $release['tag']) . '</h3>'
                          . '<p>Repository: ' . $escape($release['repository']) .
                            ' — Tag: ' . $escape($release['tag']) . '</p>'
                          . '<p>Published: ' . $escape($release['published_at']) . '</p>'
-                         . '<h4>Release notes</h4><pre class="dlm-github-notes">'
-                         . $escape(substr($release['notes'], 0, 8000)) . '</pre>'
                          . '<h4>Available ZIP assets</h4>';
                 if (empty($release['assets'])) {
                     $postContent .= '<p>No ZIP archive is attached to this release.</p>';
@@ -140,28 +138,29 @@ if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'POST') 
                             . '<input id="proposal_title" name="title" required maxlength="100" value="'
                             . $escape(substr($defaultTitle, 0, 100)) . '"></p>'
                             . '<p><label for="proposal_description">Description</label></p>'
-                            . '<textarea id="proposal_description" name="description" required rows="7" cols="70" maxlength="4000">'
+                            . '<textarea id="proposal_description" name="description" required rows="7" maxlength="4000">'
                             . $escape($defaultDescription) . '</textarea>'
                             . '<p><button type="submit">Submit proposal for moderation</button></p></form>';
                     }
                 }
+                $postContent .= '</section>';
             }
         }
     }
 }
 // Important: verify submitted token before issuing a new token for this URL.
 // SEC_createToken() revokes older page tokens for this authenticated user.
-$display = '<h2>Propose a GitHub Release</h2>'
+$display = '<div class="dlm-github-submit"><h2>Propose a GitHub Release</h2>'
          . '<p>Preview a public release before proposing it to the Downloads moderators. '
          . 'This page does not submit or publish an item, and no archive is downloaded.</p>'
          . '<form action="' . $escape($pageUrl) . '" method="post">'
          . '<label for="release_url">Public GitHub Release URL</label> '
-         . '<input id="release_url" name="release_url" type="url" size="70" maxlength="500" required '
+         . '<input id="release_url" name="release_url" type="url" maxlength="500" required '
          . 'placeholder="https://github.com/owner/repository/releases/tag/v1.0.0">'
          . '<input type="hidden" name="' . CSRF_TOKEN . '" value="' . $escape(SEC_createToken()) . '">'
          . '<button type="submit">Preview release</button></form>';
 
 $display .= $postContent;
 $display .= '<p><a href="' . $escape($_CONF['site_url'] . '/submit.php?type=downloads') .
-            '">Standard Downloads submission</a></p>';
+            '">Standard Downloads submission</a></p></div>';
 COM_output(COM_createHTMLDocument($display, array('pagetitle' => 'GitHub Release proposal')));
