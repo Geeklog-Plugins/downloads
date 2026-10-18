@@ -49,24 +49,31 @@ function DLM_githubFetchReleaseZip($repository, $asset, $destination, $limitByte
     $probeOk = curl_exec($probe);
     $probeStatus = (int) curl_getinfo($probe, CURLINFO_HTTP_CODE);
     curl_close($probe);
-    // Accept only an explicit, bounded CDN redirect from the API endpoint.
+    // GitHub documents both 200 (direct binary) and 302 (CDN redirect).
+    // For a 200 response, retry with a bounded GET against the original
+    // allowlisted api.github.com endpoint; ZIP signature validation remains mandatory.
     if ($probeOk === false || $headerTooLarge ||
-        !in_array($probeStatus, array(302, 303, 307, 308), true) ||
-        !preg_match('/^Location:\\s*(\\S+)\\s*$/im', $headers, $location)) {
-        $error = 'Unable to resolve GitHub asset location safely.';
+        !in_array($probeStatus, array(200, 302, 303, 307, 308), true)) {
+        $error = 'Unable to resolve GitHub asset safely.';
         return false;
     }
-    $target = parse_url(trim($location[1]));
-    $allowedHosts = array('release-assets.githubusercontent.com', 'objects.githubusercontent.com');
-    if (!is_array($target) || !isset($target['scheme'], $target['host']) ||
-        strtolower($target['scheme']) !== 'https' ||
-        !in_array(strtolower($target['host']), $allowedHosts, true) ||
-        isset($target['user']) || isset($target['pass']) ||
-        (isset($target['port']) && (int) $target['port'] !== 443)) {
-        $error = 'GitHub asset redirect destination is not allowed.';
-        return false;
+    if ($probeStatus !== 200) {
+        if (!preg_match('/^Location:\\s*(\\S+)\\s*$/im', $headers, $location)) {
+            $error = 'GitHub asset redirect has no usable location.';
+            return false;
+        }
+        $target = parse_url(trim($location[1]));
+        $allowedHosts = array('release-assets.githubusercontent.com', 'objects.githubusercontent.com');
+        if (!is_array($target) || !isset($target['scheme'], $target['host']) ||
+            strtolower($target['scheme']) !== 'https' ||
+            !in_array(strtolower($target['host']), $allowedHosts, true) ||
+            isset($target['user']) || isset($target['pass']) ||
+            (isset($target['port']) && (int) $target['port'] !== 443)) {
+            $error = 'GitHub asset redirect destination is not allowed.';
+            return false;
+        }
+        $url = trim($location[1]);
     }
-    $url = trim($location[1]);
     // Resolve names immediately before transfer, and never overwrite existing files.
     $fp = @fopen($destination, 'xb');
     if (!$fp) {
