@@ -548,6 +548,9 @@ function DLM_delNewDownload($id)
     global $_CONF, $_TABLES, $_DLM_CONF, $LANG_DLM;
 
     DLM_recordSubmissionStatus($id, 'rejected');
+    $githubId = DB_escapeString($id);
+    DB_query("UPDATE {$_TABLES['downloadgithubproposals']} SET status='rejected', updated_at=" . time() .
+             " WHERE lid='$githubId' AND status='pending'");
 
     $result = DB_query("SELECT url, logourl, date, secret_id "
                      . "FROM {$_TABLES['downloadsubmission']} "
