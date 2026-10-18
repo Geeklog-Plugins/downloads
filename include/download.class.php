@@ -391,7 +391,27 @@ class DLDownload
                 $this->_loadSubmission($this->_lid);
             }
             if (!$this->_loadCategoryPermissions($this->_cid)) {
-                return PLG_afterSaveSwitch('admin', '', 'downloads', 110);
+                // Early 1.3.2 GitHub proposals were assigned to the virtual
+                // Downloads root; migrate only these pending proposals to an
+                // actual editable category when opened by a moderator.
+                $pendingLid = DB_escapeString($this->_lid);
+                $githubPending = DB_query("SELECT lid FROM {$_TABLES['downloadgithubproposals']} " .
+                    "WHERE lid='$pendingLid' AND status='pending'");
+                if (!$githubPending || DB_numRows($githubPending) !== 1) {
+                    return PLG_afterSaveSwitch('admin', '', 'downloads', 110);
+                }
+                $categoryQ = DB_query("SELECT cid FROM {$_TABLES['downloadcategories']} " .
+                    "WHERE cid <> '" . DB_escapeString(DLM_ROOTID) . "' AND is_enabled=1 ORDER BY corder,cid LIMIT 1");
+                if (!$categoryQ || DB_numRows($categoryQ) < 1) {
+                    return PLG_afterSaveSwitch('admin', '', 'downloads', 110);
+                }
+                $categoryRow = DB_fetchArray($categoryQ);
+                $this->_cid = $categoryRow['cid'];
+                if (!$this->_loadCategoryPermissions($this->_cid)) {
+                    return PLG_afterSaveSwitch('admin', '', 'downloads', 110);
+                }
+                DB_query("UPDATE {$_TABLES['downloadsubmission']} SET cid='" .
+                    DB_escapeString($this->_cid) . "' WHERE lid='$pendingLid'");
             }
             $this->_checkHasAccess();
         } elseif ($mode != 'create' && $mode != 'submit') {
