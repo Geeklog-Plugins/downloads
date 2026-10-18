@@ -1663,6 +1663,14 @@ class DLDownload
         $result = DB_query("SELECT url, logourl, date, secret_id "
                          . "FROM {$_TABLES['downloadsubmission']} WHERE lid = '$lid'");
         list($url, $logourl, $date, $secret_id) = DB_fetchArray($result);
+        $github = DB_query("SELECT lid FROM {$_TABLES['downloadgithubproposals']} WHERE lid='$lid' AND status='pending'");
+        if ($github && DB_numRows($github) > 0) {
+            DLM_recordSubmissionStatus($lid, 'rejected');
+            DB_query("UPDATE {$_TABLES['downloadgithubproposals']} SET status='rejected',updated_at=" . time() .
+                     " WHERE lid='$lid' AND status='pending'");
+            DB_delete($_TABLES['downloadsubmission'], 'lid', $lid);
+            return PLG_afterSaveSwitch('admin', '', 'downloads', 102);
+        }
         $tmpfilename = DLM_findPendingFile(
             $_DLM_CONF['path_filestore'],
             $date,
