@@ -6,6 +6,17 @@
 
 **Baseline:** Downloads 1.3.1, including successful manual tests of regular-user submission, Preview, approval through moderation and Downloads administration, email notifications, and identical shared snapshots on Geeklog 2.2.2. PHP 5.6/8.1/8.3 syntax CI passed; this does **not** constitute full functional verification of older Geeklog installations.
 
+### Proposed multisite directory convention (2026-10-18)
+
+**Decision for design review (not yet implemented):** place public Downloads images alongside other Geeklog images and physically separate persistent archives for each site.
+
+- Public images: `$_CONF['path_html']/images/downloads/<site-id>/{snaps,category_snaps,tn}/`, with URLs under `$_CONF['site_url']/images/downloads/<site-id>/`.
+- Public-root ZIP fallback: `$_CONF['path_html']/downloads_data/<site-id>/files/`; preferred stronger option is a private directory outside the document root.
+- Derive `<site-id>` from an explicit, stable, validated administrator configuration, not unsanitized `HTTP_HOST` or installation order.
+- A directory name alone does not restrict direct HTTP access. If storing ZIPs inside the public root, enforce web-server-level deny rules and verify that the controlled download handler still works (Apache/LiteSpeed and Nginx deployments).
+- Keep existing configured paths unchanged on upgrades. Existing installations require opt-in migration, backups, dry-run, collision and reference checks, URL/cache changes, and rollback.
+- Confirm Geeklog's existing image directory layout, thumbnail generation and storage consumers before adopting these as installation defaults.
+
 ### Multisite storage separation — review before release (2026-10-18)
 
 - [x] Audit current defaults: `path_filestore`, `path_snapstore`, `path_snapcat` and `path_tnstore` are rooted in `$_CONF['path_html']/downloads_data/`; image URLs are based on `$_CONF['site_url']`. Values are installation settings, not automatically host-specific folders.
