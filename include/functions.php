@@ -421,6 +421,63 @@ function DLM_cleanupApprovedPendingSnapshot($date, $logourl, $secret_id)
     }
 }
 
+/**
+ * Materialize an approved GitHub proposal into the ordinary pending-file path.
+ * Called only by an authorized approval flow. No remote fetch for ordinary files.
+ */
+function DLM_prepareGithubSubmission($lid)
+{
+    global $_CONF, $_TABLES, $_DLM_CONF;
+    $id = DB_escapeString($lid);
+    $query = DB_query("SELECT repository,release_id,asset_id,release_url FROM {$_TABLES['downloadgithubproposals']} WHERE lid='$id' AND status='pending'");
+    if (!$query || DB_numRows($query) !== 1) {
+        return false;
+    }
+    $meta = DB_fetchArray($query);
+    $result = DB_query("SELECT url,date,secret_id FROM {$_TABLES['downloadsubmission']} WHERE lid='$id'");
+    if (!$result || DB_numRows($result) !== 1) {
+        return false;
+    }
+    $entry = DB_fetchArray($result);
+    require_once $_CONF['path'] . 'plugins/downloads/include/github_release.php';
+    require_once $_CONF['path'] . 'plugins/downloads/include/github_asset_fetch.php';
+    $error = '';
+    $details = DLM_githubReleaseDetails($meta['release_url'], $error);
+    if (!is_array($details) || (string) $details['id'] !== (string) $meta['release_id'] ||
+        $details['repository'] !== $meta['repository']) {
+        return false;
+    }
+    $asset = null;
+    foreach ($details['assets'] as $candidate) {
+        if ((string) $candidate['id'] === (string) $meta['asset_id'] &&
+            $candidate['name'] === $entry['url']) {
+            $asset = $candidate;
+            break;
+        }
+    }
+    if ($asset === null) {
+        return false;
+    }
+    $pendingName = DLM_createPendingFileName($entry['date'], $entry['url'], $entry['secret_id']);
+    $pendingPath = rtrim($_DLM_CONF['path_filestore'], "/\\\\") . DIRECTORY_SEPARATOR . $pendingName;
+    if (!DLM_ensureDirectory($_DLM_CONF['path_filestore']) || file_exists($pendingPath)) {
+        return false;
+    }
+    $dir = rtrim(sys_get_temp_dir(), "/\\\\") . DIRECTORY_SEPARATOR .
+           'dlm-gh-' . bin2hex(openssl_random_pseudo_bytes(12));
+    if (!@mkdir($dir, 0700)) {
+        return false;
+    }
+    $stage = $dir . DIRECTORY_SEPARATOR . 'release.zip';
+    $ok = DLM_githubFetchReleaseZip($details['repository'], $asset, $stage, 52428800, $error);
+    if ($ok) {
+        $ok = DLM_storeFetchedArchive($stage, $_DLM_CONF['path_filestore'], $pendingName);
+    }
+    if (is_file($stage)) @unlink($stage);
+    @rmdir($dir);
+    return $ok;
+}
+
 // Approve the uploaded file (process after the approval)
 function DLM_approveNewDownload($id)
 {
