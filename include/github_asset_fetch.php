@@ -23,9 +23,20 @@ function DLM_githubFetchReleaseZip($repository, $asset, $destination, $limitByte
     // GitHub's release asset API can redirect to GitHub-controlled CDN hosts.
     // Resolve the redirect explicitly, never allowing arbitrary destination URLs.
     $probe = curl_init($url);
-    curl_setopt($probe, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($probe, CURLOPT_HEADER, true);
+    // Keep response headers bounded: never buffer an untrusted header block.
+    $headers = '';
+    $headerTooLarge = false;
+    curl_setopt($probe, CURLOPT_RETURNTRANSFER, false);
+    curl_setopt($probe, CURLOPT_HEADER, false);
     curl_setopt($probe, CURLOPT_NOBODY, true);
+    curl_setopt($probe, CURLOPT_HEADERFUNCTION, function ($curl, $line) use (&$headers, &$headerTooLarge) {
+        if (strlen($headers) + strlen($line) > 16384) {
+            $headerTooLarge = true;
+            return 0;
+        }
+        $headers .= $line;
+        return strlen($line);
+    });
     curl_setopt($probe, CURLOPT_FOLLOWLOCATION, false);
     curl_setopt($probe, CURLOPT_PROTOCOLS, CURLPROTO_HTTPS);
     curl_setopt($probe, CURLOPT_REDIR_PROTOCOLS, CURLPROTO_HTTPS);
@@ -35,10 +46,12 @@ function DLM_githubFetchReleaseZip($repository, $asset, $destination, $limitByte
     curl_setopt($probe, CURLOPT_HTTPHEADER, array('Accept: application/octet-stream'));
     curl_setopt($probe, CURLOPT_SSL_VERIFYPEER, true);
     curl_setopt($probe, CURLOPT_SSL_VERIFYHOST, 2);
-    $headers = curl_exec($probe);
+    $probeOk = curl_exec($probe);
     $probeStatus = (int) curl_getinfo($probe, CURLINFO_HTTP_CODE);
     curl_close($probe);
-    if ($headers === false || $probeStatus < 300 || $probeStatus >= 400 ||
+    // Accept only an explicit, bounded CDN redirect from the API endpoint.
+    if ($probeOk === false || $headerTooLarge ||
+        !in_array($probeStatus, array(302, 303, 307, 308), true) ||
         !preg_match('/^Location:\\s*(\\S+)\\s*$/im', $headers, $location)) {
         $error = 'Unable to resolve GitHub asset location safely.';
         return false;
