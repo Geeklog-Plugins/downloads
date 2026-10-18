@@ -1741,6 +1741,15 @@ class DLDownload
         );
 
         if (!$success) {
+            // GitHub assets are fetched on approval, not on submission.
+            // Discard only the freshly fetched pending ZIP so retry is safe.
+            if ($ghCheck && DB_numRows($ghCheck) > 0) {
+                $pendingFile = rtrim($_DLM_CONF['path_filestore'], "/\\\\") . DIRECTORY_SEPARATOR .
+                               DLM_createPendingFileName($submission_date, $url, $secret_id);
+                if (is_file($pendingFile)) {
+                    @unlink($pendingFile);
+                }
+            }
             $this->_errno[] = '1002';
             $this->_retry = true;
             $this->_reedit('showEditor', array($this->_editor_mode));
