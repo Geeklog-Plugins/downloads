@@ -1739,6 +1739,10 @@ class DLDownload
         }
 
         if ($success) {
+            if ($ghCheck && DB_numRows($ghCheck) > 0) {
+                $this->_is_released = 1;
+                $this->_is_listing = 1;
+            }
             $approvedFile = rtrim($_DLM_CONF['path_filestore'], "/\\\\") . DIRECTORY_SEPARATOR .
                             DLM_createSafeFileName($url, $secret_id);
             if (is_file($approvedFile)) {
