@@ -78,6 +78,7 @@ if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'POST') 
                         $releaseId = (int) $release['id'];
                         $selectedId = (int) $selected['id'];
                         $now = time();
+                        $secretId = bin2hex(openssl_random_pseudo_bytes(16));
                         // Native Downloads submission is the authoritative moderation item.
                         $lid = 'gh' . substr(hash('sha256', $repository . '/' . $releaseId . '/' . $selectedId), 0, 30);
                         $safeLid = DB_escapeString($lid);
@@ -88,11 +89,11 @@ if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'POST') 
                         } else {
                             // This record is incomplete by design until approval transfers its ZIP.
                             $native = "INSERT INTO {$_TABLES['downloadsubmission']} " .
-                                "(lid,cid,title,url,homepage,version,description,detail,date,createddate,owner_id," .
+                                "(lid,cid,title,url,homepage,version,description,detail,date,createddate,owner_id,secret_id," .
                                 "is_released,is_listing,postmode) VALUES " .
                                 "('$safeLid','" . DB_escapeString(DLM_ROOTID) . "','$safeTitle','$assetName'," .
                                 "'','" . DB_escapeString(substr($release['tag'], 0, 10)) . "'," .
-                                "'$safeDescription',''," . $now . ",NOW(),$uid,0,0,'plaintext')";
+                                "'$safeDescription',''," . $now . ",NOW(),$uid,'$secretId',0,0,'plaintext')";
                             $meta = "INSERT INTO {$_TABLES['downloadgithubproposals']} " .
                                 "(lid,owner_id,repository,release_id,asset_id,release_url,tag,asset_name," .
                                 "title,description,status,created_at,updated_at) VALUES " .
