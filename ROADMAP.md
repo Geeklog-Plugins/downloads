@@ -123,6 +123,19 @@ Ten open issues on `Geeklog-Plugins/downloads`: **#25, #24, #22, #21, #19, #15, 
 - [ ] Produce release ZIP via Actions and inspect manifest; keep version/package metadata aligned before PR.
 - [ ] Obtain maintainer review prior to release.
 
+### Download statistics by period (planned for 1.4.0)
+
+**Goal:** supplement the existing lifetime `downloads.hits` counter with aggregated, date-based reporting; do not delay the 1.3.2 PR.
+
+- [ ] Add a daily aggregate table keyed by download ID and date (site-local reporting timezone), with a unique key and indexed date for efficient reporting; store counts only, without visitor IPs or individual event histories.
+- [ ] Update the existing successful download counter path to increment the daily aggregate reliably, keeping `hits` and its historical meaning unchanged. Confirm concurrent downloads cannot lose increments.
+- [ ] Provide admin dashboards for today, last 7/30 days, custom date range, month/year trends, top downloads and category-level totals.
+- [ ] Support comparison with the previous equivalent period and explicit CSV export when appropriate.
+- [ ] Apply Downloads authorization rules to administrative reports and keep aggregate collection economical on busy sites.
+- [ ] Define retention, deletion/uninstall behavior and handling of removed downloads; document multisite database separation.
+- [ ] Test date boundaries/timezones, high concurrency, upgrades, rollback and PHP/Geeklog compatibility.
+- [ ] Explain clearly that period statistics begin **only when tracking is enabled**; historical per-period counts cannot be reconstructed from existing lifetime `hits` totals.
+
 ## Planned feature cycle: 1.4.0 — release synchronization and project history
 
 The manual GitHub Releases importer is now a **1.3.2 release requirement** (see P0 above). Version 1.4.0 is reserved for opt-in review queues for newer releases, durable project-to-release history, and possible additional release providers. No unattended publication.
