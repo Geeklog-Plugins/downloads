@@ -27,6 +27,10 @@
             <dd>{preview_homepage}</dd>
         </dl>
 
+    </div>
+
+    <!-- Full-width text, independent of the image/metadata column layout. -->
+    <div class="dlm-preview-content" style="grid-column: 1 / -1; clear: both; width: 100%; min-width: 0; box-sizing: border-box;">
         <section class="dlm-preview-section">
             <h3>{lang_description}</h3>
             <div class="dlm_description">{file_description}</div>
