@@ -19,16 +19,16 @@ $escape = function ($value) {
 $renderReleaseNotes = function ($markdown) use ($escape) {
     // Render a safe, deliberately limited Markdown subset. No raw HTML is
     // interpreted, and URLs may only use http or https.
-    $lines = preg_split('/\\r\\n|\\r|\\n/', substr((string) $markdown, 0, 8000));
+    $lines = preg_split('/\r\n|\r|\n/', substr((string) $markdown, 0, 8000));
     $out = '';
     foreach ($lines as $line) {
         $line = $escape($line);
-        $line = preg_replace('/\\*\\*(.+?)\\*\\*/', '<strong>$1</strong>', $line);
-        $line = preg_replace('/\\*(.+?)\\*/', '<em>$1</em>', $line);
-        if (preg_match('/^(#{1,4})\\s+(.+)$/', $line, $head)) {
+        $line = preg_replace('/\*\*(.+?)\*\*/', '<strong>$1</strong>', $line);
+        $line = preg_replace('/\*(.+?)\*/', '<em>$1</em>', $line);
+        if (preg_match('/^(#{1,4})\s+(.+)$/', $line, $head)) {
             $level = min(6, strlen($head[1]) + 2);
             $out .= '<h' . $level . '>' . $head[2] . '</h' . $level . '>';
-        } elseif (preg_match('/^\\s*[-*]\\s+(.+)$/', $line, $item)) {
+        } elseif (preg_match('/^\s*[-*]\s+(.+)$/', $line, $item)) {
             $out .= '<p class="dlm-gh-bullet">&#8226; ' . $item[1] . '</p>';
         } elseif (trim($line) !== '') {
             $out .= '<p>' . $line . '</p>';
