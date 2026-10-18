@@ -19,7 +19,13 @@ function DLM_githubReleaseDetails($releaseUrl, &$error)
         isset($parts['user']) || isset($parts['pass']) ||
         (isset($parts['port']) && (int) $parts['port'] !== 443) ||
         !preg_match('~^/([A-Za-z0-9_.-]+)/([A-Za-z0-9_.-]+)/releases/tag/([^/?#]+)$~D', $path, $m)) {
-        $error = 'Enter a public GitHub release URL like https://github.com/owner/repo/releases/tag/v1.0.0';
+        // Show only the parsed host and path; never echo query strings,
+        // credentials, fragments or other potentially sensitive URL parts.
+        $receivedHost = is_array($parts) && isset($parts['host']) ? $parts['host'] : '(none)';
+        $receivedPath = is_array($parts) && isset($parts['path']) ? $parts['path'] : '(none)';
+        $error = 'Expected https://github.com/owner/repo/releases/tag/v1.0.0. '
+               . 'Received host: ' . substr($receivedHost, 0, 100)
+               . '; path: ' . substr($receivedPath, 0, 240);
         return false;
     }
     if ($m[1] === '.' || $m[1] === '..' || $m[2] === '.' || $m[2] === '..' || !function_exists('curl_init')) {
