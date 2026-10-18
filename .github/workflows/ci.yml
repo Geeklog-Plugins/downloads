@@ -1,9 +1,10 @@
-name: Downloads 1.3.1 checks
+name: Downloads PHP checks
 
 on:
   push:
     branches:
       - downloads_1.3.1
+      - develop_1.3.2
     paths-ignore:
       - 'dist/**'
   workflow_dispatch:
@@ -36,6 +37,9 @@ jobs:
         run: |
           set -euo pipefail
           find . -type f \( -name '*.php' -o -name '*.inc' \)             ! -path './.git/*'             ! -path './dist/*'             -print0           | xargs -0 -n1 php -l
+
+      - name: Test safe GitHub Markdown rendering
+        run: php tests/github_markdown.php
 
       - name: Check forbidden dot-prefixed distributable paths
         shell: bash

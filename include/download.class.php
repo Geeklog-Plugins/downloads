@@ -327,7 +327,7 @@ class DLDownload
     /**
     * Show the downloads editor
     */
-    function showEditor($mode='edit')
+    function showEditor($mode='edit', $githubDraft = null)
     {
         global $_CONF, $_TABLES, $_USER, $_GROUPS, $_SCRIPTS, $LANG01, $LANG12, $LANG24,
                $MESSAGE, $_DLM_CONF, $LANG_DLM, $LANG_ACCESS;
@@ -368,6 +368,18 @@ class DLDownload
                 $this->_initVars();
                 $homepage = DB_getItem($_TABLES['users'], 'homepage', "uid = '" . DB_escapeString($this->_owner_id) . "'");
                 $this->_homepage = DLM_htmlspecialchars(stripslashes($homepage));
+                // GitHub metadata is untrusted: only prefill text fields on a fresh,
+                // unpublished editor form. The administrator must upload and approve
+                // the ZIP using the ordinary Downloads workflow.
+                if ($mode === 'create' && is_array($githubDraft)) {
+                    $this->_title = COM_checkHTML(COM_checkWords(strip_tags($githubDraft['name'])));
+                    $this->_version = COM_applyFilter($githubDraft['tag']);
+                    $this->_project = COM_checkHTML(COM_checkWords(strip_tags($githubDraft['repository'])));
+                    $this->_homepage = DLM_htmlspecialchars($githubDraft['url']);
+                    $this->_description = COM_checkHTML(COM_checkWords(strip_tags(substr($githubDraft['notes'], 0, 2000))));
+                    $this->_detail = COM_checkHTML(COM_checkWords(strip_tags(substr($githubDraft['notes'], 0, 10000))));
+                    $this->_is_released = 0;
+                }
             }
         }
 
@@ -379,7 +391,27 @@ class DLDownload
                 $this->_loadSubmission($this->_lid);
             }
             if (!$this->_loadCategoryPermissions($this->_cid)) {
-                return PLG_afterSaveSwitch('admin', '', 'downloads', 110);
+                // Early 1.3.2 GitHub proposals were assigned to the virtual
+                // Downloads root; migrate only these pending proposals to an
+                // actual editable category when opened by a moderator.
+                $pendingLid = DB_escapeString($this->_lid);
+                $githubPending = DB_query("SELECT lid FROM {$_TABLES['downloadgithubproposals']} " .
+                    "WHERE lid='$pendingLid' AND status='pending'");
+                if (!$githubPending || DB_numRows($githubPending) !== 1) {
+                    return PLG_afterSaveSwitch('admin', '', 'downloads', 110);
+                }
+                $categoryQ = DB_query("SELECT cid FROM {$_TABLES['downloadcategories']} " .
+                    "WHERE cid <> '" . DB_escapeString(DLM_ROOTID) . "' AND is_enabled=1 ORDER BY corder,cid LIMIT 1");
+                if (!$categoryQ || DB_numRows($categoryQ) < 1) {
+                    return PLG_afterSaveSwitch('admin', '', 'downloads', 110);
+                }
+                $categoryRow = DB_fetchArray($categoryQ);
+                $this->_cid = $categoryRow['cid'];
+                if (!$this->_loadCategoryPermissions($this->_cid)) {
+                    return PLG_afterSaveSwitch('admin', '', 'downloads', 110);
+                }
+                DB_query("UPDATE {$_TABLES['downloadsubmission']} SET cid='" .
+                    DB_escapeString($this->_cid) . "' WHERE lid='$pendingLid'");
             }
             $this->_checkHasAccess();
         } elseif ($mode != 'create' && $mode != 'submit') {
@@ -828,6 +860,9 @@ class DLDownload
         }
 
         if ($mode != 'submit' || $this->_retry == true) {
+            if (function_exists('DLM_adminSectionNav')) {
+                $retval = DLM_adminSectionNav('files') . $retval;
+            }
             $retval = COM_createHTMLDocument($retval, array('pagetitle' => $blocktitle));
         }
 
@@ -1006,14 +1041,55 @@ class DLDownload
             $this->_loadFromArgs($_POST);
         }
 
+        // Import is allowed only to Root, and all selections are revalidated
+        // against the GitHub API; never trust a posted file path or asset name.
+        $githubImport = SEC_inGroup('Root') &&
+            isset($_POST['gh_release_url'], $_POST['gh_asset_id']) &&
+            (string) $_POST['gh_release_url'] !== '' &&
+            ctype_digit((string) $_POST['gh_asset_id']);
+        $githubAsset = null;
+        $githubDetails = null;
+        if ($githubImport && empty($_FILES['newfile']['name'])) {
+            require_once $_CONF['path'] . 'plugins/downloads/include/github_release.php';
+            $githubError = '';
+            $githubDetails = DLM_githubReleaseDetails($_POST['gh_release_url'], $githubError);
+            if (is_array($githubDetails)) {
+                foreach ($githubDetails['assets'] as $candidate) {
+                    if ((string) $candidate['id'] === (string) $_POST['gh_asset_id']) {
+                        $githubAsset = $candidate;
+                        break;
+                    }
+                }
+            }
+            if ($githubAsset === null) {
+                $this->_errno[] = '1404';
+                $githubImport = false;
+            }
+        } else {
+            $githubImport = false;
+        }
+
+        if ($githubImport) {
+            $this->_is_released = 0;
+            $this->_is_listing = 0;
+            $sameUrl = DB_escapeString($githubDetails['url']);
+            $sameTag = DB_escapeString($githubDetails['tag']);
+            $prior = DB_query("SELECT lid FROM {$_TABLES['downloads']} WHERE homepage = '$sameUrl' AND version = '$sameTag' LIMIT 1");
+            if ($prior && DB_numRows($prior) > 0) {
+                DLM_errorLog('Downloads: repeated GitHub release import rejected.');
+                return PLG_afterSaveSwitch('admin', '', 'downloads', 108);
+            }
+        }
         $this->_secret_id = $this->_createSecretID();
         $this->_old_url   = $this->_url;
-        $this->_url       = $_FILES['newfile']['name'];
+        $this->_url       = $githubImport ? $githubAsset['name'] : (isset($_FILES['newfile']['name']) ? $_FILES['newfile']['name'] : '');
         $this->_owner_id  = $_USER['uid'];
         if (empty($this->_lid)) $this->_lid = $this->_old_lid;
 
         // Validate the input values ----------------------->
-        if (!isset($_FILES['newfile']['error']) || !is_int($_FILES['newfile']['error'])) {
+        if ($githubImport) {
+            // The remote archive follows its own size/transfer validation.
+        } else if (!isset($_FILES['newfile']['error']) || !is_int($_FILES['newfile']['error'])) {
             $this->_errno[] = '1401';
         } else {
             switch ($_FILES['newfile']['error']) {
@@ -1063,7 +1139,31 @@ class DLDownload
         $success = false;
         if (!empty($this->_url)) {
             $safename = DLM_createSafeFileName($this->_url, $this->_secret_id);
-            $success = DLM_uploadNewFile($_FILES['newfile'], $_DLM_CONF['path_filestore'], $safename);
+            if ($githubImport) {
+                require_once $_CONF['path'] . 'plugins/downloads/include/github_asset_fetch.php';
+                // Dedicated private staging file; never re-use a browser upload.
+                $tempDir = rtrim(sys_get_temp_dir(), "/\\\\");
+                $privateDir = $tempDir . DIRECTORY_SEPARATOR . 'dlm-gh-' . bin2hex(openssl_random_pseudo_bytes(12));
+                $success = false;
+                if (@mkdir($privateDir, 0700)) {
+                    $staged = $privateDir . DIRECTORY_SEPARATOR . 'release.zip';
+                    $transferError = '';
+                    $maximum = 50 * 1024 * 1024;
+                    if (DLM_githubFetchReleaseZip($githubDetails['repository'], $githubAsset,
+                                                  $staged, $maximum, $transferError)) {
+                        $success = DLM_storeFetchedArchive($staged, $_DLM_CONF['path_filestore'], $safename);
+                    }
+                    if (is_file($staged)) {
+                        @unlink($staged);
+                    }
+                    @rmdir($privateDir);
+                }
+                if (!$success) {
+                    DLM_errorLog('Downloads: GitHub ZIP transfer/storage failed.');
+                }
+            } else {
+                $success = DLM_uploadNewFile($_FILES['newfile'], $_DLM_CONF['path_filestore'], $safename);
+            }
         } else if (!empty($this->_old_url)) {
             $old_secret_id = DB_getItem($_TABLES['downloads'], 'secret_id', "lid = '" . DB_escapeString($this->_old_lid) . "'");
             $old_safeurl = DLM_createSafeFileName($this->_old_url, $old_secret_id);
@@ -1583,6 +1683,14 @@ class DLDownload
         $result = DB_query("SELECT url, logourl, date, secret_id "
                          . "FROM {$_TABLES['downloadsubmission']} WHERE lid = '$lid'");
         list($url, $logourl, $date, $secret_id) = DB_fetchArray($result);
+        $github = DB_query("SELECT lid FROM {$_TABLES['downloadgithubproposals']} WHERE lid='$lid' AND status='pending'");
+        if ($github && DB_numRows($github) > 0) {
+            DLM_recordSubmissionStatus($lid, 'rejected');
+            DB_query("UPDATE {$_TABLES['downloadgithubproposals']} SET status='rejected',updated_at=" . time() .
+                     " WHERE lid='$lid' AND status='pending'");
+            DB_delete($_TABLES['downloadsubmission'], 'lid', $lid);
+            return PLG_afterSaveSwitch('admin', '', 'downloads', 102);
+        }
         $tmpfilename = DLM_findPendingFile(
             $_DLM_CONF['path_filestore'],
             $date,
@@ -1636,6 +1744,15 @@ class DLDownload
         $this->_logourl = $logourl;
         $this->_secret_id = $secret_id;
 
+        // GitHub proposals use the same Downloads moderation, but the archive
+        // is retrieved only when an authorized moderator approves the item.
+        $ghLid = DB_escapeString($this->_old_lid);
+        $ghCheck = DB_query("SELECT lid FROM {$_TABLES['downloadgithubproposals']} WHERE lid='$ghLid' AND status='pending'");
+        if ($ghCheck && DB_numRows($ghCheck) > 0 && !DLM_prepareGithubSubmission($this->_old_lid)) {
+            $this->_errno[] = '1002';
+            $this->_retry = true;
+            $this->_reedit('showEditor', array($this->_editor_mode));
+        }
         $success = DLM_finalizeSubmissionFiles(
             (int) $submission_date,
             $url,
@@ -1644,12 +1761,31 @@ class DLDownload
         );
 
         if (!$success) {
+            // GitHub assets are fetched on approval, not on submission.
+            // Discard only the freshly fetched pending ZIP so retry is safe.
+            if ($ghCheck && DB_numRows($ghCheck) > 0) {
+                $pendingFile = rtrim($_DLM_CONF['path_filestore'], "/\\\\") . DIRECTORY_SEPARATOR .
+                               DLM_createPendingFileName($submission_date, $url, $secret_id);
+                if (is_file($pendingFile)) {
+                    @unlink($pendingFile);
+                }
+            }
             $this->_errno[] = '1002';
             $this->_retry = true;
             $this->_reedit('showEditor', array($this->_editor_mode));
         }
 
         if ($success) {
+            if ($ghCheck && DB_numRows($ghCheck) > 0) {
+                $this->_is_released = 1;
+                $this->_is_listing = 1;
+            }
+            $approvedFile = rtrim($_DLM_CONF['path_filestore'], "/\\\\") . DIRECTORY_SEPARATOR .
+                            DLM_createSafeFileName($url, $secret_id);
+            if (is_file($approvedFile)) {
+                $this->_size = filesize($approvedFile);
+                $this->_md5 = md5_file($approvedFile);
+            }
             if (!$this->_addToDatabase()) {
                 DLM_restoreFinalizedSubmissionFiles(
                     (int) $submission_date,
@@ -1664,6 +1800,7 @@ class DLDownload
                 (int) $submission_date, $logourl, $secret_id
             );
             DLM_recordSubmissionStatus($this->_lid, 'published', $this->_lid);
+            DB_query("UPDATE {$_TABLES['downloadgithubproposals']} SET status='published',updated_at=" . time() . " WHERE lid='$ghLid' AND status='pending'");
             DB_delete($_TABLES['downloadsubmission'], "lid", DB_escapeString($this->_old_lid));
 
             // Send an email to submitter notifying them that file was approved
@@ -1719,7 +1856,7 @@ class DLDownload
         $this->_initVars();
         $this->_loadFromArgs($A);
         $this->_secret_id = $this->_createSecretID();
-        $this->_url     = $_FILES['newfile']['name'];
+        $this->_url     = isset($_FILES['newfile']['name']) ? $_FILES['newfile']['name'] : '';
 //        $this->_logourl = $_FILES['newfileshot']['name'];
         if (empty($this->_lid)) $this->_lid = $this->_old_lid;
 

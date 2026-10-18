@@ -61,6 +61,8 @@ while ($A = DB_fetchArray($result)) {
     );
 }
 
+// GitHub proposals are included via native submission history.
+
 $header_arr = array(
     array('text' => $LANG_DLM['title'], 'field' => 'title'),
     array('text' => $LANG_DLM['category'], 'field' => 'category'),
@@ -79,6 +81,10 @@ $menu_arr = array(
     array(
         'url' => $_CONF['site_url'] . '/submit.php?type=downloads',
         'text' => $LANG_DLM['submit_new_download']
+    ),
+    array(
+        'url' => $_CONF['site_url'] . '/downloads/github-submit.php',
+        'text' => 'Submit a GitHub Release'
     )
 );
 

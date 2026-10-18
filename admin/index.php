@@ -52,6 +52,41 @@ if (version_compare($installed_version, plugin_chkVersion_downloads()) < 0) {
     exit;
 }
 
+/**
+ * Persistent administration section navigation (Memorandum contract).
+ * ACL-protected, theme-neutral; actions remain in native ADMIN_createMenu.
+ */
+function DLM_adminSectionNav($section)
+{
+    global $_CONF, $LANG_DLM;
+    $base = $_CONF['site_admin_url'] . '/plugins/downloads/index.php';
+    $sections = array(
+        'files' => array($LANG_DLM['nav_files'], $base),
+        'categories' => array($LANG_DLM['nav_categories'], $base . '?op=listCategories')
+    );
+    if (SEC_inGroup('Root')) {
+        $sections['github'] = array($LANG_DLM['nav_github_import'], $_CONF['site_url'] . '/downloads/github-submit.php');
+        $sections['storage'] = array($LANG_DLM['nav_storage_inventory'], $base . '?op=storageInventory');
+    }
+    $html = '<nav class="plugin-admin-nav" aria-label="' .
+            htmlspecialchars($LANG_DLM['nav_administration'], ENT_QUOTES, 'UTF-8') .
+            '"><div class="plugin-admin-nav__primary">';
+    foreach ($sections as $key => $entry) {
+        $current = $section === $key;
+        $html .= '<a class="plugin-admin-nav__item' . ($current ? ' is-active' : '') .
+                 '"' . ($current ? ' aria-current="page"' : '') . ' href="' .
+                 htmlspecialchars($entry[1], ENT_QUOTES, 'UTF-8') . '">' .
+                 htmlspecialchars($entry[0], ENT_QUOTES, 'UTF-8') . '</a>';
+    }
+    $html .= '<form class="plugin-admin-nav__form" method="post" action="' .
+             htmlspecialchars($_CONF['site_admin_url'] . '/configuration.php', ENT_QUOTES, 'UTF-8') .
+             '"><input type="hidden" name="conf_group" value="downloads">' .
+             '<button class="plugin-admin-nav__item" type="submit">' .
+             htmlspecialchars($LANG_DLM['nav_configuration'], ENT_QUOTES, 'UTF-8') .
+             '</button></form></div></nav>';
+    return $html;
+}
+
 function listDownloads()
 {
     global $_CONF, $_TABLES, $LANG_ADMIN, $LANG_DLM, $_DLM_CONF;
@@ -82,12 +117,10 @@ function listDownloads()
 
     $defsort_arr  = array('field' => 'date', 'direction' => 'desc');
 
+    // Local actions only: persistent sections live in DLM_adminSectionNav().
     $menu_arr = array();
     if ($is_root_user) {
-        $menu_arr[] = array('url'  => $admin_url . '?op=listCategories',
-                            'text' => $LANG_DLM['nav_categories']);
-
-        $menu_arr[] = array('url'  => $admin_url . '?op=newCategory',
+        $menu_arr[] = array('url' => $admin_url . '?op=newCategory',
                             'text' => $LANG_DLM['nav_addcategory']);
     }
 
@@ -115,6 +148,7 @@ function listDownloads()
         $readme_url = $_CONF['site_admin_url'] . '/plugins/downloads/readme.html';
     }						
 
+    $retval .= DLM_adminSectionNav('files');
     $retval .= COM_startBlock($LANG_DLM['manager'], $readme_url, COM_getBlockTemplate('_admin_block', 'header'));
 
     $retval .= ADMIN_createMenu($menu_arr, 
@@ -497,33 +531,21 @@ function listCategories()
 
     $defsort_arr = array('field' => 'corder', 'direction' => 'asc');
 
-    $menu_arr = array (
-                    array('url'  => $_CONF['site_admin_url'] . '/plugins/downloads/index.php',
-                          'text' => $LANG_DLM['nav_files']),
-
-                    array('url'  => $_CONF['site_admin_url'] . '/plugins/downloads/index.php?op=newCategory',
-                          'text' => $LANG_DLM['nav_addcategory']),
+    // Category-specific actions; cross-section destinations are in shared navigation.
+    $menu_arr = array(
+        array('url' => $_CONF['site_admin_url'] . '/plugins/downloads/index.php?op=newCategory',
+              'text' => $LANG_DLM['nav_addcategory']),
+        array('url' => $_CONF['site_admin_url'],
+              'text' => $LANG_ADMIN['admin_home'])
     );
 
-    $sql = "SELECT COUNT(*) FROM {$_TABLES['downloadcategories']} WHERE cid != ''";
-    list($count) = DB_fetchArray(DB_query($sql));
-    if ($count > 0) {
-        $menu_arr = array_merge($menu_arr, array(
-                        array('url'  => $_CONF['site_admin_url'] . '/plugins/downloads/index.php?op=uploadFile',
-                              'text' => $LANG_DLM['nav_addfile']),
-        ));
-    }
-    $menu_arr = array_merge($menu_arr, array(
-                    array('url'  => $_CONF['site_admin_url'],
-                          'text' => $LANG_ADMIN['admin_home'])
-    ));
-	
     if ($_DLM_CONF['lang_id'] == 'ja') {
         $readme_url = $_CONF['site_admin_url'] . '/plugins/downloads/readme_ja.html';
     } else {
         $readme_url = $_CONF['site_admin_url'] . '/plugins/downloads/readme.html';
     }	
 
+    $retval .= DLM_adminSectionNav('categories');
     $retval .= COM_startBlock($LANG_DLM['manager'], $readme_url, COM_getBlockTemplate('_admin_block', 'header'));
 
     $retval .= ADMIN_createMenu($menu_arr, $LANG_DLM['instructions'], plugin_geticon_downloads());
@@ -694,6 +716,16 @@ function showMessage()
 
 // MAIN
 
+// When post_max_size is exceeded PHP silently empties POST and FILES,
+// including the requested admin action. Report the upload failure here.
+if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'POST'
+    && DLM_uploadRequestExceedsPostMax()) {
+    DLM_errorLog('Downloads: admin request rejected: HTTP request exceeds PHP post_max_size.');
+    $display = COM_showMessageText($LANG_DLM['1403']);
+    COM_output(COM_createHTMLDocument($display, array('pagetitle' => $LANG_DLM['main'])));
+    exit;
+}
+
 $op             = isset($_REQUEST['op'])            ? COM_applyFilter($_REQUEST['op'])              : '';
 $_page          = isset($_REQUEST['page'])          ? COM_applyFilter($_REQUEST['page'])            : '';
 $listing_cid    = isset($_REQUEST['listing_cid'])   ? COM_applyFilter($_REQUEST['listing_cid'])     : '';
@@ -762,6 +794,120 @@ if (in_array($op, array('uploadFile', 'modify', 'clone', 'editsubmission', 'add'
 }
 
 switch ($op) {
+    case "githubRelease":
+        // Administrators submit GitHub releases through the same moderated
+        // workflow as members. Preserve old bookmarked admin URLs.
+        COM_redirect($_CONF['site_url'] . '/downloads/github-submit.php');
+        break;
+    case "githubReleaseLegacyDisabled":
+        if (!SEC_inGroup('Root')) {
+            $display = COM_showMessageText($MESSAGE[29], $MESSAGE[30]);
+            $display = COM_createHTMLDocument($display, array('pagetitle' => $MESSAGE[30]));
+            break;
+        }
+        $display = DLM_adminSectionNav('github') . '<h2>GitHub Release — metadata preview</h2>'
+                 . '<p>This preview does not download files or publish a Downloads entry.</p>'
+                 . '<form method="post" action="' . htmlspecialchars($_CONF['site_admin_url'], ENT_QUOTES, 'UTF-8')
+                 . '/plugins/downloads/index.php">'
+                 . '<label for="gh_release_url">Public GitHub Release URL</label> '
+                 . '<input type="url" size="75" id="gh_release_url" name="gh_release_url" required'
+                 . ' placeholder="https://github.com/owner/repo/releases/tag/v1.0.0">'
+                 . '<input type="hidden" name="op" value="githubRelease">'
+                 . '<input type="hidden" name="'. CSRF_TOKEN . '" value="' . SEC_createToken() . '">'
+                 . '<button type="submit">Fetch release metadata</button></form>';
+        if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'POST') {
+            if (!SEC_checkToken()) {
+                $display .= '<p>Security token invalid. Please reload the page.</p>';
+            } else {
+                require_once $_CONF['path'] . 'plugins/downloads/include/github_release.php';
+                $error = '';
+                $details = DLM_githubReleaseDetails(isset($_POST['gh_release_url']) ? $_POST['gh_release_url'] : '', $error);
+                if ($details === false) {
+                    $display .= '<p>' . htmlspecialchars($error, ENT_QUOTES, 'UTF-8') . '</p>';
+                } else {
+                    foreach (array('repository', 'name', 'tag', 'published_at', 'url') as $field) {
+                        $display .= '<p><strong>' . htmlspecialchars($field, ENT_QUOTES, 'UTF-8') . ':</strong> '
+                                  . htmlspecialchars($details[$field], ENT_QUOTES, 'UTF-8') . '</p>';
+                    }
+                    $display .= '<h3>Release notes (plain-text preview)</h3><pre>'
+                              . htmlspecialchars(substr($details['notes'], 0, 10000), ENT_QUOTES, 'UTF-8')
+                              . '</pre><h3>ZIP assets</h3><ul>';
+                    foreach ($details['assets'] as $asset) {
+                        $display .= '<li>' . htmlspecialchars($asset['name'], ENT_QUOTES, 'UTF-8')
+                                  . ' (' . (int) $asset['size'] . ' bytes)</li>';
+                    }
+                    $display .= '</ul><form method="post" action="'
+                        . htmlspecialchars($_CONF['site_admin_url'], ENT_QUOTES, 'UTF-8')
+                        . '/plugins/downloads/index.php">'
+                        . '<label for="gh_asset_id">Archive ZIP to import later</label> '
+                        . '<select id="gh_asset_id" name="gh_asset_id" required>';
+                    foreach ($details['assets'] as $asset) {
+                        $display .= '<option value="' . (int) $asset['id'] . '">'
+                                  . htmlspecialchars($asset['name'], ENT_QUOTES, 'UTF-8')
+                                  . ' (' . (int) $asset['size'] . ' bytes)</option>';
+                    }
+                    $display .= '</select>'
+                        . '<input type="hidden" name="op" value="githubDraft">'
+                        . '<input type="hidden" name="gh_release_url" value="'
+                        . htmlspecialchars(isset($_POST['gh_release_url']) ? $_POST['gh_release_url'] : '', ENT_QUOTES, 'UTF-8') . '">'
+                        . '<input type="hidden" name="' . CSRF_TOKEN . '" value="' . SEC_createToken() . '">'
+                        . '<button type="submit">Open editable Downloads draft</button></form>'
+                        . '<p>No ZIP is transferred automatically. Upload the selected archive manually before saving.</p>';
+                }
+            }
+        }
+        $display = COM_createHTMLDocument($display, array('pagetitle' => 'GitHub Release preview'));
+        break;
+
+    case "githubDraft":
+        if (!SEC_inGroup('Root') || !isset($_SERVER['REQUEST_METHOD'])
+            || $_SERVER['REQUEST_METHOD'] !== 'POST' || !SEC_checkToken()) {
+            $display = COM_showMessageText($MESSAGE[29], $MESSAGE[30]);
+            $display = COM_createHTMLDocument($display, array('pagetitle' => $MESSAGE[30]));
+            break;
+        }
+        require_once $_CONF['path'] . 'plugins/downloads/include/github_release.php';
+        $githubError = '';
+        $githubDetails = DLM_githubReleaseDetails(
+            isset($_POST['gh_release_url']) ? $_POST['gh_release_url'] : '', $githubError
+        );
+        if ($githubDetails === false) {
+            $display = COM_createHTMLDocument(
+                COM_showMessageText(htmlspecialchars($githubError, ENT_QUOTES, 'UTF-8')),
+                array('pagetitle' => 'GitHub Release preview')
+            );
+        } else {
+            $selectedAsset = null;
+            $requestedAssetId = isset($_POST['gh_asset_id']) ? (string) $_POST['gh_asset_id'] : '';
+            if (ctype_digit($requestedAssetId)) {
+                foreach ($githubDetails['assets'] as $asset) {
+                    if ((string) $asset['id'] === $requestedAssetId) {
+                        $selectedAsset = $asset;
+                        break;
+                    }
+                }
+            }
+            if ($selectedAsset === null) {
+                $display = COM_createHTMLDocument(
+                    COM_showMessageText('Select a ZIP asset from the verified release.'),
+                    array('pagetitle' => 'GitHub Release preview')
+                );
+            } else {
+                $display = '<p>Selected GitHub archive: <strong>'
+                         . htmlspecialchars($selectedAsset['name'], ENT_QUOTES, 'UTF-8')
+                         . '</strong> (' . (int) $selectedAsset['size']
+                         . ' bytes). The archive is not yet downloaded; upload it manually in the editor.</p>'
+                         . $dldl->showEditor('create', $githubDetails);
+                // Add trusted selection as hidden fields inside the existing
+                // Downloads editor form. Server always checks the GitHub API again.
+                $githubFields = '<input type="hidden" name="gh_release_url" value="'
+                    . htmlspecialchars($_POST['gh_release_url'], ENT_QUOTES, 'UTF-8') . '">'
+                    . '<input type="hidden" name="gh_asset_id" value="' . (int) $selectedAsset['id'] . '">';
+                $display = str_replace('</form>', $githubFields . '</form>', $display);
+            }
+        }
+        break;
+
     case "uploadFile":
         $display = $dldl->showEditor('create');
         break;
@@ -880,6 +1026,45 @@ switch ($op) {
         $DLM_CSRF_TOKEN = SEC_createToken();
         $display .= listCategories();
         $display = COM_createHTMLDocument($display, array('pagetitle' => $LANG_DLM['manager']));
+        break;
+
+    case "storageInventory":
+        if (!SEC_inGroup('Root')) {
+            $display = COM_showMessageText($MESSAGE[29], $MESSAGE[30]);
+            $display = COM_createHTMLDocument($display, array('pagetitle' => $MESSAGE[30]));
+            break;
+        }
+        require_once $_CONF['path'] . 'plugins/downloads/include/storage_inventory.php';
+        $inventory = DLM_storageInventory();
+        $display = DLM_adminSectionNav('storage') . '<h2>Downloads storage inventory (read-only)</h2>'
+                 . '<p>No files are modified. Unreferenced files are candidates only; '
+                 . 'review backups, legacy filenames and other references before any cleanup.</p>';
+        foreach ($inventory as $type => $report) {
+            $display .= '<h3>' . htmlspecialchars($type, ENT_QUOTES, 'UTF-8') . '</h3>';
+            if ($report['error'] !== '') {
+                $display .= '<p>' . htmlspecialchars($report['error'], ENT_QUOTES, 'UTF-8') . '</p>';
+                continue;
+            }
+            $display .= '<p>Files: ' . (int) $report['total']
+                     . ' | Referenced: ' . (int) $report['referenced']
+                     . ' | Unreferenced candidates: ' . (int) $report['candidates']
+                     . ' | Missing references: ' . (int) $report['missing'] . '</p>';
+            if (!empty($report['missing_examples'])) {
+                $display .= '<details><summary>Show up to 100 missing referenced filenames</summary><ul>';
+                foreach ($report['missing_examples'] as $file) {
+                    $display .= '<li><code>' . htmlspecialchars($file, ENT_QUOTES, 'UTF-8') . '</code></li>';
+                }
+                $display .= '</ul></details>';
+            }
+            if (!empty($report['examples'])) {
+                $display .= '<details><summary>Show up to 100 candidate filenames</summary><ul>';
+                foreach ($report['examples'] as $file) {
+                    $display .= '<li><code>' . htmlspecialchars($file, ENT_QUOTES, 'UTF-8') . '</code></li>';
+                }
+                $display .= '</ul></details>';
+            }
+        }
+        $display = COM_createHTMLDocument($display, array('pagetitle' => 'Downloads storage inventory'));
         break;
 
     case "listDownloads":

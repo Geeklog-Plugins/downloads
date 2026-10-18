@@ -154,3 +154,26 @@ $_SQL[] = "CREATE TABLE {$_TABLES['downloadsubmissionhistory']} (
   KEY status (status),
   KEY submitted_date (submitted_date)
 ) ENGINE=MyISAM";
+
+
+// Community GitHub proposals never enter the public downloads table automatically.
+$_SQL[] = "CREATE TABLE {$_TABLES['downloadgithubproposals']} (
+  proposal_id int(11) unsigned NOT NULL auto_increment,
+  lid varchar(40) NOT NULL,
+  owner_id mediumint(8) unsigned NOT NULL,
+  repository varchar(180) NOT NULL,
+  release_id bigint(20) unsigned NOT NULL,
+  asset_id bigint(20) unsigned NOT NULL,
+  release_url varchar(500) NOT NULL,
+  tag varchar(200) NOT NULL,
+  asset_name varchar(250) NOT NULL,
+  title varchar(100) NOT NULL,
+  description text NOT NULL,
+  status varchar(20) NOT NULL default 'pending',
+  created_at int(10) unsigned NOT NULL,
+  updated_at int(10) unsigned NOT NULL,
+  PRIMARY KEY (proposal_id),
+  UNIQUE KEY submission_lid (lid),
+  UNIQUE KEY release_asset (repository, release_id, asset_id),
+  KEY owner_status (owner_id, status)
+) ENGINE=InnoDB";

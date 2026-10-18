@@ -54,7 +54,7 @@ function plugin_autoinstall_downloads($pi_name)
     $info = array(
         'pi_name'         => $pi_name,
         'pi_display_name' => $pi_display_name,
-        'pi_version'      => '1.3.1',
+        'pi_version'      => '1.3.2',
         'pi_gl_version'   => '2.1.2',
         'pi_homepage'     => 'https://github.com/Geeklog-Plugins/downloads'
     );
@@ -98,7 +98,8 @@ function plugin_autoinstall_downloads($pi_name)
         'downloadvotes',
         'downloadhistories',
         'downloadsubmission',
-        'downloadsubmissionhistory'
+        'downloadsubmissionhistory',
+        'downloadgithubproposals'
     );
 
     $inst_parms = array(
@@ -222,7 +223,7 @@ function DLM_autouninstall()
         // give the name of the tables, without $_TABLES[]
         'tables' => array('downloadcategories', 'downloads',
                           'downloadvotes', 'downloadhistories', 'downloadsubmission',
-                          'downloadsubmissionhistory'),
+                          'downloadsubmissionhistory', 'downloadgithubproposals'),
         // give the full name of the group, as in the db
         'groups' => array('Downloads Admin'),
         // give the full name of the feature, as in the db
@@ -309,11 +310,23 @@ function DLM_upgrade()
                 require_once $_CONF['path'] . 'plugins/downloads/install_defaults.php';
                 DLM_add130ConfigValues();
                 $current_version = '1.3.0';
-                $done = true;
+                break;
+
+            case '1.3.0':
+                $current_version = '1.3.1';
                 break;
 
             case '1.3.1':
-            case '1.3.0':
+                if (isset($_UPDATES[$current_version])) {
+                    foreach ($_UPDATES[$current_version] as $sql) {
+                        DB_query($sql);
+                    }
+                }
+                $current_version = '1.3.2';
+                $done = true;
+                break;
+
+            case '1.3.2':
                 $done = true;
                 break;
 

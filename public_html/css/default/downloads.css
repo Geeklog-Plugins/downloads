@@ -599,6 +599,19 @@ a.dlbtn-green:active {
     align-items: start;
 }
 
+.dlm-preview-content {
+    grid-column: 1 / -1;
+    min-width: 0;
+    width: 100%;
+    overflow-wrap: anywhere;
+}
+
+.dlm-preview-content pre,
+.dlm-preview-content code {
+    max-width: 100%;
+    overflow-x: auto;
+}
+
 .dlm-preview-media {
     padding: 0.5rem;
     border: 1px solid rgba(128, 128, 128, 0.3);
@@ -844,3 +857,91 @@ a.dlbtn-green:active {
         grid-column: 1;
     }
 }
+
+
+/* Memorandum: persistent, theme-neutral plugin administration sections. */
+.plugin-admin-nav { margin: 0 0 1.25rem; }
+.plugin-admin-nav__primary { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
+.plugin-admin-nav__item {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-height: 2.4rem; padding: .5rem .8rem; border: 1px solid currentColor;
+    border-radius: .35rem; background: transparent; color: inherit;
+    font: inherit; text-decoration: none; cursor: pointer;
+}
+.plugin-admin-nav__item.is-active { font-weight: 700; box-shadow: inset 0 -2px 0 currentColor; }
+.plugin-admin-nav__form { display: inline-block; margin: 0; }
+.plugin-admin-nav__item:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
+@media (max-width: 640px) {
+    .plugin-admin-nav__primary { align-items: stretch; flex-direction: column; }
+    .plugin-admin-nav__item, .plugin-admin-nav__form,
+    .plugin-admin-nav__form .plugin-admin-nav__item { width: 100%; box-sizing: border-box; }
+}
+
+/* Keep button-like navigation links free of theme hover underlines. */
+.plugin-admin-nav a.plugin-admin-nav__item:link,
+.plugin-admin-nav a.plugin-admin-nav__item:visited,
+.plugin-admin-nav a.plugin-admin-nav__item:hover,
+.plugin-admin-nav a.plugin-admin-nav__item:focus,
+.plugin-admin-nav a.plugin-admin-nav__item:active,
+.plugin-admin-nav .plugin-admin-nav__item:hover,
+.plugin-admin-nav .plugin-admin-nav__item:focus-visible {
+    text-decoration: none;
+    text-decoration-line: none;
+}
+
+/* Stable label contrast on navigation hover, including Eclipse theme overrides. */
+.plugin-admin-nav a.plugin-admin-nav__item:hover,
+.plugin-admin-nav a.plugin-admin-nav__item:focus,
+.plugin-admin-nav .plugin-admin-nav__form button.plugin-admin-nav__item:hover,
+.plugin-admin-nav .plugin-admin-nav__form button.plugin-admin-nav__item:focus {
+    color: inherit;
+    background-color: transparent;
+}
+
+
+/* Responsive GitHub release preview and member submission form. */
+.dlm-github-submit,
+.dlm-github-submit .dlm-github-preview {
+    box-sizing: border-box;
+    min-width: 0;
+    max-width: 100%;
+    overflow-wrap: anywhere;
+}
+.dlm-github-submit form,
+.dlm-github-submit p,
+.dlm-github-submit ul,
+.dlm-github-submit li {
+    max-width: 100%;
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+.dlm-github-submit input[type="url"],
+.dlm-github-submit input[type="text"],
+.dlm-github-submit textarea,
+.dlm-github-submit select {
+    box-sizing: border-box;
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+}
+.dlm-github-submit textarea {
+    resize: vertical;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+
+/* GitHub submission: space sections and avoid cramped inline fields. */
+.dlm-github-submit { line-height: 1.55; }
+.dlm-github-submit > form,
+.dlm-github-submit .dlm-github-preview { margin: 1.25rem 0 1.75rem; }
+.dlm-github-submit label { display: block; font-weight: 600; margin: 1rem 0 .35rem; }
+.dlm-github-submit form > input,
+.dlm-github-submit form > select,
+.dlm-github-submit form > textarea { margin-bottom: .85rem; }
+.dlm-github-submit button { margin-top: .6rem; }
+.dlm-github-preview h3, .dlm-github-preview h4 { margin: 1.5rem 0 .6rem; }
+.dlm-github-preview li { margin: .35rem 0; }
+.dlm-github-success { margin: 1.5rem 0; padding: 1rem 1.25rem; border: 1px solid #cad8d0; border-radius: 6px; }
+.dlm-github-success h3 { margin-top: 0; }

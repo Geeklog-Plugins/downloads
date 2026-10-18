@@ -40,7 +40,7 @@ if (!defined ('UC_READONLY')) define('UC_READONLY', (XHTML == '') ? 'readonly' :
 if (!defined ('UC_DISABLED')) define('UC_DISABLED', (XHTML == '') ? 'disabled' : 'disabled="disabled"');
 
 define('DLM_ROOTID', 'root');
-define('DOWNLOADS_VERSION', '1.3.1');
+define('DOWNLOADS_VERSION', '1.3.2');
 
 /**
 * Include language file
@@ -65,6 +65,7 @@ $_TABLES['downloadvotes']      = $_DB_table_prefix . 'downloadvotes';
 $_TABLES['downloadhistories']  = $_DB_table_prefix . 'downloadhistories';
 $_TABLES['downloadsubmission'] = $_DB_table_prefix . 'downloadsubmission';
 $_TABLES['downloadsubmissionhistory'] = $_DB_table_prefix . 'downloadsubmissionhistory';
+$_TABLES['downloadgithubproposals'] = $_DB_table_prefix . 'downloadgithubproposals';
 
 
 /**
@@ -169,6 +170,28 @@ function DLM_errorLog($entry)
     } else {
         COM_errorLog($entry);
     }
+}
+
+/**
+ * Detect requests discarded by PHP because CONTENT_LENGTH exceeds post_max_size.
+ * PHP empties both POST and FILES in this case, hiding the upload error code.
+ * Only use when processing a form submission; never trust the client size alone.
+ */
+function DLM_uploadRequestExceedsPostMax()
+{
+    if (empty($_SERVER['CONTENT_LENGTH']) || !empty($_POST) || !empty($_FILES)) {
+        return false;
+    }
+    $raw = trim((string) ini_get('post_max_size'));
+    if (!preg_match('/^([0-9]+)([KMG]?)$/i', $raw, $parts)) {
+        return false;
+    }
+    $limit = (float) $parts[1];
+    $unit = strtoupper($parts[2]);
+    if ($unit === 'K') $limit *= 1024;
+    if ($unit === 'M') $limit *= 1048576;
+    if ($unit === 'G') $limit *= 1073741824;
+    return $limit > 0 && (float) $_SERVER['CONTENT_LENGTH'] > $limit;
 }
 
 /**
@@ -640,10 +663,13 @@ function plugin_commentenabled_downloads($id, $uid = 0)
     $commentCode = COMMENT_CODE_DISABLED;
 
 	// Grab comment code from download file and rest of permission from downlaod category (since download file only has owner and no other permission settings)
-    $sql = "SELECT a.commentcode, b.owner_id, group_id, perm_owner, perm_group, perm_members, perm_anon "
-                     . "FROM {$_TABLES['downloads']} a "
-                     . "LEFT JOIN {$_TABLES['downloadcategories']} b ON b.cid=a.cid "
-                     . "WHERE lid = '" . DB_escapeString($id) . "'" . COM_getPermSQL('AND', $uid, 2, 'b');					 
+    $sql = "SELECT a.commentcode, b.owner_id, b.group_id, b.perm_owner, "
+         . "b.perm_group, b.perm_members, b.perm_anon "
+         . "FROM {$_TABLES['downloads']} a "
+         . "INNER JOIN {$_TABLES['downloadcategories']} b ON b.cid=a.cid "
+         . "WHERE a.lid = '" . DB_escapeString($id) . "' "
+         . "AND a.is_released = 1 AND b.is_enabled = 1"
+         . COM_getPermSQL('AND', $uid, 2, 'b');					 
 					 
     $result = DB_query($sql);
     $A = DB_fetchArray($result);
@@ -1333,6 +1359,10 @@ function plugin_savesubmission_downloads($A)
     global $_CONF;
 
     require_once $_CONF['path'] . 'plugins/downloads/include/functions.php';
+    if (DLM_uploadRequestExceedsPostMax()) {
+        DLM_errorLog('Downloads: submission rejected: HTTP request exceeds PHP post_max_size.');
+        return COM_showMessageText($GLOBALS['LANG_DLM']['1403']);
+    }
     require_once $_CONF['path'] . 'plugins/downloads/include/download.class.php';
     $dldl = new DLDownload();
     return $dldl->submitNewDownload($A);

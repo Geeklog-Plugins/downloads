@@ -237,6 +237,8 @@ function dlformat(&$T, &$A, $isListing=false, $cid=DLM_ROOTID)
 
     $A['datetime'] = strftime($_DLM_CONF['date_format'], $A['date']);
 
+    $githubMarkdownDescription = $A['description'];
+    $githubMarkdownDetail = $A['detail'];
     if (version_compare(VERSION, '2.1.0') >= 0) {
         require_once $_CONF['path_system'] . 'classes/gltext.class.php';
         $A['description'] = GLText::getDisplayText($A['description'], $A['postmode'], 2);
@@ -246,6 +248,22 @@ function dlformat(&$T, &$A, $isListing=false, $cid=DLM_ROOTID)
         $gltext = new GLPText();
         $A['description'] = $gltext->getDisplayText($A['description'], $A['postmode']);
         $A['detail']      = $gltext->getDisplayText($A['detail'],      $A['postmode']);
+    }
+
+    // Only GitHub-backed public entries interpret their stored description
+    // as Markdown; classic Downloads keep their configured GLText postmode.
+    if (!empty($A['lid']) && !empty($_TABLES['downloadgithubproposals'])) {
+        $githubId = DB_escapeString($A['lid']);
+        // Presence in the public Downloads table is the publication authority.
+        // Metadata status can lag after an earlier approval or an interrupted
+        // status update; do not show raw Markdown in that case.
+        $githubRow = DB_query("SELECT lid FROM {$_TABLES['downloadgithubproposals']} " .
+                              "WHERE lid='$githubId'");
+        if ($githubRow && DB_numRows($githubRow) === 1) {
+            require_once $_CONF['path'] . 'plugins/downloads/include/github_markdown.php';
+            $A['description'] = DLM_renderGithubMarkdown($githubMarkdownDescription);
+            $A['detail'] = DLM_renderGithubMarkdown($githubMarkdownDetail);
+        }
     }
 
     $filedetail_url = COM_buildURL($_CONF['site_url'] . '/downloads/index.php?id=' . $A['lid']);
@@ -358,7 +376,13 @@ function dlformat(&$T, &$A, $isListing=false, $cid=DLM_ROOTID)
         $T->set_var('snapshot', '');
         $T->set_var('snaplinkicon', '');
 
-    } elseif (!empty($A['logourl'])) {
+    } elseif (!empty($A['logourl']) && is_file(
+        rtrim($_DLM_CONF['path_snapstore'], '/\\') . DIRECTORY_SEPARATOR
+        . DLM_createSafeFileName($A['logourl'])
+    ) && is_file(DLM_modTNPath(
+        rtrim($_DLM_CONF['path_tnstore'], '/\\') . DIRECTORY_SEPARATOR
+        . DLM_createSafeFileName($A['logourl'])
+    ))) {
 
         $safename = DLM_createSafeFileName($A['logourl']);
         $imgpath = $_DLM_CONF['path_tnstore'] . $safename;
@@ -386,7 +410,8 @@ function dlformat(&$T, &$A, $isListing=false, $cid=DLM_ROOTID)
         $T->set_var('snapshot_sizeattr',    'width="200" height="200" ');
         $T->set_var('show_snapshoticon',    'none');
         $T->set_var('show_snapshoticon_na', '');
-        $T->parse('snapshot', 'tsnapshot');
+        // There is no actual image to open: render an inert grey placeholder.
+        $T->parse('snapshot', 'tplaceholder');
         $T->set_var('snaplinkicon', '');
         $T->set_var('mg_autotag',   '');
     }
@@ -663,6 +688,7 @@ $T->set_file(array(
     'filedetail'      => 'filedetail.thtml',
     'records'         => 'filelisting_record.thtml',
     'tsnapshot'       => 'filelisting_snapshot.thtml',
+    'tplaceholder'    => 'filelisting_placeholder.thtml',
     'tsnaplinkicon'   => 'filelisting_snaplinkicon.thtml',
     'filedetail_notn' => 'filedetail_no_tn.thtml',
     'records_notn'    => 'filelisting_record_no_tn.thtml',

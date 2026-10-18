@@ -421,6 +421,72 @@ function DLM_cleanupApprovedPendingSnapshot($date, $logourl, $secret_id)
     }
 }
 
+/**
+ * Materialize an approved GitHub proposal into the ordinary pending-file path.
+ * Called only by an authorized approval flow. No remote fetch for ordinary files.
+ */
+function DLM_prepareGithubSubmission($lid)
+{
+    global $_CONF, $_TABLES, $_DLM_CONF;
+    $id = DB_escapeString($lid);
+    $query = DB_query("SELECT repository,release_id,asset_id,release_url FROM {$_TABLES['downloadgithubproposals']} WHERE lid='$id' AND status='pending'");
+    if (!$query || DB_numRows($query) !== 1) {
+        return false;
+    }
+    $meta = DB_fetchArray($query);
+    $result = DB_query("SELECT url,date,secret_id FROM {$_TABLES['downloadsubmission']} WHERE lid='$id'");
+    if (!$result || DB_numRows($result) !== 1) {
+        // Core moderation may already have copied this row to public downloads.
+        $result = DB_query("SELECT url,date,secret_id FROM {$_TABLES['downloads']} WHERE lid='$id'");
+        if (!$result || DB_numRows($result) !== 1) {
+            return false;
+        }
+    }
+    $entry = DB_fetchArray($result);
+    require_once $_CONF['path'] . 'plugins/downloads/include/github_release.php';
+    require_once $_CONF['path'] . 'plugins/downloads/include/github_asset_fetch.php';
+    $error = '';
+    $details = DLM_githubReleaseDetails($meta['release_url'], $error);
+    if (!is_array($details) || (string) $details['id'] !== (string) $meta['release_id'] ||
+        $details['repository'] !== $meta['repository']) {
+        return false;
+    }
+    $asset = null;
+    foreach ($details['assets'] as $candidate) {
+        if ((string) $candidate['id'] === (string) $meta['asset_id'] &&
+            $candidate['name'] === $entry['url']) {
+            $asset = $candidate;
+            break;
+        }
+    }
+    if ($asset === null) {
+        DLM_errorLog('Downloads: GitHub moderation: selected asset no longer matches the release.');
+        return false;
+    }
+    if ((int) $asset['size'] <= 0 || (int) $asset['size'] > 52428800) {
+        DLM_errorLog('Downloads: GitHub moderation: selected archive exceeds the configured 50 MiB limit.');
+        return false;
+    }
+    $pendingName = DLM_createPendingFileName($entry['date'], $entry['url'], $entry['secret_id']);
+    $pendingPath = rtrim($_DLM_CONF['path_filestore'], "/\\\\") . DIRECTORY_SEPARATOR . $pendingName;
+    if (!DLM_ensureDirectory($_DLM_CONF['path_filestore']) || file_exists($pendingPath)) {
+        return false;
+    }
+    $dir = rtrim(sys_get_temp_dir(), "/\\\\") . DIRECTORY_SEPARATOR .
+           'dlm-gh-' . bin2hex(openssl_random_pseudo_bytes(12));
+    if (!@mkdir($dir, 0700)) {
+        return false;
+    }
+    $stage = $dir . DIRECTORY_SEPARATOR . 'release.zip';
+    $ok = DLM_githubFetchReleaseZip($details['repository'], $asset, $stage, 52428800, $error);
+    if ($ok) {
+        $ok = DLM_storeFetchedArchive($stage, $_DLM_CONF['path_filestore'], $pendingName);
+    }
+    if (is_file($stage)) @unlink($stage);
+    @rmdir($dir);
+    return $ok;
+}
+
 // Approve the uploaded file (process after the approval)
 function DLM_approveNewDownload($id)
 {
@@ -437,6 +503,23 @@ function DLM_approveNewDownload($id)
     }
 
     $A = DB_fetchArray($result);
+    $githubQ = DB_query("SELECT lid FROM {$_TABLES['downloadgithubproposals']} WHERE lid='$id' AND status='pending'");
+    if ($githubQ && DB_numRows($githubQ) > 0 && !DLM_prepareGithubSubmission($id)) {
+        if (DB_count($_TABLES['downloadsubmission'], 'lid', $id) == 0) {
+            DB_query("INSERT INTO {$_TABLES['downloadsubmission']} SELECT * FROM {$_TABLES['downloads']} WHERE lid='$id'");
+        }
+        if (DB_count($_TABLES['downloadsubmission'], 'lid', $id) != 1) {
+            // Never discard the only database copy of the submission.
+            // Keep the moved row explicitly unpublished pending repair.
+            DB_query("UPDATE {$_TABLES['downloads']} SET is_released=0,is_listing=0 WHERE lid='$id'");
+            DLM_errorLog("Downloads: CRITICAL: Could not restore GitHub submission after fetch failure.");
+            return false;
+        }
+        DB_delete($_TABLES['downloads'], 'lid', $id);
+        DLM_errorLog("Downloads: GitHub release could not be fetched; approval reverted.");
+        return false;
+    }
+    $isGithub = $githubQ && DB_numRows($githubQ) > 0;
     if (!DLM_finalizeSubmissionFiles(
         (int) $A['date'],
         $A['url'],
@@ -447,13 +530,34 @@ function DLM_approveNewDownload($id)
             DB_query("INSERT INTO {$_TABLES['downloadsubmission']} "
                    . "SELECT * FROM {$_TABLES['downloads']} WHERE lid = '$id'");
         }
+        if (DB_count($_TABLES['downloadsubmission'], 'lid', $id) != 1) {
+            DB_query("UPDATE {$_TABLES['downloads']} SET is_released=0,is_listing=0 WHERE lid='$id'");
+            DLM_errorLog("Downloads: CRITICAL: Could not restore submission after finalization failure.");
+            return false;
+        }
         DB_delete($_TABLES['downloads'], 'lid', $id);
+        if ($isGithub) {
+            $pendingArchive = rtrim($_DLM_CONF['path_filestore'], "/\\\\") . DIRECTORY_SEPARATOR .
+                              DLM_createPendingFileName($A['date'], $A['url'], $A['secret_id']);
+            if (is_file($pendingArchive)) @unlink($pendingArchive);
+        }
         DLM_errorLog("Downloads: moderation approval rolled back to pending state for '$id'.");
         return false;
     }
 
+    $finalFile = rtrim($_DLM_CONF['path_filestore'], "/\\\\") . DIRECTORY_SEPARATOR .
+                 DLM_createSafeFileName($A['url'], $A['secret_id']);
+    if (is_file($finalFile)) {
+        DB_query("UPDATE {$_TABLES['downloads']} SET size=" . (int) filesize($finalFile) .
+                 ", md5='" . DB_escapeString(md5_file($finalFile)) . "' WHERE lid='$id'");
+    }
+
+    if ($isGithub) {
+        DB_query("UPDATE {$_TABLES['downloads']} SET is_released=1,is_listing=1 WHERE lid='$id'");
+    }
     DLM_cleanupApprovedPendingSnapshot((int) $A['date'], $A['logourl'], $A['secret_id']);
     DLM_recordSubmissionStatus($id, 'published', $id);
+    DB_query("UPDATE {$_TABLES['downloadgithubproposals']} SET status='published',updated_at=" . time() . " WHERE lid='$id' AND status='pending'");
     PLG_itemSaved($id, 'downloads');
     COM_rdfUpToDateCheck('downloads', $A['cid'], $id);
 
@@ -477,11 +581,23 @@ function DLM_delNewDownload($id)
     global $_CONF, $_TABLES, $_DLM_CONF, $LANG_DLM;
 
     DLM_recordSubmissionStatus($id, 'rejected');
+    $githubId = DB_escapeString($id);
+    DB_query("UPDATE {$_TABLES['downloadgithubproposals']} SET status='rejected', updated_at=" . time() .
+             " WHERE lid='$githubId' AND status='pending'");
 
     $result = DB_query("SELECT url, logourl, date, secret_id "
                      . "FROM {$_TABLES['downloadsubmission']} "
                      . "WHERE lid = '" . DB_escapeString($id) . "'");
+    if (!$result || DB_numRows($result) !== 1) {
+        return;
+    }
     list($url, $logourl, $date, $secret_id) = DB_fetchArray($result);
+    // A GitHub proposal has no uploaded ZIP until a moderator approves it.
+    // Avoid resolving or deleting unrelated local files on rejection.
+    $github = DB_query("SELECT lid FROM {$_TABLES['downloadgithubproposals']} WHERE lid='$githubId'");
+    if ($github && DB_numRows($github) > 0) {
+        return;
+    }
     if (empty($url)) return;
     $tmpfilename = DLM_findPendingFile(
         $_DLM_CONF['path_filestore'],
@@ -767,6 +883,69 @@ function DLM_isUploadedImage($file)
     }
 
     return in_array($info[2], array(IMAGETYPE_GIF, IMAGETYPE_JPEG, IMAGETYPE_PNG), true);
+}
+
+/**
+ * Move an already verified server-fetched archive into Downloads storage.
+ *
+ * This is intentionally separate from browser uploads: never relax the
+ * is_uploaded_file() check in DLM_uploadNewFile().
+ * The staging directory must be private and outside webroot, and the caller
+ * must own and clean up its newly created staging file on failure.
+ *
+ * @return bool
+ */
+function DLM_storeFetchedArchive($source, $directory, $safeName)
+{
+    global $_DLM_CONF;
+
+    if (!is_string($source) || !is_string($safeName) ||
+        !preg_match('/^[A-Za-z0-9][A-Za-z0-9_.-]{0,199}$/D', $safeName) ||
+        !is_file($source) || is_link($source) || filesize($source) < 4 ||
+        !DLM_ensureDirectory($directory)) {
+        return false;
+    }
+    $directory = rtrim($directory, "/\\\\") . DIRECTORY_SEPARATOR;
+    $target = $directory . DLM_encodeFileName($safeName);
+    if (file_exists($target) || is_link($target)) {
+        return false;
+    }
+    // Exclusive create ensures no existing published archive is overwritten.
+    $input = @fopen($source, 'rb');
+    $output = @fopen($target, 'xb');
+    if ($input === false || $output === false) {
+        if ($input !== false) fclose($input);
+        if ($output !== false) fclose($output);
+        return false;
+    }
+    $success = true;
+    while (!feof($input)) {
+        $chunk = fread($input, 65536);
+        if ($chunk === false || ($chunk === '' && !feof($input))) {
+            $success = false;
+            break;
+        }
+        $offset = 0;
+        $length = strlen($chunk);
+        while ($offset < $length) {
+            $written = fwrite($output, substr($chunk, $offset));
+            if ($written === false || $written === 0) {
+                $success = false;
+                break 2;
+            }
+            $offset += $written;
+        }
+    }
+    fclose($input);
+    if (!fflush($output)) $success = false;
+    fclose($output);
+    if (!$success || filesize($target) !== filesize($source) ||
+        hash_file('sha256', $target) !== hash_file('sha256', $source)) {
+        @unlink($target);
+        return false;
+    }
+    @chmod($target, intval((string) $_DLM_CONF['filepermissions'], 8));
+    return true;
 }
 
 // Moves an uploaded file in temporary directory to data directory

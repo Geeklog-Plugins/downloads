@@ -1,5 +1,27 @@
 # Changelog
 
+## 1.3.2 — in development
+
+- Added authenticated GitHub Release submission with URL preview (direct tag links and release-page anchors), selectable ZIP asset, native moderation queue, duplicate detection and pending-submission history.
+- Fetch GitHub archives only on approval with bounded transfer, ZIP validation, controlled staging and failure rollback; both admin and core moderation paths supported.
+- Preserve original GitHub notes as Markdown and render descriptions and details as restricted, escaped HTML on published GitHub Downloads pages.
+- Improved responsive GitHub submission forms, confirmation/duplicate notifications and consistent administrator submission workflow.
+- Manually validated GitHub preview, submit, approve, ZIP retrieval, publication and error/rollback scenarios on Geeklog 2.2.2/PHP 8.1 (g2); older version integration remains untested.
+- **Multisite/storage caveat:** legacy defaults still use `path_html/downloads_data`; per-site directory isolation is not automatic when sites share a filesystem root. No automatic migration is included.
+
+
+- Read-only inventory now reports missing referenced files and accounts for legacy pending filenames.
+
+- Display the existing blank-image fallback and disable snapshot/lightbox links when the original snapshot or its thumbnail is missing.
+
+- Added a Root-only, read-only storage inventory for published downloads, pending uploads, snapshots and thumbnails. Lists potential orphan candidates without deleting files.
+
+- Strengthened comment visibility for released downloads in enabled, readable categories.
+- Handle oversized upload requests rejected by PHP `post_max_size` for administrator and user submissions.
+- Avoid missing `$_FILES` name warnings on rejected uploads.
+- Added PHP lint CI for the 1.3.2 development branch and a downloadable 1.3.2 development ZIP.
+
+
 ## 1.3.1 — in development
 
 - Fixed timezone-dependent pending upload filenames: new submissions use epoch-based names.
