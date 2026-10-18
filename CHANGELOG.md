@@ -1,6 +1,14 @@
 # Changelog
 
-## 1.3.2 — in development\n\n- Added authenticated GitHub Release submission with URL preview (direct tag links and release-page anchors), selectable ZIP asset, native moderation queue, duplicate detection and pending-submission history.\n- Fetch GitHub archives only on approval with bounded transfer, ZIP validation, controlled staging and failure rollback; both admin and core moderation paths supported.\n- Preserve original GitHub notes as Markdown and render descriptions and details as restricted, escaped HTML on published GitHub Downloads pages.\n- Improved responsive GitHub submission forms, confirmation/duplicate notifications and consistent administrator submission workflow.\n- Manually validated GitHub preview, submit, approve, ZIP retrieval, publication and error/rollback scenarios on Geeklog 2.2.2/PHP 8.1 (g2); older version integration remains untested.\n- **Multisite/storage caveat:** legacy defaults still use `path_html/downloads_data`; per-site directory isolation is not automatic when sites share a filesystem root. No automatic migration is included.\n
+## 1.3.2 — in development
+
+- Added authenticated GitHub Release submission with URL preview (direct tag links and release-page anchors), selectable ZIP asset, native moderation queue, duplicate detection and pending-submission history.
+- Fetch GitHub archives only on approval with bounded transfer, ZIP validation, controlled staging and failure rollback; both admin and core moderation paths supported.
+- Preserve original GitHub notes as Markdown and render descriptions and details as restricted, escaped HTML on published GitHub Downloads pages.
+- Improved responsive GitHub submission forms, confirmation/duplicate notifications and consistent administrator submission workflow.
+- Manually validated GitHub preview, submit, approve, ZIP retrieval, publication and error/rollback scenarios on Geeklog 2.2.2/PHP 8.1 (g2); older version integration remains untested.
+- **Multisite/storage caveat:** legacy defaults still use `path_html/downloads_data`; per-site directory isolation is not automatic when sites share a filesystem root. No automatic migration is included.
+
 
 - Read-only inventory now reports missing referenced files and accounts for legacy pending filenames.
 
