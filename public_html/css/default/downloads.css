@@ -884,3 +884,36 @@ a.dlbtn-green:active {
     color: inherit;
     background-color: transparent;
 }
+
+
+/* Responsive GitHub release preview and member submission form. */
+.dlm-github-submit,
+.dlm-github-submit .dlm-github-preview {
+    box-sizing: border-box;
+    min-width: 0;
+    max-width: 100%;
+    overflow-wrap: anywhere;
+}
+.dlm-github-submit form,
+.dlm-github-submit p,
+.dlm-github-submit ul,
+.dlm-github-submit li {
+    max-width: 100%;
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+.dlm-github-submit input[type="url"],
+.dlm-github-submit input[type="text"],
+.dlm-github-submit textarea,
+.dlm-github-submit select {
+    box-sizing: border-box;
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+}
+.dlm-github-submit textarea {
+    resize: vertical;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
