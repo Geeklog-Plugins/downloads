@@ -2,9 +2,26 @@
 
 ## Next maintenance cycle: 1.3.2
 
-**Status:** implementation started; fixes require automated CI and functional regression tests before release.
+**Status (2026-10-18):** GitHub submission, approval, ZIP fetch, publication and tested failure/rollback path reported successful on g2 (Geeklog 2.2.2/PHP 8.1). PHP 5.6/8.1/8.3 CI green. PR review remains pending; multisite storage isolation, migration strategy and wider regression testing remain open.
 
 **Baseline:** Downloads 1.3.1, including successful manual tests of regular-user submission, Preview, approval through moderation and Downloads administration, email notifications, and identical shared snapshots on Geeklog 2.2.2. PHP 5.6/8.1/8.3 syntax CI passed; this does **not** constitute full functional verification of older Geeklog installations.
+
+### Multisite storage separation — review before release (2026-10-18)
+
+- [x] Audit current defaults: `path_filestore`, `path_snapstore`, `path_snapcat` and `path_tnstore` are rooted in `$_CONF['path_html']/downloads_data/`; image URLs are based on `$_CONF['site_url']`. Values are installation settings, not automatically host-specific folders.
+- [ ] Define a documented per-site storage identity (site configuration or explicit directory settings) that never mixes files between sites sharing a Geeklog tree; check multisite database/config mapping and file permissions.
+- [ ] Evaluate private ZIP storage outside the document root while retaining controlled download access; review whether any code assumes direct URL access, filesystem paths or same-device renames.
+- [ ] Keep public snapshot and thumbnail URL mappings working with site-specific directories; audit direct HTTP access/ACL implications separately.
+- [ ] Build an **opt-in**, backup-first migration utility with dry-run, collision detection, counts/hashes and rollback guidance for existing installations. Never silently relocate live files on upgrade.
+- [ ] Verify two independent Geeklog sites with distinct hostnames, configurations and storage roots; test submission, approval, download, snapshot rendering, cleanup and backup/restore on each.
+- [ ] Decide whether storage isolation becomes a 1.3.2 blocker or is explicitly documented for a subsequent release before opening a merge-ready PR.
+
+### Manual acceptance confirmed on g2 (2026-10-18)
+
+- [x] User reports preview, GitHub submission, native moderation, approval and ZIP transfer/publication functional.
+- [x] User reports failed approvals and rollback cleanup scenarios functional.
+- [x] Public GitHub Markdown is retained in storage and rendered on descriptions and details (per user acceptance).
+- [ ] Repeat sensitive acceptance on Geeklog/PHP combinations other than g2; do not equate lint with runtime validation.
 
 ### 1.3.2 proposed priorities
 
@@ -37,7 +54,7 @@ Ten open issues on `Geeklog-Plugins/downloads`: **#25, #24, #22, #21, #19, #15, 
 
 ### P0 — GitHub Releases importer (moved from 1.4.0)
 
-**Required for 1.3.2 acceptance; implementation and functional tests pending.** This is a deliberately bounded, manually triggered administrative workflow, not unattended synchronization.
+**Implemented; core live path confirmed on g2, with cross-version, isolation and edge-case tests still pending.** This is a deliberately bounded, manually triggered administrative workflow, not unattended synchronization.
 
 - [x] Validate the public GitHub release URL (`https://github.com/OWNER/REPO/releases/tag/TAG`) before metadata API calls, with redirects disabled (implementation pending tests).
 - [x] Add PHP 5.6-compatible GitHub Releases API metadata reader and Root-only, CSRF-protected read-only preview of title, tag, date, notes and ZIP assets (implementation pending CI and browser test). No archive transfer or publication yet.
