@@ -84,7 +84,7 @@ $menu_arr = array(
     ),
     array(
         'url' => $_CONF['site_url'] . '/downloads/github-submit.php',
-        'text' => 'Preview GitHub Release (experimental)'
+        'text' => 'Submit a GitHub Release'
     )
 );
 
