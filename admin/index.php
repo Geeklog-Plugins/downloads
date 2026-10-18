@@ -65,7 +65,7 @@ function DLM_adminSectionNav($section)
         'categories' => array($LANG_DLM['nav_categories'], $base . '?op=listCategories')
     );
     if (SEC_inGroup('Root')) {
-        $sections['github'] = array($LANG_DLM['nav_github_import'], $base . '?op=githubRelease');
+        $sections['github'] = array($LANG_DLM['nav_github_import'], $_CONF['site_url'] . '/downloads/github-submit.php');
         $sections['storage'] = array($LANG_DLM['nav_storage_inventory'], $base . '?op=storageInventory');
     }
     $html = '<nav class="plugin-admin-nav" aria-label="' .
@@ -795,6 +795,11 @@ if (in_array($op, array('uploadFile', 'modify', 'clone', 'editsubmission', 'add'
 
 switch ($op) {
     case "githubRelease":
+        // Administrators submit GitHub releases through the same moderated
+        // workflow as members. Preserve old bookmarked admin URLs.
+        COM_redirect($_CONF['site_url'] . '/downloads/github-submit.php');
+        break;
+    case "githubReleaseLegacyDisabled":
         if (!SEC_inGroup('Root')) {
             $display = COM_showMessageText($MESSAGE[29], $MESSAGE[30]);
             $display = COM_createHTMLDocument($display, array('pagetitle' => $MESSAGE[30]));
