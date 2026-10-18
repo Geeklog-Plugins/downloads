@@ -599,6 +599,19 @@ a.dlbtn-green:active {
     align-items: start;
 }
 
+.dlm-preview-content {
+    grid-column: 1 / -1;
+    min-width: 0;
+    width: 100%;
+    overflow-wrap: anywhere;
+}
+
+.dlm-preview-content pre,
+.dlm-preview-content code {
+    max-width: 100%;
+    overflow-x: auto;
+}
+
 .dlm-preview-media {
     padding: 0.5rem;
     border: 1px solid rgba(128, 128, 128, 0.3);
