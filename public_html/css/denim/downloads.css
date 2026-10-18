@@ -1045,3 +1045,18 @@ a.dlbtn-green:active {
     white-space: pre-wrap;
     overflow-wrap: anywhere;
 }
+
+
+/* GitHub submission: space sections and avoid cramped inline fields. */
+.dlm-github-submit { line-height: 1.55; }
+.dlm-github-submit > form,
+.dlm-github-submit .dlm-github-preview { margin: 1.25rem 0 1.75rem; }
+.dlm-github-submit label { display: block; font-weight: 600; margin: 1rem 0 .35rem; }
+.dlm-github-submit form > input,
+.dlm-github-submit form > select,
+.dlm-github-submit form > textarea { margin-bottom: .85rem; }
+.dlm-github-submit button { margin-top: .6rem; }
+.dlm-github-preview h3, .dlm-github-preview h4 { margin: 1.5rem 0 .6rem; }
+.dlm-github-preview li { margin: .35rem 0; }
+.dlm-github-success { margin: 1.5rem 0; padding: 1rem 1.25rem; border: 1px solid #cad8d0; border-radius: 6px; }
+.dlm-github-success h3 { margin-top: 0; }
