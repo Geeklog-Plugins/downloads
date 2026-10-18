@@ -1716,6 +1716,15 @@ class DLDownload
         $this->_logourl = $logourl;
         $this->_secret_id = $secret_id;
 
+        // GitHub proposals use the same Downloads moderation, but the archive
+        // is retrieved only when an authorized moderator approves the item.
+        $ghLid = DB_escapeString($this->_old_lid);
+        $ghCheck = DB_query("SELECT lid FROM {$_TABLES['downloadgithubproposals']} WHERE lid='$ghLid' AND status='pending'");
+        if ($ghCheck && DB_numRows($ghCheck) > 0 && !DLM_prepareGithubSubmission($this->_old_lid)) {
+            $this->_errno[] = '1002';
+            $this->_retry = true;
+            $this->_reedit('showEditor', array($this->_editor_mode));
+        }
         $success = DLM_finalizeSubmissionFiles(
             (int) $submission_date,
             $url,
@@ -1744,6 +1753,7 @@ class DLDownload
                 (int) $submission_date, $logourl, $secret_id
             );
             DLM_recordSubmissionStatus($this->_lid, 'published', $this->_lid);
+            DB_query("UPDATE {$_TABLES['downloadgithubproposals']} SET status='published',updated_at=" . time() . " WHERE lid='$ghLid' AND status='pending'");
             DB_delete($_TABLES['downloadsubmission'], "lid", DB_escapeString($this->_old_lid));
 
             // Send an email to submitter notifying them that file was approved
