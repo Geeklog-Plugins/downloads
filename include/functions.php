@@ -588,7 +588,16 @@ function DLM_delNewDownload($id)
     $result = DB_query("SELECT url, logourl, date, secret_id "
                      . "FROM {$_TABLES['downloadsubmission']} "
                      . "WHERE lid = '" . DB_escapeString($id) . "'");
+    if (!$result || DB_numRows($result) !== 1) {
+        return;
+    }
     list($url, $logourl, $date, $secret_id) = DB_fetchArray($result);
+    // A GitHub proposal has no uploaded ZIP until a moderator approves it.
+    // Avoid resolving or deleting unrelated local files on rejection.
+    $github = DB_query("SELECT lid FROM {$_TABLES['downloadgithubproposals']} WHERE lid='$githubId'");
+    if ($github && DB_numRows($github) > 0) {
+        return;
+    }
     if (empty($url)) return;
     $tmpfilename = DLM_findPendingFile(
         $_DLM_CONF['path_filestore'],
