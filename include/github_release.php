@@ -7,9 +7,19 @@
 function DLM_githubReleaseDetails($releaseUrl, &$error)
 {
     $error = '';
-    $url = trim((string) $releaseUrl);
-    if (!preg_match('~^https://github\.com/([A-Za-z0-9_.-]+)/([A-Za-z0-9_.-]+)/releases/tag/([^/?#]+)$~D', $url, $m)) {
-        $error = 'Enter a public GitHub release URL in the form https://github.com/owner/repo/releases/tag/tag';
+    $url = trim(html_entity_decode((string) $releaseUrl, ENT_QUOTES, 'UTF-8'));
+    // Copy/paste from Markdown and browsers may carry escaped slashes,
+    // tracking query parameters or a final slash.
+    $url = str_replace('\\/', '/', $url);
+    $parts = parse_url($url);
+    $path = isset($parts['path']) ? rtrim($parts['path'], '/') : '';
+    if (!is_array($parts) || !isset($parts['scheme'], $parts['host']) ||
+        strtolower($parts['scheme']) !== 'https' ||
+        !in_array(strtolower($parts['host']), array('github.com', 'www.github.com'), true) ||
+        isset($parts['user']) || isset($parts['pass']) ||
+        (isset($parts['port']) && (int) $parts['port'] !== 443) ||
+        !preg_match('~^/([A-Za-z0-9_.-]+)/([A-Za-z0-9_.-]+)/releases/tag/([^/?#]+)$~D', $path, $m)) {
+        $error = 'Enter a public GitHub release URL like https://github.com/owner/repo/releases/tag/v1.0.0';
         return false;
     }
     if ($m[1] === '.' || $m[1] === '..' || $m[2] === '.' || $m[2] === '..' || !function_exists('curl_init')) {
