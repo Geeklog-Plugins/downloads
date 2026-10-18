@@ -80,12 +80,18 @@ function DLM_githubFetchReleaseZip($repository, $asset, $destination, $limitByte
             $tooLarge = true;
             return 0;
         }
-        $written = fwrite($fp, $chunk);
-        if ($written === false) {
-            return 0;
+        // A short fwrite is not a truncated network response: finish the
+        // chunk explicitly, or abort and discard the incomplete archive.
+        $offset = 0;
+        while ($offset < $length) {
+            $written = fwrite($fp, substr($chunk, $offset));
+            if ($written === false || $written === 0) {
+                return 0;
+            }
+            $offset += $written;
         }
-        $bytes += $written;
-        return $written;
+        $bytes += $length;
+        return $length;
     });
     $ok = curl_exec($ch);
     $http = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
