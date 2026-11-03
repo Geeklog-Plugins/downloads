@@ -1,6 +1,25 @@
 # Downloads development roadmap
 
-## Planned after 1.3.2 — GitHub release metadata consistency
+## Release scope — 1.4.0 (frozen on 2026-11-03)
+
+**Scope:** responsive public directory, category and download cards, redesigned detail pages, default-image fallback and visual assets, GitHub Release proposal presentation/metadata refinements, and associated compatibility fixes. Existing submissions/moderation, URLs, storage layout, and historical counters are preserved. This release does **not** introduce unattended downloads, automatic publishing, periodic download statistics or a new project/release data model.
+
+**Acceptance (confirmed by project owner, 2026-11-03):** upgrade from installed Downloads 1.3.2 to 1.4.0 and functional tests of the new public interface passed. These are user-reported functional results, not independent certification of all platforms. Prior g2 GitHub proposal/moderation/rollback acceptance is recorded below.
+
+**Pre-PR gate:** fix the missing helper include for DLM_createSafeFileName() in DLM_getInteropItem(), run the dependency regression and PHP CI, regenerate/validate dist ZIP, and obtain maintainer review. No further feature additions to 1.4.0.
+
+## Planned for 1.4.1 — new features (not 1.4.0 blockers)
+
+- Daily aggregate download statistics and admin period comparisons/export without reconstructing unavailable historical data.
+- Opt-in GitHub release update checks and review queues; **no unattended publication**.
+- Durable project-to-release history and consistent project names, IDs and release titles, preserving existing URLs.
+- Evaluate additional release providers only with explicit trust/security boundaries and manual approval.
+- Multisite storage isolation and opt-in migration after separate design/testing; never relocate existing files silently.
+- Continue historical security, upload/ACL, interoperability and cross-version test backlog independently of the frozen 1.4.0 scope.
+
+**Roadmap history:** the sections below retain earlier 1.3.x design and acceptance notes; headings previously referring to future 1.4.0 functionality are superseded by this 1.4.1 plan. Historical unchecked items do not imply 1.4.0 release blockers.
+
+## Planned for 1.4.1 — GitHub release metadata consistency
 
 - [ ] Look up existing Downloads project names and offer the canonical existing Project Name when importing a GitHub release, so all versions stay grouped (e.g. `Media Gallery Plugin`).
 - [ ] Suggest a consistent, SEO-friendly File ID based on the preceding version (e.g. `file_mediagallery_plugin-1.8.0`), without overwriting administrator-supplied IDs or changing existing URLs.
@@ -84,7 +103,7 @@ Ten open issues on `Geeklog-Plugins/downloads`: **#25, #24, #22, #21, #19, #15, 
 - [ ] Add tests for multiple assets, no ZIP assets, prereleases, oversized responses, redirects, network timeouts, duplicate releases and failure rollback; include PHP 5.6 / 8.1 / 8.3 compatibility checks.
 - [ ] Verify the workflow on g2, review package manifest and documentation, and obtain maintainer review before any tag.
 
-**Explicitly deferred to 1.4.0:** scheduled update checks, automatic publication, multi-provider imports, and a broader project/release history data-model migration. A stable project listing remains a design requirement for subsequent versions; 1.3.2 must not silently alter existing URLs or counters.
+**Deferred to 1.4.1 (historical planning note):** scheduled update checks, automatic publication, multi-provider imports, and a broader project/release history data-model migration. A stable project listing remains a design requirement for subsequent versions; 1.3.2 must not silently alter existing URLs or counters.
 
 ### P0 — Community GitHub Release proposals (Geeklog.net)
 
@@ -103,7 +122,7 @@ Ten open issues on `Geeklog-Plugins/downloads`: **#25, #24, #22, #21, #19, #15, 
 - [ ] Provide localized labels, guidance, empty/error states and accessibility consistent with Memorandum administration/public UI instructions.
 - [ ] Test with anonymous, ordinary member, Downloads editor, moderator and Root users, including spoofed POSTs, replayed CSRF, network failure and multiple assets.
 
-**Non-goals for 1.3.2:** automatic polling or updates, trust based solely on a GitHub URL as proof of repository ownership, arbitrary provider URLs or unattended publication. Those remain part of 1.4.0 planning.
+**Non-goals for 1.3.2:** automatic polling or updates, trust based solely on a GitHub URL as proof of repository ownership, arbitrary provider URLs or unattended publication. Those remain part of 1.4.1 planning.
 
 ### Architecture correction — reuse native Geeklog Downloads moderation (2026-10-18)
 
@@ -129,7 +148,7 @@ Ten open issues on `Geeklog-Plugins/downloads`: **#25, #24, #22, #21, #19, #15, 
 - [ ] Produce release ZIP via Actions and inspect manifest; keep version/package metadata aligned before PR.
 - [ ] Obtain maintainer review prior to release.
 
-### Download statistics by period (planned for 1.4.0)
+### Download statistics by period (planned for 1.4.1)
 
 **Goal:** supplement the existing lifetime `downloads.hits` counter with aggregated, date-based reporting; do not delay the 1.3.2 PR.
 
@@ -142,9 +161,9 @@ Ten open issues on `Geeklog-Plugins/downloads`: **#25, #24, #22, #21, #19, #15, 
 - [ ] Test date boundaries/timezones, high concurrency, upgrades, rollback and PHP/Geeklog compatibility.
 - [ ] Explain clearly that period statistics begin **only when tracking is enabled**; historical per-period counts cannot be reconstructed from existing lifetime `hits` totals.
 
-## Planned feature cycle: 1.4.0 — release synchronization and project history
+## Planned feature cycle: 1.4.1 — release synchronization and project history
 
-The manual GitHub Releases importer is now a **1.3.2 release requirement** (see P0 above). Version 1.4.0 is reserved for opt-in review queues for newer releases, durable project-to-release history, and possible additional release providers. No unattended publication.
+The manual GitHub Releases importer is now a **1.3.2 release requirement** (see P0 above). Version 1.4.1 is planned for opt-in review queues for newer releases, durable project-to-release history, and possible additional release providers. No unattended publication.
 
 ### Deliberate non-goals
 
