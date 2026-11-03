@@ -42,6 +42,9 @@ jobs:
       - name: Test safe GitHub Markdown rendering
         run: php tests/github_markdown.php
 
+      - name: Check Downloads Item Info helper loading
+        run: php tests/interop_dependency.php
+
       - name: Check forbidden dot-prefixed distributable paths
         shell: bash
         run: |
