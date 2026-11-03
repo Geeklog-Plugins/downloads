@@ -15,7 +15,7 @@ if ($start === false || $end === false) {
     exit(1);
 }
 $body = substr($source, $start, $end - $start);
-$include = "require_once \\$_CONF['path'] . 'plugins/downloads/include/functions.php';";
+$include = 'require_once ' . '$_CONF' . "['path'] . 'plugins/downloads/include/functions.php';";
 $includePos = strpos($body, $include);
 $callPos = strpos($body, 'DLM_createSafeFileName(');
 if ($includePos === false || $callPos === false || $includePos > $callPos) {
