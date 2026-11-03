@@ -1,6 +1,10 @@
 # Changelog
 
-## 1.4.0 — development branch
+## 1.4.0 — development branch (feature scope frozen 2026-11-03)
+
+- Fix intermittent undefined `DLM_createSafeFileName()` in Item Info callbacks by explicitly loading Downloads filename helpers; add a targeted dependency regression check.
+- Confirmed by project owner: successful upgrade from 1.3.2 and functional acceptance of the redesigned public interface (2026-11-03).
+- Defer previously planned new period statistics, release synchronization/review queue and project history to 1.4.1; no automatic publishing or storage migration in this release.
 
 - Replace legacy green default category/download arrow artwork with a neutral folder SVG matching the default download image; simplify category link markup and align icon sizes without affecting custom category snapshots.
 
