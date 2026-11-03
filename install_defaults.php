@@ -76,6 +76,7 @@ $_DLM_DEFAULT['path_tnstore']          = $_CONF['path_html'] . 'downloads_data/t
 $_DLM_DEFAULT['snapstore_url']         = $_CONF['site_url'] . '/downloads_data/snaps';
 $_DLM_DEFAULT['snapcat_url']           = $_CONF['site_url'] . '/downloads_data/category_snaps';
 $_DLM_DEFAULT['tnstore_url']           = $_CONF['site_url'] . '/downloads_data/tn';
+$_DLM_DEFAULT['default_image_url']     = $_CONF['site_url'] . '/downloads/images/default-download.svg';
 $_DLM_DEFAULT['default_permissions']   = array (3, 2, 2, 2);
 
 /**
@@ -149,6 +150,7 @@ function plugin_initconfig_downloads()
     $c->add('snapstore_url',         $_DLM_DEFAULT['snapstore_url'],         'text',     1, 6, 0,    $o++, true, $n);
     $c->add('snapcat_url',           $_DLM_DEFAULT['snapcat_url'],           'text',     1, 6, 0,    $o++, true, $n);
     $c->add('tnstore_url',           $_DLM_DEFAULT['tnstore_url'],           'text',     1, 6, 0,    $o++, true, $n);
+    $c->add('default_image_url',     $_DLM_DEFAULT['default_image_url'],     'text',     1, 6, 0,    $o++, true, $n);
     // ----------------------------------
     $c->add('fs_permissions',        NULL,                                   'fieldset', 1, 7, NULL, 0,    true, $n);
     $c->add('default_permissions',   $_DLM_DEFAULT['default_permissions'],   '@select',  1, 7, 12,   $o++, true, $n);
@@ -250,6 +252,12 @@ function DLM_add130ConfigValues()
     if (DB_count($_TABLES['conf_values'], array('name', 'group_name'),
                  array('submission_notify_email', $n)) == 0) {
         $c->add('submission_notify_email', $_CONF['site_mail'], 'text', 0, 0, 0, 9, true, $n);
+    }
+
+    if (DB_count($_TABLES['conf_values'], array('name', 'group_name'),
+                 array('default_image_url', $n)) == 0) {
+        $c->add('default_image_url', rtrim($_CONF['site_url'], '/')
+            . '/downloads/images/default-download.svg', 'text', 1, 6, 0, 20, true, $n);
     }
 
     DLM_updateSortOrder();

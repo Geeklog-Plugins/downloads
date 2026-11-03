@@ -5,6 +5,7 @@ on:
     branches:
       - downloads_1.3.1
       - develop_1.3.2
+      - develop_1.4.0
     paths-ignore:
       - 'dist/**'
   workflow_dispatch:
@@ -40,6 +41,9 @@ jobs:
 
       - name: Test safe GitHub Markdown rendering
         run: php tests/github_markdown.php
+
+      - name: Check Downloads Item Info helper loading
+        run: php tests/interop_dependency.php
 
       - name: Check forbidden dot-prefixed distributable paths
         shell: bash

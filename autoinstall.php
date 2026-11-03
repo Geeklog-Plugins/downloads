@@ -54,7 +54,7 @@ function plugin_autoinstall_downloads($pi_name)
     $info = array(
         'pi_name'         => $pi_name,
         'pi_display_name' => $pi_display_name,
-        'pi_version'      => '1.3.2',
+        'pi_version'      => '1.4.0',
         'pi_gl_version'   => '2.1.2',
         'pi_homepage'     => 'https://github.com/Geeklog-Plugins/downloads'
     );
@@ -327,6 +327,14 @@ function DLM_upgrade()
                 break;
 
             case '1.3.2':
+                require_once $_CONF['path'] . 'plugins/downloads/install_defaults.php';
+                require_once $_CONF['path_system'] . 'classes/config.class.php';
+                DLM_add130ConfigValues();
+                $current_version = '1.4.0';
+                $done = true;
+                break;
+
+            case '1.4.0':
                 $done = true;
                 break;
 

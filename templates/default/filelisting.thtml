@@ -1,26 +1,14 @@
-
-<!-- start filelisting.thtml -->
+<!-- Downloads public catalog -->
 {block_header}
-
-<div id="dlm_cat_path">{category_path_link}</div>
-
-{category_selbox}
-
-{search_form}
-
-{category_part}
-
-<div id="dlm_filelist_info"><strong>{filelisting_info}</strong></div>
-
-{sort_menu}
-
-{filelisting_records}
-
-<div style="padding:10px;">{page_navigation}</div>
-
-{item_extensions}
-
-{comment_records}
-
+<div id="dlm-catalog" class="dlm-v14-catalog">
+  <div class="dlm-v14-toolbar"><div id="dlm_cat_path">{category_path_link}</div>{category_selbox}</div>
+  {search_form}
+  {category_part}
+  <div class="dlm-v14-list-header"><div id="dlm_filelist_info"><strong>{filelisting_info}</strong></div>{sort_menu}</div>
+  <div class="dlm-v14-results">{filelisting_records}</div>
+  <nav class="dlm-v14-pagination">{page_navigation}</nav>
+  {item_extensions}
+  {comment_records}
+</div>
 {block_footer}
-<!-- end filelisting.thtml -->
+<!-- end Downloads public catalog -->

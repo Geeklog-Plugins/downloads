@@ -3,7 +3,7 @@ name: Build Downloads distribution
 on:
   push:
     branches:
-      - develop_1.3.2
+      - develop_1.4.0
     paths-ignore:
       - 'dist/**'
   workflow_dispatch:
@@ -12,7 +12,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: downloads-1.3.2-dist
+  group: downloads-1.4.0-dist
   cancel-in-progress: true
 
 jobs:
@@ -24,7 +24,7 @@ jobs:
       - name: Checkout release branch
         uses: actions/checkout@v4
         with:
-          ref: develop_1.3.2
+          ref: develop_1.4.0
           fetch-depth: 0
 
       - name: Prepare installable plugin tree
@@ -38,7 +38,8 @@ jobs:
           rsync -a ./ package/downloads/ \
             --exclude='.*' \
             --exclude='package/' \
-            --exclude='dist/'
+            --exclude='dist/' \
+            --exclude='tests/'
 
           find package/downloads -depth -name '.*' -print -delete
 
@@ -47,6 +48,7 @@ jobs:
         run: |
           set -euo pipefail
 
+          test ! -e package/downloads/tests
           test -f package/downloads/autoinstall.php
           test -f package/downloads/plugin.json
           test -f package/downloads/functions.inc
@@ -73,7 +75,7 @@ jobs:
 
           (
             cd package
-            zip -r -9 ../dist/downloads_1.3.2_2.1.2.zip downloads
+            zip -r -9 ../dist/downloads_1.4.0_2.1.2.zip downloads
           )
 
       - name: Verify distribution archive
@@ -81,9 +83,13 @@ jobs:
         run: |
           set -euo pipefail
 
-          archive='dist/downloads_1.3.2_2.1.2.zip'
+          archive='dist/downloads_1.4.0_2.1.2.zip'
           test -s "$archive"
           unzip -t "$archive"
+          if unzip -Z1 "$archive" | grep -E "^downloads/tests(/|$)"; then
+            echo "Error: test files must not be distributed." >&2
+            exit 1
+          fi
 
           for required in \
             downloads/autoinstall.php \
@@ -133,7 +139,7 @@ jobs:
           grep -q 'if (!DLM_ensureDirectory($directory))' verify/downloads/include/functions.php
 
           # Asset cache versioning is part of the release contract.
-          grep -q "define('DOWNLOADS_VERSION', '1.3.2')" verify/downloads/functions.inc
+          grep -q "define('DOWNLOADS_VERSION', '1.4.0')" verify/downloads/functions.inc
           grep -q "DOWNLOADS_VERSION" verify/downloads/functions.inc
           grep -q "function DLM_getAssetVersion" verify/downloads/functions.inc
           grep -q "function DLM_getVersionedAssetUrl" verify/downloads/functions.inc
@@ -148,15 +154,15 @@ jobs:
         shell: bash
         run: |
           ls -lh dist/
-          sha256sum dist/downloads_1.3.2_2.1.2.zip
+          sha256sum dist/downloads_1.4.0_2.1.2.zip
 
       - name: Commit distribution archive
         shell: bash
         run: |
           set -euo pipefail
 
-          git fetch origin develop_1.3.2
-          REMOTE_HEAD="$(git rev-parse origin/develop_1.3.2)"
+          git fetch origin develop_1.4.0
+          REMOTE_HEAD="$(git rev-parse origin/develop_1.4.0)"
           if [ "$REMOTE_HEAD" != "$GITHUB_SHA" ]; then
             echo "Branch advanced from $GITHUB_SHA to $REMOTE_HEAD; skipping stale dist commit."
             exit 0
@@ -172,5 +178,5 @@ jobs:
             exit 0
           fi
 
-          git commit -m "build: refresh Downloads 1.3.2 distribution"
-          git push origin HEAD:develop_1.3.2
+          git commit -m "build: refresh Downloads 1.4.0 distribution"
+          git push origin HEAD:develop_1.4.0

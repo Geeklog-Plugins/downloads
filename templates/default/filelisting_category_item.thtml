@@ -1,1 +1,1 @@
-<li><div class="icon">{category_link}</div>&nbsp;<a href="{category_url}">{chtitle}</a>&nbsp;({totaldownload})</li>
+<li class="dlm-v14-category-link">{category_link}<a href="{category_url}">{chtitle}</a><span class="dlm-v14-category-count">({totaldownload})</span></li>

@@ -1,64 +1,45 @@
-
-<!-- start filedetail_no_tn.thtml -->
+<!-- Downloads 1.4.0 detail -->
 {block_header}
-
-<div style="padding-bottom:10px;">{category_path_link}</div>
-
-<div class="dlm_download">
-
-
-
-
-
-
-
-    <div class="dlm_heading_no_tn">
-        <div class="dlm_title">
-            <a href="{filedetail_url}" title="{dtitle}">
-            <span class="dlm_catimg">{category_image}</span><span class="dlm_title">{dtitle}</span>
-            </a>
+<div class="dlm-v14-detail">
+  <nav class="dlm-v14-detail-breadcrumb">{category_path_link}</nav>
+  <article class="dlm-v14-detail-article">
+    <header class="dlm-v14-detail-header">
+      <div class="dlm-v14-detail-media"><img src="{thumbnail_url}" alt="" aria-hidden="true">{snaplinkicon}</div>
+      <div class="dlm-v14-detail-summary">
+        <h1 class="dlm-v14-detail-title">{dtitle} {newdownload}{popdownload}</h1>
+        <div class="dlm-v14-detail-category">{lang_category}: {category_path}</div>
+        <div class="dlm-v14-detail-facts">
+          <span>{lang_version}: {version}</span>
+          <span>{lang_size}: {file_size}</span>
+          <span>{lang_submitdate}: {datetime}</span>
         </div>
-
-        <div class="dlm_property" style="position:relative;">
-            <div class="lv1"><span>{lang_category}: </span>{category_path}</div>
-            <div class="lv1 {notags}"><span>{lang_tags}: </span>{tags}</div>
-            <div class="lv1">
-                <div class="lv2"><span>{lang_submitdate}: </span>{datetime}</div>
-                <div class="lv2"><span>{lang_size}: </span>{file_size}</div>
-                <div class="lv2"><span>{lang_version}: </span>{version}</div>
-            </div>
-            <div class="lv1"><span>{lang_md5_checksum}: </span>{md5_checksum}</div>
-            <div class="lv1">
-                <div class="lv2"><span>{lang_submitter}: </span>{submitter_name}</div>
-                <div class="lv2"><span>{lang_homepage}: </span>{homepage_link}</div>
-            </div>
-            <div class="lv1">
-                <div class="lv2"><span>{lang_rating}: </span><a href="{site_url}/downloads/ratefile.php?lid={lid}">{rating}</a>{votestring}</div>
-                <div class="lv2"><span>{lang_popularity}: </span>{begin_dlreport_link}{download_count}{end_dlreport_link}&nbsp;&nbsp;&nbsp;{newdownload}{popdownload}</div>
-            </div>
-{snaplinkicon}
+        <div class="dlm-v14-detail-extras">
+          <span>{lang_submitter}: {submitter_name}</span>
+          <span>{lang_homepage}: {homepage_link}</span>
+          <span>{lang_rating}: <a href="{site_url}/downloads/ratefile.php?lid={lid}">{rating}</a>{votestring}</span>
+          <span>{lang_popularity}: {begin_dlreport_link}{download_count}{end_dlreport_link}</span>
+          <span class="{notags}">{lang_tags}: {tags}</span>
         </div>
-
-        <div class="dlm_down_btn">
-            <a href="{visitfile_url}" title="{download_title}" class="dlbtn-green">{lang_download_button}</a>
-        </div>
-        <div class="dlm_description">{file_description}</div>
+      </div>
+      <div class="dlm-v14-detail-action"><a href="{visitfile_url}" title="{download_title}" class="dlm-v14-download">{lang_download_button}</a></div>
+    </header>
+    <div class="dlm-v14-detail-content">
+      <div class="dlm-v14-detail-description">{file_description}</div>
+      <div class="dlm-v14-detail-notes">{file_detail}</div>
     </div>
-    <div class="dlm_main">
-        <div class="dlm_detail">{file_detail}</div>
-
-        <div class="dlm_footer">
-            <a href="{visitfile_url}">{lang_download}</a>&nbsp;&nbsp;|&nbsp;
-            <a href="{filedetail_url}">{lang_permalink}</a>&nbsp;&nbsp;|&nbsp;
-            <a href="{site_url}/downloads/ratefile.php?lid={lid}">{lang_ratethisfile}</a><span style="display:{show_editlink};">&nbsp;&nbsp;|&nbsp;
-            <a href="{site_admin_url}/plugins/downloads/index.php?lid={lid}&amp;op=modify&amp;p=item">{lang_edit}</a></span>
-        </div>
-    </div>
-</div>
-{project_filelist}
-{item_extensions}
-<div class="dlm-comments">
-{comment_records}
+    <footer class="dlm-v14-detail-footer">
+      <div class="dlm-v14-detail-checksum"><strong>{lang_md5_checksum}:</strong> <code>{md5_checksum}</code></div>
+      <nav class="dlm-v14-detail-links">
+        <a href="{visitfile_url}">{lang_download}</a>
+        <a href="{filedetail_url}">{lang_permalink}</a>
+        <a href="{site_url}/downloads/ratefile.php?lid={lid}">{lang_ratethisfile}</a>
+        <span style="display:{show_editlink};"><a href="{site_admin_url}/plugins/downloads/index.php?lid={lid}&amp;op=modify&amp;p=item">{lang_edit}</a></span>
+      </nav>
+    </footer>
+  </article>
+  {project_filelist}
+  {item_extensions}
+  <div class="dlm-comments">{comment_records}</div>
 </div>
 {block_footer}
-<!-- end filedetail_no_tn.thtml -->
+<!-- end Downloads detail -->

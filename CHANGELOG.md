@@ -1,5 +1,32 @@
 # Changelog
 
+## 1.4.0 — development branch (feature scope frozen 2026-11-03)
+
+- Fix intermittent undefined `DLM_createSafeFileName()` in Item Info callbacks by explicitly loading Downloads filename helpers; add a targeted dependency regression check.
+- Confirmed by project owner: successful upgrade from 1.3.2 and functional acceptance of the redesigned public interface (2026-11-03).
+- Defer previously planned new period statistics, release synchronization/review queue and project history to 1.4.1; no automatic publishing or storage migration in this release.
+
+- Replace legacy green default category/download arrow artwork with a neutral folder SVG matching the default download image; simplify category link markup and align icon sizes without affecting custom category snapshots.
+
+- Redesign individual download pages with responsive compact metadata, thumbnail/default image, prominent download action, full-width description and release notes, and a separated checksum/actions footer. Retain existing project history, extensions, and comments.
+
+- Add a configurable default image URL for missing download snapshots (#9), shipping a neutral SVG; use it in list and detail views without lightbox and register the new setting on upgrade.
+
+- Rebuild public listing templates around semantic responsive cards (with and without thumbnails), removing the duplicated Downloads heading and obsolete float-based layout; replace the earlier catalog CSS overrides with a dedicated, scoped layout.
+
+- Refresh public Downloads directory with responsive software-catalog cards, category navigation, search, sorting controls, thumbnails and prominent download buttons; preserve existing actions and URLs.
+
+- Provide separate short-description and full-details fields for GitHub Release proposals, matching the existing two-field model of standard Downloads submissions. Preserve complete GitHub release notes in the native moderation `detail` field up to a validated 60,000-byte limit; avoid silent 3,500-byte truncation, and preview full notes.
+
+- Exempt Downloads editors (`downloads.edit`) from the GitHub proposal limit of five submissions per rolling 24 hours; keep the limit for regular users and distinguish quota errors from invalid submissions.
+
+- Render GitHub release Markdown in the administrative submission and download preview using the same safe renderer as public download pages; retain normal GLText previews for non-GitHub downloads.
+
+- Versioned the installable distribution as Downloads 1.4.0.
+- Excluded the `tests/` directory from the distributed ZIP while retaining the test scripts in GitHub and CI.
+- Added packaging validation that rejects archives containing tests.
+
+
 ## 1.3.2 — in development
 
 - Fix admin preview with no image taking up only the left grid column; description and details can use full width.

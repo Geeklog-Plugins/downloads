@@ -19,7 +19,7 @@ $escape = function ($value) {
 $renderReleaseNotes = function ($markdown) use ($escape) {
     // Render a safe, deliberately limited Markdown subset. No raw HTML is
     // interpreted, and URLs may only use http or https.
-    $lines = preg_split('/\r\n|\r|\n/', substr((string) $markdown, 0, 8000));
+    $lines = preg_split('/\r\n|\r|\n/', (string) $markdown);
     $out = '';
     foreach ($lines as $line) {
         $line = $escape($line);
@@ -68,6 +68,8 @@ if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'POST') 
                            ? trim($_POST['title']) : '';
                     $description = isset($_POST['description']) && is_string($_POST['description'])
                                  ? trim($_POST['description']) : '';
+                    $detail = isset($_POST['detail']) && is_string($_POST['detail'])
+                            ? trim($_POST['detail']) : '';
                     $selected = null;
                     if (ctype_digit($assetId)) {
                         foreach ($release['assets'] as $asset) {
@@ -78,13 +80,21 @@ if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'POST') 
                         }
                     }
                     $uid = (int) $_USER['uid'];
-                    $recent = DB_query("SELECT COUNT(*) AS count_proposals FROM {$_TABLES['downloadgithubproposals']} " .
-                                       "WHERE owner_id=$uid AND created_at > " . (time() - 86400));
-                    $recentRow = $recent ? DB_fetchArray($recent) : array('count_proposals' => 99);
-                    if ($selected === null || $title === '' || strlen($title) > 100 ||
-                        $description === '' || strlen($description) > 4000 ||
-                        (int) $selected['size'] > 52428800 || (int) $recentRow['count_proposals'] >= 5) {
-                        $postContent .= '<p>Invalid proposal or daily submission limit reached (5 per day).</p>';
+                    $limitReached = false;
+                    if (!SEC_hasRights('downloads.edit')) {
+                        $recent = DB_query("SELECT COUNT(*) AS count_proposals FROM {$_TABLES['downloadgithubproposals']} " .
+                                           "WHERE owner_id=$uid AND created_at > " . (time() - 86400));
+                        // Fail closed for regular users if counting fails.
+                        $recentRow = $recent ? DB_fetchArray($recent) : array('count_proposals' => 5);
+                        $limitReached = (int) $recentRow['count_proposals'] >= 5;
+                    }
+                    if ($limitReached) {
+                        $postContent .= '<p>Daily submission limit reached (5 proposals per 24 hours).</p>';
+                    } elseif ($selected === null || $title === '' || strlen($title) > 100 ||
+                        $description === '' || strlen($description) > 2000 ||
+                        strlen($detail) > 60000 ||
+                        (int) $selected['size'] > 52428800) {
+                        $postContent .= '<p>Invalid proposal. Check the selected ZIP asset, title, short description (maximum 2,000 bytes) and details (maximum 60,000 bytes).</p>';
                     } else {
                         $repository = DB_escapeString($release['repository']);
                         $releaseUrl = DB_escapeString($release['url']);
@@ -92,6 +102,7 @@ if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'POST') 
                         $assetName = DB_escapeString($selected['name']);
                         $safeTitle = DB_escapeString(strip_tags($title));
                         $safeDescription = DB_escapeString(strip_tags($description));
+                        $safeDetail = DB_escapeString(strip_tags($detail));
                         $releaseId = (int) $release['id'];
                         $selectedId = (int) $selected['id'];
                         $now = time();
@@ -121,7 +132,7 @@ if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'POST') 
                                 "is_released,is_listing,postmode) VALUES " .
                                 "('$safeLid','" . $proposalCid . "','$safeTitle','$assetName'," .
                                 "'','" . DB_escapeString(substr($release['tag'], 0, 10)) . "'," .
-                                "'$safeDescription',''," . $now . ",NOW(),$uid,'$secretId',0,0,'plaintext')";
+                                "'$safeDescription','$safeDetail'," . $now . ",NOW(),$uid,'$secretId',0,0,'plaintext')";
                             $meta = "INSERT INTO {$_TABLES['downloadgithubproposals']} " .
                                 "(lid,owner_id,repository,release_id,asset_id,release_url,tag,asset_name," .
                                 "title,description,status,created_at,updated_at) VALUES " .
@@ -164,7 +175,10 @@ if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'POST') 
                     $postContent .= '</ul>';
                     if ($action !== 'propose') {
                         $defaultTitle = $release['name'] !== '' ? $release['name'] : $release['tag'];
-                        $defaultDescription = substr($release['notes'], 0, 3500);
+                        $defaultDetail = (string) $release['notes'];
+                        $defaultDescription = function_exists('mb_substr')
+                            ? mb_substr(trim($defaultDetail), 0, 900, 'UTF-8')
+                            : substr(trim($defaultDetail), 0, 900);
                         $postContent .= '<form method="post" action="' . $escape($pageUrl) . '">'
                             . '<input type="hidden" name="github_action" value="propose">'
                             . '<input type="hidden" name="release_url" value="' . $escape($url) . '">'
@@ -179,11 +193,14 @@ if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'POST') 
                         $postContent .= '</select><p><label for="proposal_title">Title</label> '
                             . '<input id="proposal_title" name="title" required maxlength="100" value="'
                             . $escape(substr($defaultTitle, 0, 100)) . '"></p>'
-                            . '<p><label for="proposal_description">Description</label></p>'
-                            . '<textarea id="proposal_description" name="description" required rows="7" maxlength="4000">'
+                            . '<p><label for="proposal_description">Short description (for listings, max 2,000 bytes)</label></p>'
+                            . '<textarea id="proposal_description" name="description" required rows="5" maxlength="2000">'
                             . $escape($defaultDescription) . '</textarea>'
+                            . '<p><label for="proposal_detail">Details (full GitHub release notes, max 60,000 bytes)</label></p>'
+                            . '<textarea id="proposal_detail" name="detail" rows="14">'
+                            . $escape($defaultDetail) . '</textarea>'
                             . '<details class="dlm-gh-rendered-notes"><summary>Preview formatted release notes (Markdown)</summary>'
-                            . '<div class="dlm-gh-markdown">' . $renderReleaseNotes($defaultDescription) . '</div></details>'
+                            . '<div class="dlm-gh-markdown">' . $renderReleaseNotes($defaultDetail) . '</div></details>'
                             . '<p><button type="submit">Submit proposal for moderation</button></p></form>';
                     }
                 }

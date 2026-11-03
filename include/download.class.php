@@ -565,6 +565,20 @@ class DLDownload
             $file_detail      = $gltext->getDisplayText($this->_detail,      $this->_postmode);
         }
 
+        // Match public rendering for GitHub-backed downloads and submissions.
+        // Only the GitHub proposal sidecar marks Markdown content; ordinary
+        // Downloads entries continue using their configured GLText postmode.
+        if (!empty($this->_lid) && !empty($_TABLES['downloadgithubproposals'])) {
+            $githubId = DB_escapeString($this->_lid);
+            $githubRow = DB_query("SELECT lid FROM {$_TABLES['downloadgithubproposals']} "
+                . "WHERE lid='" . $githubId . "'");
+            if ($githubRow && DB_numRows($githubRow) === 1) {
+                require_once $_CONF['path'] . 'plugins/downloads/include/github_markdown.php';
+                $file_description = DLM_renderGithubMarkdown($this->_description);
+                $file_detail = DLM_renderGithubMarkdown($this->_detail);
+            }
+        }
+
         list($year, $month, $day, $hour, $minute, $second) = explode(',', date('Y,m,d,H,i,s', $this->_date));
 
         $enabled_adv_editor = ($_CONF['advanced_editor'] && $_USER['advanced_editor']);

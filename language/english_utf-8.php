@@ -350,6 +350,7 @@ $LANG_confignames['downloads'] = array(
     'snapstore_url'            => 'Download File Snapshot',
     'snapcat_url'              => 'Category Image',
     'tnstore_url'              => 'Thumbnail Image',
+    'default_image_url'        => 'Default download image URL',
     'show_tn_image'            => 'Show Thumbnail Image',
     'show_tn_only_exists'      => 'Show Only Image Exists',
     'max_tnimage_width'        => 'Max Width',

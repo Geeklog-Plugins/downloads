@@ -344,6 +344,7 @@ $LANG_confignames['downloads'] = array(
     'snapstore_url'            => 'ファイル画像',
     'snapcat_url'              => 'カテゴリ画像',
     'tnstore_url'              => 'サムネール画像',
+    'default_image_url'        => 'Default download image URL',
     'show_tn_image'            => 'サムネール画像を表示する',
     'show_tn_only_exists'      => '存在する画像のみ表示する',
     'max_tnimage_width'        => '最大幅',

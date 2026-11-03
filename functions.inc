@@ -40,7 +40,7 @@ if (!defined ('UC_READONLY')) define('UC_READONLY', (XHTML == '') ? 'readonly' :
 if (!defined ('UC_DISABLED')) define('UC_DISABLED', (XHTML == '') ? 'disabled' : 'disabled="disabled"');
 
 define('DLM_ROOTID', 'root');
-define('DOWNLOADS_VERSION', '1.3.2');
+define('DOWNLOADS_VERSION', '1.4.0');
 
 /**
 * Include language file
@@ -1439,6 +1439,9 @@ function DLM_buildItemInfoResult($properties, $record, $indexed = false)
 function DLM_getInteropItem($id, $properties, $uid = 0)
 {
     global $_CONF, $_TABLES, $_DLM_CONF, $LANG_DLM;
+
+    // This callback can be invoked before other Downloads helpers are loaded.
+    require_once $_CONF['path'] . 'plugins/downloads/include/functions.php';
 
     $identity = DLM_parseInteropId($id);
     $uid = (int) $uid;
