@@ -76,6 +76,8 @@ Public detail/category pages emit those values where appropriate. Downloads also
 
 ## Development status
 
+The 1.4.0 feature scope is frozen. The project owner confirmed successful 1.3.2 → 1.4.0 upgrade and new public UI testing on 2026-11-03. CI/package validation and maintainer review remain separate release gates. New periodic statistics, release update monitoring, project/release history and storage isolation are planned for 1.4.1; no unattended publication or automatic storage migration is included in 1.4.0.
+
 The active development roadmap is in [ROADMAP.md](ROADMAP.md).
 
 The installable development archive is generated as:
